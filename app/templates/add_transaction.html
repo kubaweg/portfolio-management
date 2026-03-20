@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Dodaj Transakcję{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Rejestracja Transakcji</h3>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Wybierz Aktywo</label>
+                        <select name="asset_id" id="asset_select" class="form-select" required>
+                            <option value="" disabled selected>Wybierz z listy...</option>
+                            {% for asset in assets %}
+                            <option value="{{ asset.id }}" data-currency="{{ asset.currency }}">
+                                {{ asset.ticker }} - {{ asset.name }} ({{ asset.currency }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Typ operacji</label>
+                        <select name="type" class="form-select">
+                            <option value="KUPNO">Kupno</option>
+                            <option value="SPRZEDAZ">Sprzedaż</option>
+                            <option value="KAPITALIZACJA">KAPITALIZACJA (np. odsetki EDO)</option>
+                            <option value="ODSETKI">ODSETKI (np. wypłata COI / Dywidenda)</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ilość</label>
+                            <input type="number" step="0.0001" name="quantity" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cena za sztukę</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" name="price" class="form-control" required>
+                                <span class="input-group-text" id="currency_label">---</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Kurs walutowy (1 <span class="currency_name">waluty</span> = ? PLN)</label>
+                        <div class="input-group">
+                            <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate" class="form-control" value="1.0000" required>
+                            <span class="input-group-text">PLN</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Data i godzina (Warszawa)</label>
+                        <input type="datetime-local" name="date" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Zapisz transakcję</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const assetSelect = document.getElementById('asset_select');
+    const currencyLabel = document.getElementById('currency_label');
+    const exchangeRateInput = document.getElementById('exchange_rate');
+    const currencyNameSpans = document.querySelectorAll('.currency_name');
+
+    assetSelect.addEventListener('change', function() {
+        // Pobierz wybraną opcję
+        const selectedOption = this.options[this.selectedIndex];
+        const currency = selectedOption.getAttribute('data-currency');
+        
+        // Zaktualizuj etykietę ceny
+        currencyLabel.textContent = currency;
+        
+        // Zaktualizuj pomocnicze teksty
+        currencyNameSpans.forEach(span => span.textContent = currency);
+
+        // Automatyczne ustawienie kursu 1.0 dla PLN
+        if (currency === 'PLN') {
+            exchangeRateInput.value = "1.0000";
+            exchangeRateInput.readOnly = true;
+        } else {
+            exchangeRateInput.readOnly = false;
+            if (exchangeRateInput.value === "1.0000") {
+                exchangeRateInput.value = ""; // Zachęca do wpisania kursu dla walut obcych
+            }
+        }
+    });
+</script>
+{% endblock %}

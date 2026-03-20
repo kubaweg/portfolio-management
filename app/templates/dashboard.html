@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-light shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Zainwestowano</h6>
+                <h3>{{ total_invested|format_pln }} PLN</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-light shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Wartość aktywów (bez odsetek)</h6>
+                <h3>{{ total_current|format_pln }} PLN</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white shadow-sm {{ 'bg-success' if total_profit >= 0 else 'bg-danger' }}">
+            <div class="card-body">
+                <h6 class="card-title">Całkowity Zysk / Strata</h6>
+                <h3>{{ total_profit|format_pln }} PLN</h3>
+                <small>w tym odsetki: {{ total_cash_interest|format_pln }} PLN</small><br>
+                <small>zmiana wartości aktywów: {{ (total_profit - total_cash_interest)|format_pln }} PLN</small><br>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white shadow-sm {{ 'bg-success' if total_profit >= 0 else 'bg-danger' }}">
+            <div class="card-body">
+                <h6 class="card-title">ROI</h6>
+                <h3>{{ total_roi|format_pct }}</h3>
+                <small>w skali roku: {{ total_roi_pa|format_pct }}</small>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">Alokacja Aktywów</h6>
+                <canvas id="allocationChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">Podział Instrumentów</h6>
+                <canvas id="instrumentChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Rejestrujemy wtyczkę globalnie (tylko raz!)
+        Chart.register(ChartDataLabels);
+
+        // --- DANE Z SERWERA ---
+        const allocationData = {{ allocation|tojson }};
+        const instrData = {{ instrument_data|tojson }};
+
+        // --- FUNKCJA POMOCNICZA DLA PROCENTÓW ---
+        const getLabelSettings = (fontSize = 12) => ({
+            color: '#fff',
+            font: { weight: 'bold', size: fontSize },
+            formatter: (value, context) => {
+                const dataset = context.chart.data.datasets[0].data;
+                const localSum = dataset.reduce((a, b) => a + b, 0);
+                if (localSum === 0) return '';
+                const percentage = (value / localSum * 100).toFixed(1);
+                // Wyświetlaj tylko jeśli wycinek ma więcej niż 3% (żeby nie było ścisku)
+                return (percentage > 3) ? percentage + '%' : '';
+            },
+            display: 'auto'
+        });
+
+        // --- 1. WYKRES: ALOKACJA AKTYWÓW ---
+        const ctxAlloc = document.getElementById('allocationChart').getContext('2d');
+        new Chart(ctxAlloc, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(allocationData),
+                datasets: [{
+                    data: Object.values(allocationData),
+                    backgroundColor: ['#0d6efd', '#198754'], // Niebieski (ETF), Zielony (Obligacje)
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    datalabels: getLabelSettings(14) // Większa czcionka dla głównego wykresu
+                }
+            }
+        });
+
+        // --- 2. WYKRES: PODZIAŁ INSTRUMENTÓW ---
+        const ctxInstr = document.getElementById('instrumentChart').getContext('2d');
+        
+        // Dynamiczne generowanie odcieni
+        const generateColors = (data) => {
+            const blueCount = data.filter(i => i.type === 'ETF').length;
+            const greenCount = data.filter(i => i.type === 'Obligacja').length;
+            const colors = [];
+            let bIdx = 0, gIdx = 0;
+
+            data.forEach(item => {
+                if (item.type === 'ETF') {
+                    colors.push(`hsl(210, 80%, ${70 - (bIdx / (blueCount || 1) * 40)}%)`);
+                    bIdx++;
+                } else {
+                    colors.push(`hsl(140, 60%, ${65 - (gIdx / (greenCount || 1) * 35)}%)`);
+                    gIdx++;
+                }
+            });
+            return colors;
+        };
+
+        new Chart(ctxInstr, {
+            type: 'doughnut',
+            data: {
+                labels: instrData.map(i => i.label),
+                datasets: [{
+                    data: instrData.map(i => i.value),
+                    backgroundColor: generateColors(instrData),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    datalabels: getLabelSettings(11) // Mniejsza czcionka dla szczegółów
+                }
+            }
+        });
+    });
+</script>
+
+
+
+<div class="alert alert-info py-2 shadow-sm mb-4" style="font-size: 0.85rem;">
+    <i class="bi bi-info-circle"></i> <strong>Nota:</strong> Wartość obecna uwzględnia koszty przewalutowania (spread 0.5%) oraz narosłe odsetki z obligacji.
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Twoje Aktywa</h4>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ticker</th>
+                        <th class="text-end">Ilość</th>
+                        <th class="text-end">Śr. Cena zakupu</th>
+                        <th class="text-end">Cena rynkowa</th>
+                        <th class="text-end">Wynik (PLN)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in portfolio %}
+                    <tr data-bs-toggle="collapse" data-bs-target="#collapse-{{ item.asset.id }}" style="cursor: pointer;">
+                        <td>
+                            <strong>{{ item.asset.ticker }}</strong><br>
+                            <small class="text-muted">{{ item.asset.name }}</small>
+                        </td>
+                        <td class="text-end">{{ "%.4f"|format(item.quantity) if item.asset.asset_type != 'Obligacja' else item.quantity }}</td>
+                        <td class="text-end text-muted">
+                            {{ item.avg_price_currency|format_pln }} {{ item.asset.currency }}<br>
+                            <small>({{ item.avg_price_pln|format_pln }} PLN)</small>
+                        </td>
+                        <td class="text-end font-monospace">
+                            <strong>{{ item.current_price|format_pln }} {{ item.asset.currency }}</strong>
+                            
+                            {% if item.asset.currency != 'PLN' %}
+                                <br>
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    Kurs: 1 {{ item.asset.currency }} = {{ "%.4f"|format(item.fx_rate) }} PLN
+                                </small>
+                            {% endif %}
+
+                            {% if item.asset.currency != 'PLN' %}
+                                <br>
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    Kurs efektywny XTB: 1 {{ item.asset.currency }} = {{ "%.4f"|format(item.fx_effective_rate) }} PLN
+                                </small>
+                            {% endif %}
+                            
+                        </td>
+                        <td class="text-end font-monospace {{ 'text-success' if item.profit_loss_pln >= 0 else 'text-danger' }}">
+                            <strong>{{ "+" if item.profit_loss_pln > 0 else "" }}{{ item.profit_loss_pln|format_pln }}</strong><br>
+                            <small>Całkowity zwrot: {{ item.roi_percent|format_pct }}</small><br>
+                            <small title="Stopa zwrotu w skali roku (CAGR)">W skali roku: {{ item.annualized_roi|format_pct }}</small>
+                        </td>
+                    </tr>
+                    
+                    <tr class="collapse" id="collapse-{{ item.asset.id }}">
+                        <td colspan="6" class="bg-light p-0">
+                            <div class="p-3">
+                                <h6 class="small fw-bold">Historia dla {{ item.asset.ticker }}:</h6>
+                                <table class="table table-sm table-bordered bg-white mb-0" style="font-size: 0.85rem;">
+                                    <thead>
+                                        <tr class="table-secondary">
+                                            <th>Data</th>
+                                            <th>Typ</th>
+                                            <th class="text-end">Ilość</th>
+                                            <th class="text-end">Cena ({{ item.asset.currency }})</th>
+                                            <th class="text-end">Kurs</th>
+                                            <th class="text-end">Suma (PLN)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for t in item.transactions %}
+                                        <tr>
+                                            <td>{{ t.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td><span class="badge {{ 'bg-success' if t.transaction_type in ['KUPNO', 'KAPITALIZACJA'] else 'bg-info text-dark' if t.transaction_type == 'ODSETKI' else 'bg-danger' }}">{{ t.transaction_type }}</span></td>
+                                            <td class="text-end">{{ "%.4f"|format(t.quantity) }}</td>
+                                            <td class="text-end">{{ t.price_per_unit|format_pln }}</td>
+                                            <td class="text-end">{{ "%.4f"|format(t.exchange_rate) }}</td>
+                                            <td class="text-end">{{ (t.quantity * t.price_per_unit * t.exchange_rate)|format_pln }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

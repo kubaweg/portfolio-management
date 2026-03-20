@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Dodaj Nowe Aktywo{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Nowe Aktywo w Bazie</h3>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Ticker (Symbol)</label>
+                        <input type="text" name="ticker" class="form-control" placeholder="np. AAPL.US, PKN.WA, VUSA.DE" required>
+                        <small class="text-muted">Używaj formatu zgodnego z Yahoo Finance dla przyszłej automatyzacji.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pełna Nazwa</label>
+                        <input type="text" name="name" class="form-control" placeholder="np. Apple Inc. lub iShares S&P 500" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Typ aktywa</label>
+                            <select name="asset_type" class="form-select">
+                                <option value="ETF">ETF</option>
+                                <option value="Akcja">Akcja</option>
+                                <option value="Obligacja">Obligacja</option>
+                                <option value="Kryptowaluta">Kryptowaluta</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Waluta notowań</label>
+                            <input type="text" name="currency" class="form-control" placeholder="PLN, EUR, USD" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">Dodaj do bazy</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
