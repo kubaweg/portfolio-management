@@ -1,6 +1,7 @@
 from typing import NewType, List, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
+from models import Asset
 
 # --- FILAR 2: TYPY DOMENOWE (Domain-Driven Types) ---
 
@@ -20,18 +21,33 @@ FXRate = NewType('FXRate', float)
 
 # --- MOLEKUŁY: Modele Pydantic korzystające z tych typów ---
 
-class TransactionStats(BaseModel):
+class CurrentInstrumentData(BaseModel):
+    label: str
+    value: PLN
+    type: str
+
+class PortfolioTotals(BaseModel):
     """Statystyki z historii transakcji."""
-    model_config = ConfigDict(frozen=True)
+    invested: PLN = Field(ge=0)
+    current_value: PLN = Field(ge=0)
+    interest: PLN = Field(ge=0)
+    profit: PLN
+    roi: PercentTotal
+    allocation: dict[str, PLN]
+    instrument_data: list[CurrentInstrumentData]
 
-    quantity: AssetQuantity = Field(default=AssetQuantity(0.0))
-    cost_pln: PLN = Field(default=PLN(0.0))
-    cost_currency: CurrencyForeign = Field(default=CurrencyForeign(0.0))
-    capitalization: PLN = Field(default=PLN(0.0))
-    interest: PLN = Field(default=PLN(0.0))
+class AssetData(BaseModel):
+    asset: Asset
+    quantity: AssetQuantity
+    avg_price_currency: CurrencyForeign
+    avg_price_pln: PLN
+    current_price: CurrencyForeign
+    current_value_pln: PLN
+    profit_loss_pln: PLN
+    fx_rate: FXRate
+    fx_effective_rate: FXRate
+    roi_percent: PercentTotal
+    annualized_roi: PercentAnnual
+    transactions: Any
 
-class MarketQuote(BaseModel):
-    """Cena rynkowa i kurs waluty."""
-    price: CurrencyForeign = Field(...)
-    fx_rate: FXRate = Field(default=FXRate(1.0))
-    as_of: datetime = Field(default_factory=datetime.now)
+PortfolioData = NewType('PortfolioData', list)
