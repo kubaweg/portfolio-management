@@ -3,12 +3,13 @@ from datetime import datetime
 import pytz
 
 from app import db
-from app.models import Asset, Transaction
-from app.portfolio_engine import PortfolioEngine
+from .models import Asset, Transaction
+from .portfolio_engine import PortfolioEngine
 
 service = PortfolioEngine()
 
 @app.route('/')
+@app.route('/dashboard')
 def dashboard():
     assets = Asset.query.all()
     portfolio_data, totals = service.get_portfolio_summary(assets)
@@ -31,14 +32,14 @@ def add_transaction():
     assets = Asset.query.all()
     if request.method == 'POST':
         warsaw_tz = pytz.timezone('Europe/Warsaw')
-        naive_dt = datetime.strptime(request.form.get('date'), '%Y-%m-%dT%H:%M')
+        naive_dt = datetime.strptime(request.form.get('date', '9999-12-31T23:59:00'), '%Y-%m-%dT%H:%M')
         
         new_trans = Transaction(
             asset_id=request.form.get('asset_id'),
             transaction_type=request.form.get('type'),
-            quantity=float(request.form.get('quantity')),
-            price_per_unit=float(request.form.get('price')),
-            exchange_rate=float(request.form.get('exchange_rate')),
+            quantity=float(request.form.get('quantity', -1.0)),
+            price_per_unit=float(request.form.get('price', -1.0)),
+            exchange_rate=float(request.form.get('exchange_rate', -1.0)),
             date=warsaw_tz.localize(naive_dt)
         )
         db.session.add(new_trans)
@@ -63,10 +64,10 @@ def delete_transaction(id):
 def add_asset():
     if request.method == 'POST':
         new_asset = Asset(
-            ticker=request.form.get('ticker').upper().strip(),
-            name=request.form.get('name').strip(),
-            asset_type=request.form.get('asset_type'),
-            currency=request.form.get('currency').upper().strip()
+            ticker=request.form.get('ticker', '').upper().strip(),
+            name=request.form.get('name', '').strip(),
+            asset_type=request.form.get('asset_type', ''),
+            currency=request.form.get('currency', '').upper().strip()
         )
         db.session.add(new_asset)
         db.session.commit()
