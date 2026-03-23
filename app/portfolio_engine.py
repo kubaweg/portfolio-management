@@ -1,6 +1,6 @@
 from typing import List, Tuple, Dict, Any
-from schemas import PLN, CurrencyForeign, PercentTotal, PercentAnnual, AssetQuantity, FXRate, CurrentInstrumentData, AssetData, PortfolioData, PortfolioTotals
-from models import Asset
+from .schemas import PLN, CurrencyForeign, PercentTotal, PercentAnnual, AssetQuantity, FXRate, CurrentInstrumentData, AssetData, PortfolioData, PortfolioTotals
+from .models import Asset
 from .market_data import MarketDataProvider
 from .calculators import process_transaction_history, calculate_annualized_return
 
@@ -77,16 +77,16 @@ class PortfolioEngine:
 
     def _update_totals(self, totals: PortfolioTotals, asset: Asset, market_value_pln: PLN, stats: Dict[str, float]):
         """Pomocnicza metoda do aktualizacji sumarycznych statystyk."""
-        totals.invested += PLN(stats['cost_pln'])
-        totals.current_value += PLN(market_value_pln)
-        totals.interest += PLN(stats['interest'])
+        totals.invested = PLN(totals.invested + stats['cost_pln'])
+        totals.current_value = PLN(totals.current_value + market_value_pln)
+        totals.interest = PLN(totals.interest + stats['interest'])
 
         if market_value_pln > 0:
             a_type = asset.asset_type or 'Inne'
-            totals.allocation[a_type] = PLN(totals.allocation.get(a_type, 0)) + PLN(market_value_pln)
+            totals.allocation[a_type] = PLN(totals.allocation.get(a_type, 0) + market_value_pln)
             
-            totals.instrument_data.append(CurrentInstrumentData(
-                label = asset.ticker,
-                value = market_value_pln,
-                type =  a_type
-            ))
+            totals.instrument_data.append(CurrentInstrumentData({
+                'label': asset.ticker,
+                'value': market_value_pln,
+                'type': a_type
+            }))

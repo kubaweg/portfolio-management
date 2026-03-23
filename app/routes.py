@@ -4,9 +4,9 @@ import pytz
 
 from app import db
 from app.models import Asset, Transaction
-from app.services import PortfolioService
+from app.portfolio_engine import PortfolioEngine
 
-service = PortfolioService()
+service = PortfolioEngine()
 
 @app.route('/')
 def dashboard():
@@ -16,14 +16,14 @@ def dashboard():
     return render_template(
         'dashboard.html', 
         portfolio=portfolio_data, 
-        total_invested=totals['invested'],
-        total_current=totals['current_value'],
-        total_cash_interest=totals['interest'],
-        total_profit=totals['profit'],
-        total_roi=totals['roi'],
+        total_invested=totals.invested,
+        total_current=totals.current_value,
+        total_cash_interest=totals.interest,
+        total_profit=totals.profit,
+        total_roi=totals.roi,
         total_roi_pa=None,
-        allocation=totals['allocation'],
-        instrument_data=totals['instrument_data']
+        allocation=totals.allocation,
+        instrument_data=totals.instrument_data
     )
 
 @app.route('/add_transaction', methods=['GET', 'POST'])

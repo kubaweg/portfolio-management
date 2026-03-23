@@ -1,7 +1,7 @@
 from typing import NewType, List, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from models import Asset
+from .models import Asset
 
 # --- FILAR 2: TYPY DOMENOWE (Domain-Driven Types) ---
 
@@ -21,10 +21,7 @@ FXRate = NewType('FXRate', float)
 
 # --- MOLEKUŁY: Modele Pydantic korzystające z tych typów ---
 
-class CurrentInstrumentData(BaseModel):
-    label: str
-    value: PLN
-    type: str
+CurrentInstrumentData = NewType("CurrentInstrumentData", dict)
 
 class PortfolioTotals(BaseModel):
     """Statystyki z historii transakcji."""
@@ -37,6 +34,9 @@ class PortfolioTotals(BaseModel):
     instrument_data: list[CurrentInstrumentData]
 
 class AssetData(BaseModel):
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     asset: Asset
     quantity: AssetQuantity
     avg_price_currency: CurrencyForeign
