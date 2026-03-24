@@ -57,7 +57,7 @@ def calculate_annualized_return(transactions: List[Any], current_value_pln: floa
         try:
             result = xirr(dates, amounts)
             # Filtrujemy nierealne wyniki (błędy algorytmu)
-            return result if result and abs(result) < 100 else 0.0
+            return result if result else 0.0
         except Exception:
             return 0.0
     return 0.0
