@@ -17,7 +17,7 @@ def create_app():
         return "{:,.2f}".format(value).replace(",", " ")
     
     @app.template_filter('format_pct')
-    def format_pln(value):
+    def format_pct(value):
         if value is None:
             return "0.00%"
         # Formatowanie: tysiące oddzielone spacją, 2 miejsca po przecinku
