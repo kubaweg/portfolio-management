@@ -11,6 +11,9 @@ class Asset(db.Model):
     
     transactions = db.relationship('Transaction', backref='asset', lazy=True)
 
+    def __init__(self, **kwargs):
+        super(Asset, self).__init__(**kwargs)
+
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     asset_id = db.Column(db.Integer, db.ForeignKey('asset.id'), nullable=False)
@@ -21,3 +24,6 @@ class Transaction(db.Model):
     quantity = db.Column(db.Float, nullable=False)
     price_per_unit = db.Column(db.Float, nullable=False) # Cena w walucie aktywa
     exchange_rate = db.Column(db.Float, nullable=False) # Kurs waluty do PLN
+
+    def __init__(self, **kwargs):
+        super(Transaction, self).__init__(**kwargs)
