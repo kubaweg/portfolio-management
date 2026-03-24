@@ -1,5 +1,6 @@
 import yfinance as yf
 from typing import Tuple, Optional
+from datetime import datetime
 
 class MarketDataProvider:
     """Klasa odpowiedzialna za pobieranie danych z rynków zewnętrznych."""
@@ -17,6 +18,27 @@ class MarketDataProvider:
             return price if price is not None else fallback_price
         except Exception:
             return fallback_price
+        
+    @staticmethod
+    def get_asset_time(ticker_symbol: str, asset_type: str, fallback_price: float = 0.0) -> datetime:
+        """Pobiera aktualność ceny instrumentu z Yahoo Finance."""
+        if asset_type == 'Obligacja':
+            return datetime.now()
+
+        try:
+            ticker_yf = yf.Ticker(ticker_symbol)
+                
+            # Uwaga: .info jest wolne i czasem blokowane przez Yahoo
+            timestamp_unix = ticker_yf.info.get('regularMarketTime')
+            if timestamp_unix:
+                timestamp = datetime.fromtimestamp(timestamp_unix)
+                return timestamp
+                
+            # Jeśli brak danych o czasie w .info, zwracamy czas bieżący
+            return datetime.now()
+                            
+        except Exception:
+            return datetime.now()
 
     @staticmethod
     def get_fx_rate(currency: str) -> float:
@@ -31,3 +53,25 @@ class MarketDataProvider:
             return rate if rate is not None else 1.0
         except Exception:
             return 1.0
+        
+    @staticmethod
+    def get_fx_time(currency: str) -> datetime:
+        """Pobiera aktualność kursu wymiany waluty na PLN (np. USDPLN=X)."""
+        if not currency or currency == 'PLN':
+            return datetime.now()
+        
+        try:
+            pair = f"{currency.upper()}PLN=X"
+            fx_yf = yf.Ticker(pair)
+                
+            # Uwaga: .info jest wolne i czasem blokowane przez Yahoo
+            timestamp_unix = fx_yf.info.get('regularMarketTime')
+            if timestamp_unix:
+                timestamp = datetime.fromtimestamp(timestamp_unix)
+                return timestamp
+                
+            # Jeśli brak danych o czasie w .info, zwracamy czas bieżący
+            return datetime.now()
+                            
+        except Exception:
+            return datetime.now()
