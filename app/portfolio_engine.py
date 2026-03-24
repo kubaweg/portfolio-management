@@ -61,8 +61,8 @@ class PortfolioEngine:
                 profit_loss_pln = PLN(profit_pln),
                 fx_rate = FXRate(fx_rate),
                 fx_effective_rate = FXRate(effective_fx),
-                roi_percent = PercentTotal(roi * 100),
-                annualized_roi = PercentAnnual(ann_roi * 100),
+                roi_percent = PercentTotal(roi),
+                annualized_roi = PercentAnnual(ann_roi),
                 transactions = asset.transactions
             ))
 
