@@ -34,15 +34,18 @@ class PortfolioEngine:
             fallback = (stats['cost_curr'] / stats['qty']) if stats['qty'] > 0 else 0
 
             # to będzie do zmiany, bo typowanie powinno się odbywać na poziomie MarketDataProvider
-            curr_price = CurrencyForeign(MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type, fallback))
+            asset_price = CurrencyForeign(MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type, fallback))
+            asset_dt = MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type)
+
             fx_rate = FXRate(MarketDataProvider.get_fx_rate(asset.currency))
-            
+            fx_dt = MarketDataProvider.get_fx_time(asset.currency)
+
             # 3. Logika biznesowa (Przewalutowanie i Prowizje)
             effective_fx = FXRate(fx_rate * (1 - self.CONVERSION_FEE) if asset.currency != 'PLN' else 1.0)
             
             # Wycena końcowa
-            market_value_pln = PLN((stats['qty'] * curr_price * effective_fx) + stats['capitalization'])
-            profit_pln = (market_value_pln + PLN(stats['interest'])) - PLN(stats['cost_pln'])
+            market_value_pln = PLN((stats['qty'] * asset_price * effective_fx) + stats['capitalization'])
+            profit_pln = PLN((market_value_pln + stats['interest']) - stats['cost_pln'])
             
             # Prosta stopa zwrotu
             roi = PercentTotal((profit_pln / stats['cost_pln']) if stats['cost_pln'] > 0 else 0)
@@ -56,11 +59,13 @@ class PortfolioEngine:
                 quantity = AssetQuantity(stats['qty']),
                 avg_price_currency = CurrencyForeign((stats['cost_curr'] / stats['qty']) if stats['qty'] > 0 else 0),
                 avg_price_pln = PLN((stats['cost_pln'] / stats['qty']) if stats['qty'] > 0 else 0),
-                current_price = CurrencyForeign(curr_price),
+                current_price = CurrencyForeign(asset_price),
+                current_price_datetime = asset_dt,
                 current_value_pln = PLN(market_value_pln),
                 profit_loss_pln = PLN(profit_pln),
                 fx_rate = FXRate(fx_rate),
                 fx_effective_rate = FXRate(effective_fx),
+                fx_datetime = fx_dt,
                 roi_percent = PercentTotal(roi),
                 annualized_roi = PercentAnnual(ann_roi),
                 transactions = asset.transactions

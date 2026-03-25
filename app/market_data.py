@@ -20,10 +20,10 @@ class MarketDataProvider:
             return fallback_price
         
     @staticmethod
-    def get_asset_time(ticker_symbol: str, asset_type: str, fallback_price: float = 0.0) -> datetime:
+    def get_asset_time(ticker_symbol: str, asset_type: str) -> datetime:
         """Pobiera aktualność ceny instrumentu z Yahoo Finance."""
         if asset_type == 'Obligacja':
-            return datetime.now()
+            return datetime.now().replace(second=0, microsecond=0)
 
         try:
             ticker_yf = yf.Ticker(ticker_symbol)
@@ -35,10 +35,10 @@ class MarketDataProvider:
                 return timestamp
                 
             # Jeśli brak danych o czasie w .info, zwracamy czas bieżący
-            return datetime.now()
+            return datetime.now().replace(second=0, microsecond=0)
                             
         except Exception:
-            return datetime.now()
+            return datetime.now().replace(second=0, microsecond=0)
 
     @staticmethod
     def get_fx_rate(currency: str) -> float:
@@ -58,7 +58,7 @@ class MarketDataProvider:
     def get_fx_time(currency: str) -> datetime:
         """Pobiera aktualność kursu wymiany waluty na PLN (np. USDPLN=X)."""
         if not currency or currency == 'PLN':
-            return datetime.now()
+            return datetime.now().replace(second=0, microsecond=0)
         
         try:
             pair = f"{currency.upper()}PLN=X"
@@ -71,7 +71,7 @@ class MarketDataProvider:
                 return timestamp
                 
             # Jeśli brak danych o czasie w .info, zwracamy czas bieżący
-            return datetime.now()
+            return datetime.now().replace(second=0, microsecond=0)
                             
         except Exception:
-            return datetime.now()
+            return datetime.now().replace(second=0, microsecond=0)

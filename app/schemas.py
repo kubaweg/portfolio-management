@@ -42,10 +42,12 @@ class AssetData(BaseModel):
     avg_price_currency: CurrencyForeign
     avg_price_pln: PLN
     current_price: CurrencyForeign
+    current_price_datetime: datetime
     current_value_pln: PLN
     profit_loss_pln: PLN
     fx_rate: FXRate
     fx_effective_rate: FXRate
+    fx_datetime: datetime
     roi_percent: PercentTotal
     annualized_roi: PercentAnnual
     transactions: Any
