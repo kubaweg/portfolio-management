@@ -120,8 +120,9 @@
                 yAnnotations.push({
                     y: result.avg_price,
                     strokeDashArray: 0, // Linia ciągła (0) lub przerywana (np. 4)
-                    borderColor: '#777777', // Ciemniejszy szary dla lepszej widoczności
+                    borderColor: '#44444', // Ciemniejszy szary dla lepszej widoczności
                     borderWidth: 2, // Nieco grubsza niż domyślnie (1)
+                    opacity: 0.8,
                     position: 'back', // KLUCZ: Linia ląduje POD świecami
                     label: {
                         text: 'Średnia Cena: ' + result.avg_price.toFixed(2),

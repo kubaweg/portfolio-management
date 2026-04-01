@@ -130,7 +130,6 @@ def get_asset_history(ticker):
     # 3. Pobieramy dane rynkowe (Yahoo Finance)
     # MarketDataProvider zwraca List[ChartDataPoint]
     historical_market_data = MarketDataProvider.get_historical_data(ticker_upper, period=period)
-    print(historical_market_data)
 
     if not historical_market_data:
         return jsonify({"error": f"Brak danych rynkowych dla {ticker_upper}"}), 404
