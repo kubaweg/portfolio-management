@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
+
 <body class="bg-light">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
@@ -16,10 +18,12 @@
             <a class="navbar-brand" href="{{ url_for('dashboard') }}">📈 InvestTracker</a>
             <div class="navbar-nav">
                 <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('analysis') }}">Analizy</a>
                 <a class="nav-link" href="{{ url_for('add_asset') }}">Dodaj aktywo</a>
                 <a class="nav-link" href="{{ url_for('add_transaction') }}">Dodaj transakcję</a>
-                <a class="nav-link" href="{{ url_for('list_transactions') }}">Historia/Usuń</a> </div>
-                </div>
+                <a class="nav-link" href="{{ url_for('list_transactions') }}">Historia/Usuń</a>
+            </div>
+        </div>
         </div>
     </nav>
 
@@ -34,4 +38,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

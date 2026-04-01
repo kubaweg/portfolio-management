@@ -11,7 +11,7 @@ class PortfolioEngine:
     """
     
     CONVERSION_FEE = 0.005  # 0.5% prowizji na kursie (reguła biznesowa)
-    SPREAD_PCT = 0.0012
+    SPREAD_PCT = 0.0023
 
     def get_portfolio_summary(self, assets: List[Any]) -> Tuple[PortfolioData, PortfolioTotals]:
         """Buduje kompletny zestaw danych do Dashboardu."""

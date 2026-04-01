@@ -1,6 +1,7 @@
 import yfinance as yf
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 from datetime import datetime
+from .schemas import ChartDataPoint
 
 class MarketDataProvider:
     """Klasa odpowiedzialna za pobieranie danych z rynków zewnętrznych."""
@@ -75,3 +76,34 @@ class MarketDataProvider:
                             
         except Exception:
             return datetime.now().replace(second=0, microsecond=0)
+        
+    @staticmethod
+    def get_historical_data(ticker_symbol: str, period: str = "1y") -> List[ChartDataPoint]:
+        """
+        Pobiera historię cen zamknięcia dla danego instrumentu.
+        Dostępne okresy: '1mo', '3mo', '6mo', '1y', '5y', 'max'.
+        """
+        try:
+            ticker = yf.Ticker(ticker_symbol)
+            # Pobieramy interwał dzienny (interval="1d")
+            hist = ticker.history(period=period, interval="1d")
+            
+            if hist.empty:
+                return []
+
+            chart_data = []
+            for timestamp, row in hist.iterrows():
+                # Czyścimy dane: resetujemy czas do samej daty i zaokrąglamy cenę
+                chart_data.append(ChartDataPoint(
+                    date=timestamp.strftime('%Y-%m-%d'),
+                    open=round(float(row['Open']), 4),
+                    high=round(float(row['High']), 4),
+                    low=round(float(row['Low']), 4),
+                    close=round(float(row['Close']), 4)
+                ))
+                
+            return chart_data
+
+        except Exception as e:
+            print(f"Błąd pobierania historii dla {ticker_symbol}: {e}")
+            return []

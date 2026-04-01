@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-chart-line me-2"></i>Analiza Instrumentu</h2>
+    <hr>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label for="tickerSelect" class="form-label">Wybierz instrument:</label>
+            <select id="tickerSelect" class="form-select border-primary">
+                <option value="" selected disabled>-- Wybierz ticker --</option>
+                {% for ticker in tickers %}
+                <option value="{{ ticker }}">{{ ticker }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-8 d-flex align-items-end">
+            <div class="btn-group" role="group" id="periodButtons">
+                <button type="button" class="btn btn-outline-secondary" data-period="1mo">1M</button>
+                <button type="button" class="btn btn-outline-secondary" data-period="6mo">6M</button>
+                <button type="button" class="btn btn-outline-primary active" data-period="1y">1Y</button>
+                <button type="button" class="btn btn-outline-secondary" data-period="5y">5Y</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div id="chart-loader" class="text-center d-none">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p>Pobieranie danych...</p>
+            </div>
+            <div id="main-chart"></div>
+            <div id="chart-error" class="alert alert-warning d-none">
+                Nie udało się pobrać danych dla tego instrumentu.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+<script>
+    let chart = null;
+
+    function initChart() {
+        const options = {
+            chart: { type: 'candlestick', height: 450, id: 'analysisChart', zoom: { enabled: true } },
+            series: [],
+            xaxis: { type: 'datetime', labels: { format: 'dd MMM yyyy' } },
+            yaxis: { labels: { formatter: (val) => val.toFixed(2) } },
+            // dataLabels ukryte (żeby nie było etykiet dla każdego dnia)
+            dataLabels: { enabled: false },
+            // Wyłączamy stroke, żeby ApexCharts użył własnego rysowania świec
+            stroke: { width: 1 },
+            // --- 1. TWOJA WIZJA (Linia Średniej) ---
+            // Uzupełnimy ją w updateChart
+            annotations: { yaxis: [] },
+            // --- 2. TWOJA WIZJA (Markers/Kropki) ---
+            // Na początku puste, uzupełnimy je w updateChart
+            markers: {
+                size: 0, // Domyślnie chowane, pokazujemy tylko te z dataPointIndex
+                hover: { size: 10 }
+            },
+            // --- 3. TWOJA WIZJA (Tooltip z Wolumenem) ---
+            tooltip: {
+                custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                    const data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
+
+                    // Jeśli najedziesz na kropkę transakcji:
+                    if (data.transaction) {
+                        const t = data.transaction;
+                        const typeColor = (t.type === 'KUPNO') ? 'text-success' : 'text-danger';
+                        return '<div class="card p-3 shadow border-0">' +
+                            '<div class="card-header bg-white border-0 p-0 text-center ' + typeColor + ' fw-bold">' + t.type + '</div>' +
+                            '<div class="card-body p-0 pt-2">' +
+                            '<p class="mb-1">Data: <b>' + t.date + '</b></p>' +
+                            '<p class="mb-1">Cena Twoja: <b>' + t.price.toFixed(2) + '</b></p>' +
+                            '<p class="mb-0">Wolumen: <b class="fs-5">' + t.quantity + '</b></p>' +
+                            '</div></div>';
+                    }
+
+                    // Domyślny tooltip dla samej świecy OHLC
+                    const o = data.y[0].toFixed(2);
+                    const h = data.y[1].toFixed(2);
+                    const l = data.y[2].toFixed(2);
+                    const c = data.y[3].toFixed(2);
+
+                    return `<div class="p-2" style="font-family: sans-serif; font-size: 13px;">
+                        <div><b>Open:</b> ${o}</div>
+                        <div><b>High:</b> ${h}</div>
+                        <div><b>Low:</b> ${l}</div>
+                        <div><b>Close:</b> ${c}</div>
+                    </div>`;
+                }
+            },
+            noData: { text: 'Wybierz instrument...' }
+        };
+        chart = new ApexCharts(document.querySelector("#main-chart"), options);
+        chart.render();
+    }
+
+    async function updateChart() {
+        const ticker = document.getElementById('tickerSelect').value;
+        const period = document.querySelector('#periodButtons .active').dataset.period;
+        if (!ticker) return;
+
+        // UI State
+        document.getElementById('chart-loader').classList.remove('d-none');
+        document.getElementById('main-chart').style.opacity = "0.3";
+
+        try {
+            const response = await fetch(`/api/history/${ticker}?period=${period}`);
+            // Teraz dostajemy `ChartResponse` (obiekt, nie listę)
+            const result = await response.json();
+
+            // --- KONFIGURACJA LINII ŚREDNIEJ (Annotations) ---
+            let yAnnotations = [];
+            if (result.avg_price) {
+                yAnnotations.push({
+                    y: result.avg_price,
+                    strokeDashArray: 0, // Linia ciągła (0) lub przerywana (np. 4)
+                    borderColor: '#777777', // Ciemniejszy szary dla lepszej widoczności
+                    borderWidth: 2, // Nieco grubsza niż domyślnie (1)
+                    position: 'back', // KLUCZ: Linia ląduje POD świecami
+                    label: {
+                        text: 'Średnia Cena: ' + result.avg_price.toFixed(2),
+                        textAnchor: 'start', // KLUCZ: Etykieta przeskakuje na LEWĄ stronę
+                        position: 'left',
+                        offsetX: 10,  // Odstęp od lewej krawędzi
+                        offsetY: -10, // KLUCZ: Chmurka "wędruje" lekko nad linię, by nie nachodzić na świece
+                        style: {
+                            color: '#fff',
+                            background: '#888888', // Szare tło chmurki
+                            padding: {
+                                left: 8,
+                                right: 8,
+                                top: 5,
+                                bottom: 5
+                            }
+                        }
+                    }
+                });
+            }
+            chart.updateOptions({ annotations: { yaxis: yAnnotations } });
+
+
+            // --- MAPOWANIE DANYCH (Ceny + Transakcje) ---
+            // Tworzymy mapę transakcji po dacie, by szybko sprawdzać
+            const transMap = new Map();
+            result.transactions.forEach(t => transMap.set(t.date, t));
+
+            let markerIndices = [];
+            let markerColors = [];
+
+            const seriesData = result.historical_data.map((item, index) => {
+                const time = new Date(item.date).getTime();
+                const transaction = transMap.get(item.date);
+
+                if (transaction) {
+                    markerIndices.push(index);
+                    markerColors.push((transaction.type === 'KUPNO') ? '#198754' : '#dc3545');
+                }
+
+                return {
+                    x: time,
+                    // Wymagany format dla świecy: [Open, High, Low, Close]
+                    y: [item.open, item.high, item.low, item.close],
+                    transaction: transaction
+                };
+            });
+
+            // --- KONFIGURACJA KROPEK (Markers) ---
+            // Pokazujemy markery tylko na indeksach transakcji
+            chart.updateOptions({
+                markers: {
+                    size: 0, // chowane domyślnie
+                    discrete: markerIndices.map((idx, i) => ({
+                        seriesIndex: 0,
+                        dataPointIndex: idx,
+                        fillColor: markerColors[i],
+                        strokeColor: '#fff',
+                        size: 8,
+                        shape: "circle"
+                    }))
+                }
+            });
+
+            chart.updateSeries([{ name: ticker, data: seriesData }]);
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById('chart-error').classList.remove('d-none');
+        } finally {
+            document.getElementById('chart-loader').classList.add('d-none');
+            document.getElementById('main-chart').style.opacity = "1";
+        }
+    }
+
+    // Event Listeners (pozostają bez zmian)
+    document.getElementById('tickerSelect').addEventListener('change', updateChart);
+    document.querySelectorAll('#periodButtons button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('#periodButtons button').forEach(b => b.classList.remove('active', 'btn-outline-primary'));
+            document.querySelectorAll('#periodButtons button').forEach(b => b.classList.add('btn-outline-secondary'));
+            btn.classList.add('active', 'btn-outline-primary');
+            btn.classList.remove('btn-outline-secondary');
+            updateChart();
+        });
+    });
+    document.addEventListener('DOMContentLoaded', initChart);
+</script>
+{% endblock %}

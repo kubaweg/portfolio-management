@@ -1,4 +1,4 @@
-from typing import NewType, List, Dict, Any
+from typing import NewType, List, Dict, Any, Optional
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from .models import Asset
@@ -54,3 +54,28 @@ class AssetData(BaseModel):
     transactions: Any
 
 PortfolioData = NewType('PortfolioData', list)
+
+# typy do wykresów
+class ChartDataPoint(BaseModel):
+    """Pojedynczy punkt na wykresie: OHLC."""
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+
+class ChartTransactionPoint(BaseModel):
+    """Informacja o transakcji dla wykresu."""
+    date: str  # 'YYYY-MM-DD'
+    type: str  # 'KUPNO' lub 'SPRZEDAZ'
+    quantity: float # wolumen
+    price: float # cena transakcji
+
+class ChartResponse(BaseModel):
+    """Pełna odpowiedź dla wykresu (JSON)."""
+    ticker: str
+    period: str
+    historical_data: List[ChartDataPoint] # Ceny rynkowe (OHLC/Close)
+    # TWOJE DANE (z bazy):
+    avg_price: Optional[float] = None  # Linia średniej ceny
+    transactions: List[ChartTransactionPoint] # Kropki
