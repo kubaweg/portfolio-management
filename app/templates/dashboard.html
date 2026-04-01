@@ -264,9 +264,10 @@
                                             <th>Data</th>
                                             <th>Typ</th>
                                             <th class="text-end">Ilość</th>
-                                            <th class="text-end">Cena ({{ item.asset.currency }})</th>
-                                            <th class="text-end">Kurs</th>
-                                            <th class="text-end">Suma (PLN)</th>
+                                            <th class="text-end">Kwota transakcji</th>
+                                            <th class="text-end">Kurs walutowy otwarcia</th>
+                                            <th class="text-end">Wartość zakupu</th>
+                                            <th class="text-end">Zwrot %</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -277,10 +278,23 @@
                                                     class="badge {{ 'bg-success' if t.transaction_type in ['KUPNO', 'KAPITALIZACJA'] else 'bg-info text-dark' if t.transaction_type == 'ODSETKI' else 'bg-danger' }}">{{
                                                     t.transaction_type }}</span></td>
                                             <td class="text-end">{{ "%.4f"|format(t.quantity) }}</td>
-                                            <td class="text-end">{{ t.price_per_unit|format_pln }}</td>
-                                            <td class="text-end">{{ "%.4f"|format(t.exchange_rate) }}</td>
+                                            <td class="text-end">{{ t.price_per_unit|format_pln }} {{
+                                                item.asset.currency }}</td>
+                                            <td class="text-end">
+                                                {% if item.asset.currency != 'PLN' %}
+                                                {{ "%.4f"|format(t.exchange_rate) }} PLN/{{ item.asset.currency }}
+                                                {% else %}
+                                                -
+                                                {% endif %}
+                                            </td>
                                             <td class="text-end">{{ (t.quantity * t.price_per_unit *
-                                                t.exchange_rate)|format_pln }}</td>
+                                                t.exchange_rate)|format_pln }} PLN</td>
+                                            <td class="text-end">
+                                                <span
+                                                    class="fw-bold {{ 'text-success' if t.roi >= 0 else 'text-danger' }}">
+                                                    {{ "+" if t.roi > 0 }}{{ t.roi | format_pct }}
+                                                </span>
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>

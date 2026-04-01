@@ -1,5 +1,5 @@
 from typing import List, Tuple, Dict, Any
-from .schemas import PLN, CurrencyForeign, PercentTotal, PercentAnnual, AssetQuantity, FXRate, CurrentInstrumentData, AssetData, PortfolioData, PortfolioTotals
+from .schemas import PLN, CurrencyForeign, PercentTotal, PercentAnnual, AssetQuantity, FXRate, CurrentInstrumentData, AssetData, PortfolioData, PortfolioTotals, TransactionData
 from .models import Asset
 from .market_data import MarketDataProvider
 from .calculators import process_transaction_history, calculate_annualized_return
@@ -61,6 +61,24 @@ class PortfolioEngine:
             # Roczna stopa zwrotu (XIRR)
             ann_roi = PercentAnnual(calculate_annualized_return(asset.transactions, market_value_pln, stats['qty']))
 
+            enriched_transactions = []
+            for t in asset.transactions:
+                # Obliczamy zwrot tylko dla kupna (ROI dla sprzedaży jest mniej intuicyjne w tym widoku)
+                t_roi = PercentTotal(0.0)
+                if t.transaction_type == 'KUPNO' and t.price_per_unit > 0:
+                    # (Cena rynkowa teraz - Cena kupna wtedy) / Cena kupna wtedy
+                    t_roi = PercentTotal((float(asset_price) - float(t.price_per_unit)) / float(t.price_per_unit))
+                
+                # Tworzymy słownik lub prosty obiekt, który przekażemy do szablonu
+                enriched_transactions.append(TransactionData(
+                    date = t.date,
+                    transaction_type = t.transaction_type,
+                    quantity = t.quantity,
+                    price_per_unit = t.price_per_unit,
+                    exchange_rate = t.exchange_rate,
+                    roi = t_roi
+                ))
+
             # 4. Pakowanie danych pojedynczego aktywa
             portfolio_data.append(AssetData(
                 asset = asset,
@@ -76,7 +94,7 @@ class PortfolioEngine:
                 fx_datetime = fx_dt,
                 roi_percent = PercentTotal(roi),
                 annualized_roi = PercentAnnual(ann_roi),
-                transactions = asset.transactions
+                transactions = enriched_transactions
             ))
 
             # 5. Agregacja do sum całkowitych

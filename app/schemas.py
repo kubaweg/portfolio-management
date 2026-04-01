@@ -34,6 +34,14 @@ class PortfolioTotals(BaseModel):
     allocation: dict[str, PLN]
     instrument_data: list[CurrentInstrumentData]
 
+class TransactionData(BaseModel):
+    date: datetime
+    transaction_type: str
+    quantity: AssetQuantity
+    price_per_unit: PLN | CurrencyForeign
+    exchange_rate: FXRate
+    roi: PercentTotal
+
 class AssetData(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -51,7 +59,7 @@ class AssetData(BaseModel):
     fx_datetime: datetime
     roi_percent: PercentTotal
     annualized_roi: PercentAnnual
-    transactions: Any
+    transactions: list[TransactionData]
 
 PortfolioData = NewType('PortfolioData', list)
 
