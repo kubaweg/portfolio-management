@@ -169,8 +169,8 @@
                     <tr>
                         <th>Ticker</th>
                         <th class="text-end">Ilość</th>
-                        <th class="text-end">Śr. Cena zakupu</th>
-                        <th class="text-end">Cena rynkowa</th>
+                        <th class="text-end">Wartość zakupu</th>
+                        <th class="text-end">Wartość rynkowa</th>
                         <th class="text-end">Aktualność danych</th>
                         <th class="text-end">Wynik (PLN)</th>
                     </tr>
@@ -185,25 +185,52 @@
                         </td>
                         <td class="text-end">{{ "%.4f"|format(item.quantity) if item.asset.asset_type != 'Obligacja'
                             else item.quantity }}</td>
-                        <td class="text-end text-muted">
-                            {{ item.avg_price_currency|format_pln }} {{ item.asset.currency }}<br>
-                            <small>({{ item.avg_price_pln|format_pln }} PLN)</small>
-                        </td>
                         <td class="text-end font-monospace">
-                            <strong>{{ item.current_price|format_pln }} {{ item.asset.currency }}</strong>
-
+                            <strong>
+                                {{ (item.avg_price_currency * item.quantity)|format_pln }}
+                                {{ item.asset.currency}}
+                            </strong><br>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                Średnia cena zakupu:
+                            </small>
                             {% if item.asset.currency != 'PLN' %}
                             <br>
                             <small class="text-muted" style="font-size: 0.75rem;">
-                                Kurs: 1 {{ item.asset.currency }} = {{ "%.4f"|format(item.fx_rate) }} PLN
+                                {{ item.avg_price_currency|format_pln}} {{ item.asset.currency}}
+                            </small>
+                            {% endif %}
+                            <br>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                {{ item.avg_price_pln|format_pln }} PLN
+                            </small>
+                            {% if item.asset.currency != 'PLN' %}
+                            <br>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                Śr. kurs: {{ "%.4f"|format(item.avg_price_pln /
+                                item.avg_price_currency) }} PLN/{{item.asset.currency}}
+                            </small>
+                            {% endif %}
+                        </td>
+                        <td class="text-end font-monospace">
+                            <strong>
+                                {{ (item.current_price * item.quantity)|format_pln }}
+                                {{item.asset.currency}}
+                            </strong><br>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                Cena rynkowa: {{ item.current_price|format_pln }} {{item.asset.currency}}
+                            </small>
+                            {% if item.asset.currency != 'PLN' %}
+                            <br>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                Kurs: {{ "%.4f"|format(item.fx_rate) }} PLN/{{ item.asset.currency }}
                             </small>
                             {% endif %}
 
                             {% if item.asset.currency != 'PLN' %}
                             <br>
                             <small class="text-muted" style="font-size: 0.75rem;">
-                                Kurs efektywny XTB: 1 {{ item.asset.currency }} = {{
-                                "%.4f"|format(item.fx_effective_rate) }} PLN
+                                Kurs efektywny XTB: {{ "%.4f"|format(item.fx_effective_rate) }} PLN/{{
+                                item.asset.currency }}
                             </small>
                             {% endif %}
 
