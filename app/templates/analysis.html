@@ -129,59 +129,21 @@
 
     async function updateChart() {
         const ticker = document.getElementById('tickerSelect').value;
-        const period = document.querySelector('#periodButtons .active').dataset.period;
+        const periodBtn = document.querySelector('#periodButtons .active');
+        const period = periodBtn ? periodBtn.dataset.period : '3mo';
+
         if (!ticker) return;
 
+        // UI State - sygnalizacja ładowania
         document.getElementById('chart-loader').classList.remove('d-none');
         document.getElementById('main-chart').style.opacity = "0.3";
 
         try {
             const response = await fetch(`/api/history/${ticker}?period=${period}`);
+            if (!response.ok) throw new Error("Błąd pobierania danych");
             const result = await response.json();
 
-            // --- KONFIGURACJA LINII ŚREDNIEJ (Y-Axis) ---
-            let yAnnotations = [];
-            if (result.avg_price) {
-                yAnnotations.push({
-                    y: result.avg_price,
-                    strokeDashArray: 0, // Linia ciągła
-                    borderColor: '#444444',
-                    borderWidth: 1,
-                    opacity: 0.5,
-                    position: 'back',
-                    label: {
-                        text: 'Średnia Cena: ' + result.avg_price.toFixed(2),
-                        textAnchor: 'start',
-                        position: 'left',
-                        offsetX: 10,
-                        offsetY: -10,
-                        style: { color: '#fff', background: '#888888' }
-                    }
-                });
-            }
-
-            // --- TWOJA WIZJA (Pionowe linie transakcji - X-Axis) ---
-            let xAnnotations = [];
-            result.transactions.forEach(t => {
-                xAnnotations.push({
-                    x: new Date(t.date).getTime(),
-                    strokeDashArray: 4, // Linia przerywana
-                    borderColor: '#888888', // Szary
-                    borderWidth: 1,
-                    label: {
-                        show: false // Nie chcemy etykiet na osi X, tylko linie
-                    }
-                });
-            });
-
-            // Aktualizacja wszystkich adnotacji na raz
-            chart.updateOptions({
-                annotations: {
-                    yaxis: yAnnotations,
-                    xaxis: xAnnotations
-                }
-            });
-
+            // 1. Przygotowanie serii danych (Świece)
             const transMap = new Map();
             result.transactions.forEach(t => transMap.set(t.date, t));
 
@@ -204,7 +166,42 @@
                 };
             });
 
+            // 2. Przygotowanie adnotacji (Y - średnia, X - transakcje)
+            let yAnnotations = [];
+            if (result.avg_price) {
+                yAnnotations.push({
+                    y: result.avg_price,
+                    borderColor: '#444444',
+                    borderWidth: 2,
+                    opacity: 0.6,
+                    position: 'back',
+                    label: {
+                        text: 'Średnia Cena: ' + result.avg_price.toFixed(2),
+                        textAnchor: 'start',
+                        position: 'left',
+                        offsetX: 10,
+                        offsetY: -10,
+                        style: { color: '#fff', background: '#888888' }
+                    }
+                });
+            }
+
+            let xAnnotations = result.transactions.map(t => ({
+                x: new Date(t.date).getTime(),
+                strokeDashArray: 4,
+                borderColor: '#888888',
+                borderWidth: 1,
+                label: { show: false }
+            }));
+
+            // 3. ATOMIC UPDATE - Jedna aktualizacja dla wszystkich parametrów
+            // To eliminuje "wyścig" i konieczność podwójnego klikania.
             chart.updateOptions({
+                series: [{ name: ticker, data: seriesData }],
+                annotations: {
+                    yaxis: yAnnotations,
+                    xaxis: xAnnotations
+                },
                 markers: {
                     size: 0,
                     discrete: markerIndices.map((idx, i) => ({
@@ -215,13 +212,16 @@
                         size: 8,
                         shape: "circle"
                     }))
+                },
+                xaxis: {
+                    // Wymuszamy autoscale przy każdej zmianie, by osie nie "zamarzły"
+                    min: undefined,
+                    max: undefined
                 }
-            });
-
-            chart.updateSeries([{ name: ticker, data: seriesData }]);
+            }, false, true); // (redraw=false, animate=true)
 
         } catch (err) {
-            console.error(err);
+            console.error("Chart Update Error:", err);
             document.getElementById('chart-error').classList.remove('d-none');
         } finally {
             document.getElementById('chart-loader').classList.add('d-none');
