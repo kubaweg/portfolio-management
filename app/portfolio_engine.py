@@ -11,21 +11,29 @@ class PortfolioEngine:
     """
     
     CONVERSION_FEE = 0.005  # 0.5% prowizji na kursie (reguła biznesowa)
+    SPREAD_PCT = 0.0012
 
     def get_portfolio_summary(self, assets: List[Any]) -> Tuple[PortfolioData, PortfolioTotals]:
         """Buduje kompletny zestaw danych do Dashboardu."""
+
         portfolio_data = PortfolioData([])
+        all_transactions = []
+
         totals = PortfolioTotals(
             invested = PLN(0.0),
             current_value =  PLN(0.0),
             interest = PLN(0.0),
             profit = PLN(0.0),
             roi = PercentTotal(0.0),
+            annualized_roi = PercentAnnual(0.0),
             allocation = {},
             instrument_data = []
         )
 
         for asset in assets:
+
+            all_transactions.extend(asset.transactions)
+
             # 1. Wyciągamy czystą historię (Calculators)
             stats = process_transaction_history(asset.transactions)
             
@@ -34,7 +42,7 @@ class PortfolioEngine:
             fallback = (stats['cost_curr'] / stats['qty']) if stats['qty'] > 0 else 0
 
             # to będzie do zmiany, bo typowanie powinno się odbywać na poziomie MarketDataProvider
-            asset_price = CurrencyForeign(MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type, fallback))
+            asset_price = CurrencyForeign(MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type, fallback)) * (1.0 if asset.asset_type != 'ETF' else 1 - self.SPREAD_PCT)
             asset_dt = MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type)
 
             fx_rate = FXRate(MarketDataProvider.get_fx_rate(asset.currency))
@@ -78,6 +86,8 @@ class PortfolioEngine:
         totals.profit = PLN((totals.current_value + totals.interest) - totals.invested)
         totals.roi = PercentTotal((totals.profit / totals.invested) if totals.invested > 0 else 0)
         
+        totals.annualized_roi = PercentAnnual(calculate_annualized_return(all_transactions, totals.current_value, 1.0))
+
         return portfolio_data, totals
 
     def _update_totals(self, totals: PortfolioTotals, asset: Asset, market_value_pln: PLN, stats: Dict[str, float]):

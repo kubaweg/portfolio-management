@@ -30,6 +30,7 @@ class PortfolioTotals(BaseModel):
     interest: PLN = Field(ge=0)
     profit: PLN
     roi: PercentTotal
+    annualized_roi: PercentAnnual
     allocation: dict[str, PLN]
     instrument_data: list[CurrentInstrumentData]
 

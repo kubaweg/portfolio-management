@@ -34,30 +34,32 @@ def process_transaction_history(transactions: List[Any]) -> Dict[str, float]:
     return res
 
 def calculate_annualized_return(transactions: List[Any], current_value_pln: float, total_qty: float) -> float:
-    """Oblicza XIRR dla strumienia przepływów pieniężnych."""
+    """Oblicza XIRR dla strumienia przepływów pieniężnych (całe portfolio lub ticker)."""
     amounts = []
     dates = []
 
     for t in transactions:
-        # Pieniądze wychodzące z portfela (zakup) są ujemne
         val_pln = t.quantity * t.price_per_unit * t.exchange_rate
+        
         if t.transaction_type == 'KUPNO':
-            amounts.append(-val_pln)
+            amounts.append(-val_pln) # Pieniądze wychodzą z portfela
             dates.append(t.date)
-        elif t.transaction_type == 'ODSETKI':
+        elif t.transaction_type in ['SPRZEDAZ', 'ODSETKI', 'KAPITALIZACJA']:
+            # Pieniądze wracają do portfela (zrealizowany zysk/kapitał)
             amounts.append(val_pln)
             dates.append(t.date)
 
-    # Dodajemy końcową wycenę jako ostatni "przepływ" (pieniądze wracające do portfela)
-    if total_qty > 0:
+    # Dodajemy końcową wycenę wszystkiego, co jeszcze trzymamy
+    if current_value_pln > 0:
         amounts.append(current_value_pln)
         dates.append(datetime.now())
 
     if len(amounts) >= 2:
         try:
-            result = xirr(dates, amounts)
-            # Filtrujemy nierealne wyniki (błędy algorytmu)
-            return result if result else 0.0
+            # XIRR wymaga co najmniej jednej wartości ujemnej i jednej dodatniej
+            if any(x < 0 for x in amounts) and any(x > 0 for x in amounts):
+                result = xirr(dates, amounts)
+                return result if result else 0.0
         except Exception:
             return 0.0
     return 0.0

@@ -22,7 +22,7 @@ def dashboard():
         total_cash_interest=totals.interest,
         total_profit=totals.profit,
         total_roi=totals.roi,
-        total_roi_pa=None,
+        total_roi_pa=totals.annualized_roi,
         allocation=totals.allocation,
         instrument_data=totals.instrument_data
     )
