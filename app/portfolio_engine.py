@@ -11,7 +11,7 @@ class PortfolioEngine:
     """
     
     CONVERSION_FEE = 0.005  # 0.5% prowizji na kursie (reguła biznesowa)
-    SPREAD_PCT = 0.0023
+    SPREAD_PCT = 0.0010
 
     def get_portfolio_summary(self, assets: List[Any]) -> Tuple[PortfolioData, PortfolioTotals]:
         """Buduje kompletny zestaw danych do Dashboardu."""
@@ -67,7 +67,7 @@ class PortfolioEngine:
                 t_roi = PercentTotal(0.0)
                 if t.transaction_type == 'KUPNO' and t.price_per_unit > 0:
                     # (Cena rynkowa teraz - Cena kupna wtedy) / Cena kupna wtedy
-                    t_roi = PercentTotal((float(asset_price) - float(t.price_per_unit)) / float(t.price_per_unit))
+                    t_roi = PercentTotal((float(asset_price*effective_fx) - float(t.price_per_unit*t.exchange_rate)) / float(t.price_per_unit*t.exchange_rate))
                 
                 # Tworzymy słownik lub prosty obiekt, który przekażemy do szablonu
                 enriched_transactions.append(TransactionData(
