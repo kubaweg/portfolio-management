@@ -11,7 +11,7 @@ class PortfolioEngine:
     """
     
     CONVERSION_FEE = 0.005  # 0.5% prowizji na kursie (reguła biznesowa)
-    SPREAD_PCT = 0.0010
+    SPREAD_PCT = 0.00135
 
     def get_portfolio_summary(self, assets: List[Any]) -> Tuple[PortfolioData, PortfolioTotals]:
         """Buduje kompletny zestaw danych do Dashboardu."""
@@ -31,12 +31,14 @@ class PortfolioEngine:
         )
 
         for asset in assets:
-
-            all_transactions.extend(asset.transactions)
-
+            
             # 1. Wyciągamy czystą historię (Calculators)
             stats = process_transaction_history(asset.transactions)
-            
+            if stats['qty'] <= 0:
+                continue
+            else:
+                all_transactions.extend(asset.transactions)
+
             # 2. Pobieramy ceny (Market Data)
             # Jeśli nie mamy ceny, fallback to średni koszt zakupu
             fallback = (stats['cost_curr'] / stats['qty']) if stats['qty'] > 0 else 0
@@ -93,7 +95,7 @@ class PortfolioEngine:
                 fx_effective_rate = FXRate(effective_fx),
                 fx_datetime = fx_dt,
                 roi_percent = PercentTotal(roi),
-                annualized_roi = PercentAnnual(ann_roi),
+                annualized_roi = PercentAnnual(0.0) if roi == 0.0 else PercentAnnual(ann_roi),
                 transactions = enriched_transactions
             ))
 

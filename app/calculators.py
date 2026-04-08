@@ -15,7 +15,7 @@ def process_transaction_history(transactions: List[Any]) -> Dict[str, float]:
             res['cost_curr'] += (t.quantity * t.price_per_unit)
             res['cost_pln'] += (t.quantity * t.price_per_unit * t.exchange_rate)
             
-        elif t.transaction_type == 'SPRZEDAZ':
+        elif t.transaction_type == 'SPRZEDAŻ':
             if res['qty'] > 0:
                 # Obliczamy średni koszt jednostkowy w momencie sprzedaży
                 avg_c_curr = res['cost_curr'] / res['qty']

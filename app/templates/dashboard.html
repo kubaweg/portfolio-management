@@ -67,9 +67,9 @@
         Chart.register(ChartDataLabels);
 
         // --- DANE Z SERWERA ---
-        const allocationData = {{ allocation| tojson
+        const allocationData = {{ allocation | tojson
     }};
-    const instrData = {{ instrument_data| tojson }};
+    const instrData = {{ instrument_data | tojson }};
 
     // --- FUNKCJA POMOCNICZA DLA PROCENTÓW ---
     const getLabelSettings = (fontSize = 12) => ({
@@ -85,6 +85,13 @@
         },
         display: 'auto'
     });
+
+    const formatVolume = (v) => {
+        const num = Number(v);   // 🔥 zawsze konwersja na liczbę
+        if (isNaN(num)) return v;
+        return new Intl.NumberFormat('pl-PL', { useGrouping: true }).format(num);
+    };
+
 
     // --- 1. WYKRES: ALOKACJA AKTYWÓW ---
     const ctxAlloc = document.getElementById('allocationChart').getContext('2d');
@@ -102,8 +109,25 @@
             responsive: true,
             plugins: {
                 legend: { position: 'bottom' },
-                datalabels: getLabelSettings(14) // Większa czcionka dla głównego wykresu
+                datalabels: getLabelSettings(14),
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const label = context.label || '';
+                            const value = Math.round(parseFloat(context.raw));
+
+                            const dataset = context.chart.data.datasets[0].data.map(Number);
+                            const total = dataset.reduce((a, b) => a + b, 0);
+
+                            const percent = total ? ((value / total) * 100).toFixed(1) : 0;
+
+                            return ` Wartość [PLN]: ${formatVolume(value)} (${percent}%)`;
+                        }
+                    }
+                }
             }
+
+
         }
     });
 
@@ -143,8 +167,26 @@
             responsive: true,
             plugins: {
                 legend: { position: 'bottom' },
-                datalabels: getLabelSettings(11) // Mniejsza czcionka dla szczegółów
+                datalabels: getLabelSettings(11),
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const label = context.label || '';
+                            const value = Math.round(parseFloat(context.raw));
+
+
+                            const dataset = context.chart.data.datasets[0].data.map(Number);
+                            const total = dataset.reduce((a, b) => a + b, 0);
+
+                            const percent = total ? ((value / total) * 100).toFixed(1) : 0;
+
+                            return ` Wartość [PLN]: ${formatVolume(value)} (${percent}%)`;
+                        }
+                    }
+                }
             }
+
+
         }
     });
     });
