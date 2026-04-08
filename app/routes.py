@@ -129,16 +129,20 @@ def get_asset_history(ticker):
 
     # 3. Pobieramy dane rynkowe (Yahoo Finance)
     # MarketDataProvider zwraca List[ChartDataPoint]
-    historical_market_data = MarketDataProvider.get_historical_data(ticker_upper, period=period)
+    historical_market_data, historical_volume_data = MarketDataProvider.get_historical_data(ticker_upper, period=period)
 
     if not historical_market_data:
         return jsonify({"error": f"Brak danych rynkowych dla {ticker_upper}"}), 404
+    
+    if not historical_volume_data:
+        return jsonify({"error": f"Brak danych wolumenowych dla {ticker_upper}"}), 404
 
     # 4. Budujemy pancerne Response przy użyciu Pydantic
     response_model = ChartResponse(
         ticker=ticker_upper,
         period=period,
         historical_data=historical_market_data,
+        historical_volume=historical_volume_data,
         avg_price=avg_price_val,
         transactions=transaction_points
     )

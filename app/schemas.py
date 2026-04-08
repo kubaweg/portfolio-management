@@ -72,6 +72,11 @@ class ChartDataPoint(BaseModel):
     low: float
     close: float
 
+class VolumeDataPoint(BaseModel):
+    """Pojedynczy słupek wolumenowy."""
+    date: str
+    volume: int
+
 class ChartTransactionPoint(BaseModel):
     """Informacja o transakcji dla wykresu."""
     date: str  # 'YYYY-MM-DD'
@@ -84,6 +89,7 @@ class ChartResponse(BaseModel):
     ticker: str
     period: str
     historical_data: List[ChartDataPoint] # Ceny rynkowe (OHLC/Close)
+    historical_volume: List[VolumeDataPoint] # Wolumeny transakcji
     # TWOJE DANE (z bazy):
     avg_price: Optional[float] = None  # Linia średniej ceny
     transactions: List[ChartTransactionPoint] # Kropki
