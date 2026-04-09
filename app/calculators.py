@@ -7,31 +7,32 @@ def process_transaction_history(transactions: List[Any]) -> Dict[str, float]:
     Oblicza sumaryczne wartości (ilość, koszty) z historii transakcji.
     Implementuje logikę średniego kosztu zakupu.
     """
-    res = {'qty': 0.0, 'cost_pln': 0.0, 'cost_curr': 0.0, 'capitalization': 0.0, 'interest': 0.0}
+    stats = {'qty': 0.0, 'cost_pln': 0.0, 'cost_curr': 0.0, 'capitalization': 0.0, 'interest': 0.0}
     
     for t in transactions:
+
         if t.transaction_type == 'KUPNO':
-            res['qty'] += t.quantity
-            res['cost_curr'] += (t.quantity * t.price_per_unit)
-            res['cost_pln'] += (t.quantity * t.price_per_unit * t.exchange_rate)
+            stats['qty'] += t.quantity
+            stats['cost_curr'] += (t.quantity * t.price_per_unit)
+            stats['cost_pln'] += (t.quantity * t.price_per_unit * t.exchange_rate)
             
         elif t.transaction_type == 'SPRZEDAŻ':
-            if res['qty'] > 0:
+            if stats['qty'] > 0:
                 # Obliczamy średni koszt jednostkowy w momencie sprzedaży
-                avg_c_curr = res['cost_curr'] / res['qty']
-                avg_c_pln = res['cost_pln'] / res['qty']
-                
-                res['qty'] -= t.quantity
-                res['cost_curr'] -= t.quantity * avg_c_curr
-                res['cost_pln'] -= t.quantity * avg_c_pln
+                avg_c_curr = stats['cost_curr'] / stats['qty']
+                avg_c_pln = stats['cost_pln'] / stats['qty']
+
+                stats['qty'] -= t.quantity
+                stats['cost_curr'] -= t.quantity * avg_c_curr
+                stats['cost_pln'] -= t.quantity * avg_c_pln
                 
         elif t.transaction_type == 'KAPITALIZACJA':
-            res['capitalization'] += (t.quantity * t.price_per_unit * t.exchange_rate)
+            stats['capitalization'] += (t.quantity * t.price_per_unit * t.exchange_rate)
             
         elif t.transaction_type == 'ODSETKI':
-            res['interest'] += (t.quantity * t.price_per_unit * t.exchange_rate)
+            stats['interest'] += (t.quantity * t.price_per_unit * t.exchange_rate)
             
-    return res
+    return stats
 
 def calculate_annualized_return(transactions: List[Any], current_value_pln: float, total_qty: float) -> float:
     """Oblicza XIRR dla strumienia przepływów pieniężnych (całe portfolio lub ticker)."""
@@ -44,7 +45,7 @@ def calculate_annualized_return(transactions: List[Any], current_value_pln: floa
         if t.transaction_type == 'KUPNO':
             amounts.append(-val_pln) # Pieniądze wychodzą z portfela
             dates.append(t.date)
-        elif t.transaction_type in ['SPRZEDAZ', 'ODSETKI', 'KAPITALIZACJA']:
+        elif t.transaction_type in ['SPRZEDAŻ', 'ODSETKI', 'KAPITALIZACJA']:
             # Pieniądze wracają do portfela (zrealizowany zysk/kapitał)
             amounts.append(val_pln)
             dates.append(t.date)

@@ -34,17 +34,13 @@ class PortfolioEngine:
             
             # 1. Wyciągamy czystą historię (Calculators)
             stats = process_transaction_history(asset.transactions)
-            if stats['qty'] <= 0:
-                continue
-            else:
-                all_transactions.extend(asset.transactions)
+
+            if asset.ticker == 'OTS0326': print(stats)
+            
+            all_transactions.extend(asset.transactions)
 
             # 2. Pobieramy ceny (Market Data)
-            # Jeśli nie mamy ceny, fallback to średni koszt zakupu
-            fallback = (stats['cost_curr'] / stats['qty']) if stats['qty'] > 0 else 0
-
-            # to będzie do zmiany, bo typowanie powinno się odbywać na poziomie MarketDataProvider
-            asset_price = CurrencyForeign(MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type, fallback)) * (1.0 if asset.asset_type != 'ETF' else 1 - self.SPREAD_PCT)
+            asset_price = CurrencyForeign(MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type)) * (1.0 if asset.asset_type != 'ETF' else 1 - self.SPREAD_PCT)
             asset_dt = MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type)
 
             fx_rate = FXRate(MarketDataProvider.get_fx_rate(asset.currency))
@@ -65,11 +61,20 @@ class PortfolioEngine:
 
             enriched_transactions = []
             for t in asset.transactions:
+
                 # Obliczamy zwrot tylko dla kupna (ROI dla sprzedaży jest mniej intuicyjne w tym widoku)
+                t_profit = PLN(0.0)
                 t_roi = PercentTotal(0.0)
-                if t.transaction_type == 'KUPNO' and t.price_per_unit > 0:
+
+                if t.transaction_type == 'KUPNO':
                     # (Cena rynkowa teraz - Cena kupna wtedy) / Cena kupna wtedy
-                    t_roi = PercentTotal((float(asset_price*effective_fx) - float(t.price_per_unit*t.exchange_rate)) / float(t.price_per_unit*t.exchange_rate))
+                    t_profit = PLN(t_profit + t.quantity*(asset_price*effective_fx - t.price_per_unit*t.exchange_rate))
+
+                elif t.transaction_type == 'ODSETKI':
+                    # t_profit = PLN(t_profit + (t.price_per_unit*t.exchange_rate))
+                    t_profit = PLN(t_profit + 0.0)
+
+                t_roi = PercentTotal(t_profit / (t.quantity*t.price_per_unit*t.exchange_rate))
                 
                 # Tworzymy słownik lub prosty obiekt, który przekażemy do szablonu
                 enriched_transactions.append(TransactionData(
@@ -100,6 +105,7 @@ class PortfolioEngine:
             ))
 
             # 5. Agregacja do sum całkowitych
+            # print(asset.ticker, market_value_pln, totals.current_value)
             self._update_totals(totals, asset, market_value_pln, stats)
 
         # Końcowe obliczenia dla całego portfela
@@ -116,7 +122,7 @@ class PortfolioEngine:
         totals.current_value = PLN(totals.current_value + market_value_pln)
         totals.interest = PLN(totals.interest + stats['interest'])
 
-        if market_value_pln > 0:
+        if stats['qty'] > 0:
             a_type = asset.asset_type or 'Inne'
             totals.allocation[a_type] = PLN(totals.allocation.get(a_type, 0) + market_value_pln)
             

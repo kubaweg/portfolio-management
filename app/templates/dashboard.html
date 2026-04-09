@@ -287,9 +287,11 @@
 
                         </td>
                         <td
-                            class="text-end font-monospace {{ 'text-success' if item.profit_loss_pln >= 0 else 'text-danger' }}">
+                            class="text-end font-monospace {{ 'text-success' if item.profit_loss_pln > 0 else ('text-danger' if item.profit_loss_pln < 0 else 'text-dark') }}">
+                            <small class="text-muted" style="font-size: 0.75rem;">Wynik całkowity:</small><br>
                             <strong>{{ "+" if item.profit_loss_pln > 0 else "" }}{{ item.profit_loss_pln|format_pln
                                 }}</strong><br>
+                            <small class="text-muted" style="font-size: 0.75rem;">Zwrot z otwartych pozycji:</small><br>
                             <small>Całkowity zwrot: {{ item.roi_percent|format_pct }}</small><br>
                             <small title="Stopa zwrotu w skali roku (CAGR)">W skali roku: {{
                                 item.annualized_roi|format_pct }}</small>
@@ -333,7 +335,7 @@
                                                 t.exchange_rate)|format_pln }} PLN</td>
                                             <td class="text-end">
                                                 <span
-                                                    class="fw-bold {{ 'text-success' if t.roi >= 0 else 'text-danger' }}">
+                                                    class="fw-bold {{ 'text-success' if t.roi > 0 else ('text-danger' if t.roi < 0 else 'text-dark') }}">
                                                     {{ "+" if t.roi > 0 }}{{ t.roi | format_pct }}
                                                 </span>
                                             </td>
