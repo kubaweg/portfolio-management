@@ -289,51 +289,82 @@
                     <tr class="collapse" id="collapse-{{ item.asset.id }}">
                         <td colspan="6" class="bg-light p-0">
                             <div class="p-3">
-                                <h6 class="small fw-bold">Historia dla {{ item.asset.ticker }}:</h6>
-                                <table class="table table-sm table-bordered bg-white mb-0" style="font-size: 0.85rem;">
-                                    <thead>
-                                        <tr class="table-secondary">
-                                            <th>Data</th>
-                                            <th>Typ</th>
-                                            <th class="text-end">Ilość</th>
-                                            <th class="text-end">Kwota transakcji</th>
-                                            <th class="text-end">Kurs walutowy otwarcia</th>
-                                            <th class="text-end">Wartość zakupu</th>
-                                            <th class="text-end">Zwrot %</th>
+
+                                <!-- POZYCJE OTWARTE -->
+                                <h6 class="fw-bold mt-3">Pozycje otwarte</h6>
+                                {% if item.open_positions %}
+                                <table class="table table-sm table-bordered bg-white mb-3" style="font-size: 0.85rem;">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th>Ilość</th>
+                                            <th class="text-end">Koszt (PLN)</th>
+                                            <th class="text-end">Wartość bieżąca (PLN)</th>
+                                            <th class="text-end">Zysk niezrealizowany</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for t in item.transactions %}
+                                        {% for op in item.open_positions %}
                                         <tr>
-                                            <td>{{ t.date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                            <td><span
-                                                    class="badge {{ 'bg-success' if t.transaction_type in ['KUPNO', 'KAPITALIZACJA'] else 'bg-info text-dark' if t.transaction_type == 'ODSETKI' else 'bg-danger' }}">{{
-                                                    t.transaction_type }}</span></td>
-                                            <td class="text-end">{{ "%.4f"|format(t.quantity) }}</td>
-                                            <td class="text-end">{{ t.price_per_unit|format_pln }} {{
-                                                item.asset.currency }}</td>
-                                            <td class="text-end">
-                                                {% if item.asset.currency != 'PLN' %}
-                                                {{ "%.4f"|format(t.exchange_rate) }} PLN/{{ item.asset.currency }}
-                                                {% else %}
-                                                -
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end">{{ (t.quantity * t.price_per_unit *
-                                                t.exchange_rate)|format_pln }} PLN</td>
-                                            <td class="text-end">
-                                                <span
-                                                    class="fw-bold {{ 'text-success' if t.roi > 0 else ('text-danger' if t.roi < 0 else 'text-dark') }}">
-                                                    {{ "+" if t.roi > 0 }}{{ t.roi | format_pct }}
-                                                </span>
+                                            <td>{{ "%.4f"|format(op.quantity) }}</td>
+                                            <td class="text-end">{{ (op.cost * op.fx_rate)|format_pln }}</td>
+                                            <td class="text-end">{{ (op.current_value *
+                                                item.fx_effective_rate)|format_pln }}</td>
+                                            <td
+                                                class="text-end {{ 'text-success' if op.unrealized_profit > 0 else 'text-danger' }}">
+                                                {{ (op.unrealized_profit * item.fx_effective_rate)|format_pln }}
                                             </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
+                                {% else %}
+                                <p class="text-muted small">Brak otwartych pozycji.</p>
+                                {% endif %}
+
+                                <!-- POZYCJE ZAMKNIĘTE -->
+                                <h6 class="fw-bold mt-4">Pozycje zamknięte</h6>
+                                {% if item.closed_positions %}
+                                <table class="table table-sm table-bordered bg-white mb-3" style="font-size: 0.85rem;">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th>Ilość</th>
+                                            <th class="text-end">Koszt (PLN)</th>
+                                            <th class="text-end">Przychód (PLN)</th>
+                                            <th class="text-end">Zysk zrealizowany</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for cp in item.closed_positions %}
+                                        <tr>
+                                            <td>{{ "%.4f"|format(cp.quantity) }}</td>
+                                            <td class="text-end">{{ cp.cost|format_pln }}</td>
+                                            <td class="text-end">{{ cp.proceeds|format_pln }}</td>
+                                            <td
+                                                class="text-end {{ 'text-success' if cp.realized_profit > 0 else 'text-danger' }}">
+                                                {{ cp.realized_profit|format_pln }}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% else %}
+                                <p class="text-muted small">Brak zamkniętych pozycji.</p>
+                                {% endif %}
+
+                                <!-- PODSUMOWANIE -->
+                                <h6 class="fw-bold mt-4">Podsumowanie</h6>
+                                <ul class="small">
+                                    <li>Zysk zrealizowany: <strong>{{ item.realized_profit_pln|format_pln }}</strong>
+                                    </li>
+                                    <li>Zysk niezrealizowany: <strong>{{ item.unrealized_profit_pln|format_pln
+                                            }}</strong></li>
+                                    <li>Całkowity wynik: <strong>{{ item.profit_loss_pln|format_pln }}</strong></li>
+                                </ul>
+
                             </div>
                         </td>
                     </tr>
+
                     {% endfor %}
                 </tbody>
             </table>

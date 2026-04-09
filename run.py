@@ -4,7 +4,7 @@ app = create_app()
 
 # Tworzenie tabel w bazie danych, jeśli jeszcze nie istnieją
 with app.app_context():
-    from app.models import Asset, Transaction
+    from app.schemas.models import Asset, Transaction
     db.create_all()
 
 if __name__ == '__main__':

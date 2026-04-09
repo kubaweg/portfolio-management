@@ -1,7 +1,7 @@
 import yfinance as yf
 from typing import Tuple, Optional, List
 from datetime import datetime
-from .schemas import ChartDataPoint, VolumeDataPoint
+from .schemas.dto.charts import ChartDataPoint, VolumeDataPoint
 
 class MarketDataProvider:
     """Klasa odpowiedzialna za pobieranie danych z rynków zewnętrznych."""

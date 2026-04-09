@@ -4,9 +4,9 @@ import pytz
 
 from app import db
 from app.market_data import MarketDataProvider
-from .models import Asset, Transaction
+from .schemas.models import Asset, Transaction
 from .portfolio_engine import PortfolioEngine
-from .schemas import ChartDataPoint, ChartResponse, ChartTransactionPoint
+from .schemas.dto.charts import ChartDataPoint, ChartResponse, ChartTransactionPoint
 
 service = PortfolioEngine()
 
@@ -14,7 +14,7 @@ service = PortfolioEngine()
 @app.route('/dashboard')
 def dashboard():
     assets = Asset.query.all()
-    portfolio_data, totals = service.get_portfolio_summary(assets)
+    portfolio_data, totals = service.build_portfolio(assets)
 
     return render_template(
         'dashboard.html', 

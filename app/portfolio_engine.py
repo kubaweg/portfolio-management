@@ -1,132 +1,229 @@
-from typing import List, Tuple, Dict, Any
-from .schemas import PLN, CurrencyForeign, PercentTotal, PercentAnnual, AssetQuantity, FXRate, CurrentInstrumentData, AssetData, PortfolioData, PortfolioTotals, TransactionData
-from .models import Asset
-from .market_data import MarketDataProvider
-from .calculators import TransactionProcessor, calculate_annualized_return
+from typing import List, Tuple
+from app.schemas.models import Asset
+from app.schemas.mappers import TransactionMapper
+from app.schemas.groupers import group_by_ticker
+from app.position_builder import PositionBuilder
+
+from app.schemas.domain.types import (
+    PLN,
+    CurrencyForeign,
+    FXRate,
+    PercentTotal,
+    PercentAnnual,
+    AssetQuantity,
+)
+from app.schemas.dto.portfolio import AssetData, PortfolioTotals, TransactionData
+from app.market_data import MarketDataProvider
+
 
 class PortfolioEngine:
-    """
-    Główny silnik portfela. 
-    Łączy dane z bazy, ceny rynkowe i kalkulatory w spójny raport.
-    """
-    
-    CONVERSION_FEE = 0.005  # 0.5% prowizji na kursie (reguła biznesowa)
+
+    CONVERSION_FEE = 0.005
     SPREAD_PCT = 0.00135
 
-    def get_portfolio_summary(self, assets: List[Any]) -> Tuple[PortfolioData, PortfolioTotals]:
-        """Buduje kompletny zestaw danych do Dashboardu."""
+    # ---------------------------------------------------------
+    # PUBLIC API
+    # ---------------------------------------------------------
+    def build_portfolio(self, assets: List[Asset]) -> Tuple[List[AssetData], PortfolioTotals]:
+        domain_map = self._map_sqlalchemy_to_domain(assets)
+        grouped = group_by_ticker(self._flatten(domain_map))
 
-        portfolio_data = PortfolioData([])
-        all_transactions = []
+        asset_data_list: List[AssetData] = []
+        totals = self._init_totals()
+        pb = PositionBuilder()
 
-        totals = PortfolioTotals(
-            invested = PLN(0.0),
-            current_value =  PLN(0.0),
-            interest = PLN(0.0),
-            profit = PLN(0.0),
-            roi = PercentTotal(0.0),
-            annualized_roi = PercentAnnual(0.0),
-            allocation = {},
-            instrument_data = []
+        for tt in grouped:
+            asset = self._find_asset(assets, tt.ticker)
+            prices = self._get_market_prices(asset)
+
+            pb_result = pb.build(tt, current_price=prices["asset_price"])
+
+            asset_data, metrics = self._build_asset_data(
+                asset=asset,
+                tt=tt,
+                pb_result=pb_result,
+                prices=prices,
+            )
+            asset_data_list.append(asset_data)
+
+            self._update_totals(totals, asset_data, metrics)
+
+        self._finalize_totals(totals)
+        return asset_data_list, totals
+
+    # ---------------------------------------------------------
+    # STEP 1 — Mapowanie SQLAlchemy → domena
+    # ---------------------------------------------------------
+    def _map_sqlalchemy_to_domain(self, assets: List[Asset]):
+        domain_map = {}
+        for asset in assets:
+            domain_map[asset.ticker] = TransactionMapper.map_many(asset.transactions)
+        return domain_map
+
+    def _flatten(self, domain_map):
+        all_txs = []
+        for txs in domain_map.values():
+            all_txs.extend(txs)
+        return all_txs
+
+    # ---------------------------------------------------------
+    # STEP 2 — Ceny rynkowe i FX
+    # ---------------------------------------------------------
+    def _get_market_prices(self, asset: Asset):
+        raw_price = MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type)
+        asset_price = CurrencyForeign(
+            raw_price * (1.0 if asset.asset_type != "ETF" else 1 - self.SPREAD_PCT)
         )
 
-        for asset in assets:
-            
-            # 1. Wyciągamy czystą historię (Calculators)
-            processor = TransactionProcessor()
-            stats = processor.process(asset.transactions)
-            
-            all_transactions.extend(asset.transactions)
+        fx_rate = FXRate(MarketDataProvider.get_fx_rate(asset.currency))
+        effective_fx = FXRate(
+            fx_rate * (1 - self.CONVERSION_FEE) if asset.currency != "PLN" else 1.0
+        )
 
-            # 2. Pobieramy ceny (Market Data)
-            asset_price = CurrencyForeign(MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type)) * (1.0 if asset.asset_type != 'ETF' else 1 - self.SPREAD_PCT)
-            asset_dt = MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type)
+        return {
+            "asset_price": asset_price,
+            "asset_dt": MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type),
+            "fx_rate": fx_rate,
+            "fx_dt": MarketDataProvider.get_fx_time(asset.currency),
+            "effective_fx": effective_fx,
+        }
 
-            fx_rate = FXRate(MarketDataProvider.get_fx_rate(asset.currency))
-            fx_dt = MarketDataProvider.get_fx_time(asset.currency)
+    # ---------------------------------------------------------
+    # STEP 3 — AssetData + metryki do totals
+    # ---------------------------------------------------------
+    def _build_asset_data(self, asset, tt, pb_result, prices):
+        open_positions = pb_result.open_positions
+        total_qty = sum(op.quantity for op in open_positions)
 
-            # 3. Logika biznesowa (Przewalutowanie i Prowizje)
-            effective_fx = FXRate(fx_rate * (1 - self.CONVERSION_FEE) if asset.currency != 'PLN' else 1.0)
-            
-            # Wycena końcowa
-            market_value_pln = PLN((stats['qty'] * asset_price * effective_fx) + stats['capitalization'])
-            profit_pln = PLN((market_value_pln + stats['interest']) - stats['cost_pln'])
-            
-            # Prosta stopa zwrotu
-            roi = PercentTotal((profit_pln / stats['cost_pln']) if stats['cost_pln'] > 0 else 0)
-            
-            # Roczna stopa zwrotu (XIRR)
-            ann_roi = PercentAnnual(calculate_annualized_return(asset.transactions, market_value_pln, stats['qty']))
+        # 1) Koszt historyczny w PLN (po historycznym FX z transakcji)
+        historical_cost_pln = sum(
+            op.cost * op.fx_rate for op in open_positions
+        )
 
-            enriched_transactions = []
-            for t in asset.transactions:
+        # 2) Wartość bieżąca w PLN (po bieżącym FX)
+        current_value_pln = sum(
+            op.current_value * prices["effective_fx"] for op in open_positions
+        )
 
-                # Obliczamy zwrot tylko dla kupna (ROI dla sprzedaży jest mniej intuicyjne w tym widoku)
-                t_profit = PLN(0.0)
-                t_roi = PercentTotal(0.0)
+        # 3) Zysk zrealizowany w PLN (przeliczamy po bieżącym FX – uproszczenie)
+        realized_pln = pb_result.realized_profit * prices["effective_fx"]
 
-                if t.transaction_type == 'KUPNO':
-                    # (Cena rynkowa teraz - Cena kupna wtedy) / Cena kupna wtedy
-                    t_profit = PLN(t_profit + t.quantity*(asset_price*effective_fx - t.price_per_unit*t.exchange_rate))
+        # 4) Zysk niezrealizowany w PLN
+        unrealized_pln = current_value_pln - historical_cost_pln
 
-                elif t.transaction_type == 'ODSETKI':
-                    # t_profit = PLN(t_profit + (t.price_per_unit*t.exchange_rate))
-                    t_profit = PLN(t_profit + 0.0)
+        # 5) ROI bezwzględne
+        roi = PercentTotal(
+            (realized_pln + unrealized_pln) / historical_cost_pln
+            if historical_cost_pln > 0
+            else 0.0
+        )
 
-                t_roi = PercentTotal(t_profit / (t.quantity*t.price_per_unit*t.exchange_rate))
-                
-                # Tworzymy słownik lub prosty obiekt, który przekażemy do szablonu
-                enriched_transactions.append(TransactionData(
-                    date = t.date,
-                    transaction_type = t.transaction_type,
-                    quantity = t.quantity,
-                    price_per_unit = t.price_per_unit,
-                    exchange_rate = t.exchange_rate,
-                    roi = t_roi
-                ))
+        # 6) Annualized ROI – na razie 0.0
+        ann_roi = PercentAnnual(0.0)
 
-            # 4. Pakowanie danych pojedynczego aktywa
-            portfolio_data.append(AssetData(
-                asset = asset,
-                quantity = AssetQuantity(stats['qty']),
-                avg_price_currency = CurrencyForeign((stats['cost_curr'] / stats['qty']) if stats['qty'] > 0 else 0),
-                avg_price_pln = PLN((stats['cost_pln'] / stats['qty']) if stats['qty'] > 0 else 0),
-                current_price = CurrencyForeign(asset_price),
-                current_price_datetime = asset_dt,
-                current_value_pln = PLN(market_value_pln),
-                profit_loss_pln = PLN(profit_pln),
-                fx_rate = FXRate(fx_rate),
-                fx_effective_rate = FXRate(effective_fx),
-                fx_datetime = fx_dt,
-                roi_percent = PercentTotal(roi),
-                annualized_roi = PercentAnnual(0.0) if roi == 0.0 else PercentAnnual(ann_roi),
-                transactions = enriched_transactions
-            ))
+        # 7) Średnie ceny
+        total_cost_currency = sum(op.cost for op in open_positions)
+        avg_price_currency = (
+            total_cost_currency / total_qty if total_qty > 0 else 0.0
+        )
+        avg_price_pln = (
+            historical_cost_pln / total_qty if total_qty > 0 else 0.0
+        )
 
-            # 5. Agregacja do sum całkowitych
-            # print(asset.ticker, market_value_pln, totals.current_value)
-            self._update_totals(totals, asset, market_value_pln, stats)
+        # 8) DTO transakcji
+        enriched_transactions = self._build_transaction_dto(tt.transactions)
 
-        # Końcowe obliczenia dla całego portfela
-        totals.profit = PLN((totals.current_value + totals.interest) - totals.invested)
-        totals.roi = PercentTotal((totals.profit / totals.invested) if totals.invested > 0 else 0)
-        
-        totals.annualized_roi = PercentAnnual(calculate_annualized_return(all_transactions, totals.current_value, 1.0))
+        asset_data = AssetData(
+            asset=asset,
+            quantity=AssetQuantity(total_qty),
+            avg_price_currency=CurrencyForeign(avg_price_currency),
+            avg_price_pln=PLN(avg_price_pln),
+            current_price=prices["asset_price"],
+            current_price_datetime=prices["asset_dt"],
+            current_value_pln=PLN(current_value_pln),
+            profit_loss_pln=PLN(realized_pln + unrealized_pln),
+            fx_rate=prices["fx_rate"],
+            fx_effective_rate=prices["effective_fx"],
+            fx_datetime=prices["fx_dt"],
+            roi_percent=roi,
+            annualized_roi=ann_roi,
+            transactions=enriched_transactions,
+            open_positions=pb_result.open_positions,
+            closed_positions=pb_result.closed_positions,
+            realized_profit_pln=realized_pln,
+            unrealized_profit_pln=unrealized_pln,
+        )
 
-        return portfolio_data, totals
+        metrics = {
+            "historical_cost_pln": historical_cost_pln,
+            "current_value_pln": current_value_pln,
+            "realized_pln": realized_pln,
+            "unrealized_pln": unrealized_pln,
+        }
 
-    def _update_totals(self, totals: PortfolioTotals, asset: Asset, market_value_pln: PLN, stats: Dict[str, float]):
-        """Pomocnicza metoda do aktualizacji sumarycznych statystyk."""
-        totals.invested = PLN(totals.invested + stats['cost_pln'])
-        totals.current_value = PLN(totals.current_value + market_value_pln)
-        totals.interest = PLN(totals.interest + stats['interest'])
+        return asset_data, metrics
 
-        if stats['qty'] > 0:
-            a_type = asset.asset_type or 'Inne'
-            totals.allocation[a_type] = PLN(totals.allocation.get(a_type, 0) + market_value_pln)
-            
-            totals.instrument_data.append(CurrentInstrumentData({
-                'label': asset.ticker,
-                'value': market_value_pln,
-                'type': a_type
-            }))
+    def _build_transaction_dto(self, txs):
+        dto = []
+        for tx in txs:
+            dto.append(
+                TransactionData(
+                    date=tx.date,
+                    transaction_type=tx.type.value,
+                    quantity=getattr(tx, "quantity", 0.0),
+                    price_per_unit=getattr(tx, "price", 0.0),
+                    exchange_rate=getattr(tx, "fx_rate", 1.0),
+                    roi=PercentTotal(0.0),  # na razie 0.0
+                )
+            )
+        return dto
+
+    # ---------------------------------------------------------
+    # STEP 4 — Totals
+    # ---------------------------------------------------------
+    def _init_totals(self):
+        return PortfolioTotals(
+            invested=PLN(0.0),
+            current_value=PLN(0.0),
+            interest=PLN(0.0),
+            profit=PLN(0.0),
+            roi=PercentTotal(0.0),
+            annualized_roi=PercentAnnual(0.0),
+            allocation={},
+            instrument_data=[],
+        )
+
+    def _update_totals(self, totals, asset_data: AssetData, metrics: dict):
+        invested_pln = PLN(metrics["historical_cost_pln"])
+        current_value_pln = PLN(metrics["current_value_pln"])
+        realized_pln = PLN(metrics["realized_pln"])
+
+        totals.invested += invested_pln
+        totals.current_value += current_value_pln
+        totals.interest += realized_pln  # tu traktujemy realized jako „interest/zysk zrealizowany”
+
+        totals.instrument_data.append(
+            {
+                "label": asset_data.asset.ticker,
+                "value": current_value_pln,
+                "type": asset_data.asset.asset_type,
+            }
+        )
+
+        totals.allocation[asset_data.asset.asset_type] = (
+            totals.allocation.get(asset_data.asset.asset_type, PLN(0.0))
+            + current_value_pln
+        )
+
+    def _finalize_totals(self, totals):
+        totals.profit = PLN(totals.current_value + totals.interest - totals.invested)
+        totals.roi = PercentTotal(
+            totals.profit / totals.invested if totals.invested > 0 else 0.0
+        )
+        totals.annualized_roi = PercentAnnual(0.0)  # na razie 0.0
+
+    # ---------------------------------------------------------
+    # HELPERS
+    # ---------------------------------------------------------
+    def _find_asset(self, assets, ticker):
+        return next(a for a in assets if a.ticker == ticker)

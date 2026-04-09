@@ -11,7 +11,7 @@ from app import create_app, db
 app = create_app()
 
 
-from app.models import Asset, Transaction
+from app.schemas.models import Asset, Transaction
 
 def finalize_bond_import(input_file):
     print(f"Rozpoczynam inteligentny import z pliku: {input_file}...")

@@ -1,0 +1,49 @@
+# Struktura katalogów projektu portfolio-management (aktualizowana)
+
+```
+portfolio-management/
+├── .python-version
+├── HistoriaDyspozycji (1).xls
+├── HistoriaDyspozycji.xls
+├── import_final.py
+├── main.py
+├── pyproject.toml
+├── README.md
+├── run.py
+├── seed.py
+├── test_importu.py
+├── uv.lock
+├── wynik_testu.xlsx
+├── app/
+│   ├── __init__.py
+│   ├── calculators.py
+│   ├── market_data.py
+│   ├── portfolio_engine.py
+│   ├── routes.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── groupers.py
+│   │   ├── mappers.py
+│   │   ├── models.py
+│   │   ├── domain/
+│   │   │   ├── __init__.py
+│   │   │   ├── positions.py
+│   │   │   ├── transactions.py
+│   │   │   └── types.py
+│   │   └── dto/
+│   │       ├── __init__.py
+│   │       ├── charts.py
+│   │       └── portfolio.py
+│   └── templates/
+│       ├── add_asset.html
+│       ├── add_transaction.html
+│       ├── analysis.html
+│       ├── base.html
+│       ├── dashboard.html
+│       └── list_transactions.html
+└── instance/
+    └── portfolio.db
+```
+
+Data z dnia: $(date)
+
