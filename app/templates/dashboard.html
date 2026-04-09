@@ -192,14 +192,12 @@
     });
 </script>
 
-
-
 <div class="alert alert-info py-2 shadow-sm mb-4" style="font-size: 0.85rem;">
     <i class="bi bi-info-circle"></i> <strong>Nota:</strong> Wartość obecna uwzględnia koszty przewalutowania (spread
     0.5%) oraz narosłe odsetki z obligacji.
 </div>
 
-<div class="card shadow">
+<div class="card shadow" style="padding: 20px">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="mb-0">Twoje Aktywa</h4>
@@ -213,7 +211,6 @@
                         <th class="text-end">Ilość</th>
                         <th class="text-end">Wartość zakupu</th>
                         <th class="text-end">Wartość rynkowa</th>
-                        <th class="text-end">Aktualność danych</th>
                         <th class="text-end">Wynik (PLN)</th>
                     </tr>
                 </thead>
@@ -275,15 +272,6 @@
                                 item.asset.currency }}
                             </small>
                             {% endif %}
-
-                        </td>
-                        <td class="text-end font-monospace">
-                            {% if item.asset.currency != 'PLN' %}
-                            <small class="text-muted" style="font-size: 0.75rem;">Kurs walutowy: {{ item.fx_datetime
-                                }}</small><br>
-                            {% endif %}
-                            <small class="text-muted" style="font-size: 0.75rem;">Kurs aktywa: {{
-                                item.current_price_datetime }}</small>
 
                         </td>
                         <td
@@ -349,6 +337,57 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<hr style="margin: 20px 0; border: none;">
+
+<div class="card shadow" style="padding: 20px">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0" data-bs-toggle="collapse" data-bs-target="#collapse-table" style="cursor: pointer;">
+                Aktualność danych
+            </h4>
+
+        </div>
+
+        <div class="collapse" id="collapse-table">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ticker</th>
+                            <th class="text-end">Kurs walutowy</th>
+                            <th class="text-end">Kurs instrumentu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in portfolio %}
+                        <tr data-bs-toggle="collapse" data-bs-target="#collapse-{{ item.asset.id }}"
+                            style="cursor: pointer;">
+                            <td>
+                                <strong>{{ item.asset.ticker }}</strong><br>
+                                <small class="text-muted">{{ item.asset.name }}</small>
+                            </td>
+
+                            <td class="text-end font-monospace">
+                                {% if item.asset.currency != 'PLN' %}
+                                {{ item.fx_datetime }}
+
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end font-monospace">
+                                {{ item.current_price_datetime }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

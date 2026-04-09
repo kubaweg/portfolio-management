@@ -25,9 +25,9 @@
                         <label class="form-label">Typ operacji</label>
                         <select name="type" class="form-select">
                             <option value="KUPNO">Kupno</option>
-                            <option value="SPRZEDAZ">Sprzedaż</option>
-                            <option value="KAPITALIZACJA">KAPITALIZACJA (np. odsetki EDO)</option>
-                            <option value="ODSETKI">ODSETKI (np. wypłata COI / Dywidenda)</option>
+                            <option value="SPRZEDAŻ">Sprzedaż</option>
+                            <option value="KAPITALIZACJA">Kapitalizacja (np. odsetki EDO)</option>
+                            <option value="ODSETKI">Odsetki (np. wypłata COI / Dywidenda)</option>
                         </select>
                     </div>
 
@@ -46,9 +46,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Kurs walutowy (1 <span class="currency_name">waluty</span> = ? PLN)</label>
+                        <label class="form-label">Kurs walutowy (1 <span class="currency_name">waluty</span> = ?
+                            PLN)</label>
                         <div class="input-group">
-                            <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate" class="form-control" value="1.0000" required>
+                            <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate"
+                                class="form-control" value="1.0000" required>
                             <span class="input-group-text">PLN</span>
                         </div>
                     </div>
@@ -71,14 +73,14 @@
     const exchangeRateInput = document.getElementById('exchange_rate');
     const currencyNameSpans = document.querySelectorAll('.currency_name');
 
-    assetSelect.addEventListener('change', function() {
+    assetSelect.addEventListener('change', function () {
         // Pobierz wybraną opcję
         const selectedOption = this.options[this.selectedIndex];
         const currency = selectedOption.getAttribute('data-currency');
-        
+
         // Zaktualizuj etykietę ceny
         currencyLabel.textContent = currency;
-        
+
         // Zaktualizuj pomocnicze teksty
         currencyNameSpans.forEach(span => span.textContent = currency);
 
