@@ -2,7 +2,7 @@ from typing import List, Tuple, Dict, Any
 from .schemas import PLN, CurrencyForeign, PercentTotal, PercentAnnual, AssetQuantity, FXRate, CurrentInstrumentData, AssetData, PortfolioData, PortfolioTotals, TransactionData
 from .models import Asset
 from .market_data import MarketDataProvider
-from .calculators import process_transaction_history, calculate_annualized_return
+from .calculators import TransactionProcessor, calculate_annualized_return
 
 class PortfolioEngine:
     """
@@ -33,9 +33,8 @@ class PortfolioEngine:
         for asset in assets:
             
             # 1. Wyciągamy czystą historię (Calculators)
-            stats = process_transaction_history(asset.transactions)
-
-            if asset.ticker == 'OTS0326': print(stats)
+            processor = TransactionProcessor()
+            stats = processor.process(asset.transactions)
             
             all_transactions.extend(asset.transactions)
 
