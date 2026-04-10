@@ -310,8 +310,8 @@
                                             <td class="text-end">{{ (op.current_value *
                                                 item.fx_effective_rate)|format_pln }}</td>
                                             <td
-                                                class="text-end {{ 'text-success' if op.unrealized_profit > 0 else 'text-danger' }}">
-                                                {{ (op.unrealized_profit * item.fx_effective_rate)|format_pln }}
+                                                class="text-end {{ 'text-success' if op.unrealized_profit_pln > 0 else 'text-danger' }}">
+                                                {{ op.unrealized_profit_pln|format_pln }}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -340,8 +340,8 @@
                                             <td class="text-end">{{ cp.cost|format_pln }}</td>
                                             <td class="text-end">{{ cp.proceeds|format_pln }}</td>
                                             <td
-                                                class="text-end {{ 'text-success' if cp.realized_profit > 0 else 'text-danger' }}">
-                                                {{ cp.realized_profit|format_pln }}
+                                                class="text-end {{ 'text-success' if cp.realized_profit_pln > 0 else 'text-danger' }}">
+                                                {{ cp.realized_profit_pln|format_pln }}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -355,6 +355,8 @@
                                 <h6 class="fw-bold mt-4">Podsumowanie</h6>
                                 <ul class="small">
                                     <li>Zysk zrealizowany: <strong>{{ item.realized_profit_pln|format_pln }}</strong>
+                                    </li>
+                                    <li>Odsetki: <strong>{{ item.interest_profit_pln|format_pln }}</strong>
                                     </li>
                                     <li>Zysk niezrealizowany: <strong>{{ item.unrealized_profit_pln|format_pln
                                             }}</strong></li>

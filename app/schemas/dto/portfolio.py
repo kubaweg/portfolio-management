@@ -47,3 +47,4 @@ class AssetData(BaseModel):
     closed_positions: list[ClosedPosition]
     realized_profit_pln: float
     unrealized_profit_pln: float
+    interest_profit_pln: float

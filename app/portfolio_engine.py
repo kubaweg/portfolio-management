@@ -171,6 +171,7 @@ class PortfolioEngine:
             closed_positions=closed_positions,
             realized_profit_pln=realized_pln,
             unrealized_profit_pln=unrealized_pln,
+            interest_profit_pln=pb_result.interest_profit,
         )
 
         metrics = {
