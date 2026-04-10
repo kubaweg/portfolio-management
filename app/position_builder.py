@@ -17,11 +17,14 @@ class PositionBuilderResult:
         closed_positions: List[ClosedPosition],
         realized_profit: float,
         unrealized_profit: float,
+        interest_profit: float = 0.0
+
     ):
         self.open_positions = open_positions
         self.closed_positions = closed_positions
         self.realized_profit = realized_profit
         self.unrealized_profit = unrealized_profit
+        self.interest_profit = interest_profit
 
 
 class PositionBuilder:
@@ -42,6 +45,7 @@ class PositionBuilder:
 
         realized_profit = 0.0
         unrealized_profit = 0.0
+        interest_profit = 0.0
 
         for tx in tt.transactions:
             if isinstance(tx, BuyTransaction):
@@ -57,19 +61,20 @@ class PositionBuilder:
 
             elif isinstance(tx, InterestTransaction):
                 # Odsetki traktujemy jako zysk zrealizowany (cashflow)
-                realized_profit += tx.amount
+                interest_profit += tx.amount
 
         # Po przejściu wszystkich transakcji budujemy pozycje otwarte
         total_unrealized, open_positions = self._build_open_positions(
             tt.ticker, buy_lots, current_price
         )
-        unrealized_profit += total_unrealized
+        unrealized_profit += (total_unrealized + interest_profit)
 
         return PositionBuilderResult(
             open_positions=open_positions,
             closed_positions=closed_positions,
             realized_profit=realized_profit,
             unrealized_profit=unrealized_profit,
+            interest_profit=interest_profit
         )
 
     # --- Metody pomocnicze ---
@@ -93,6 +98,7 @@ class PositionBuilder:
                 "fx_rate": tx.fx_rate,
             }
         )
+        
 
     def _handle_sell(
         self, tx: SellTransaction, buy_lots: List[dict]
@@ -111,6 +117,7 @@ class PositionBuilder:
             lot = buy_lots[0]
             lot_qty = lot["qty"]
             lot_price = lot["price"]
+            lot_fx_rate = lot["fx_rate"]
 
             matched_qty = min(remaining_qty, lot_qty)
 
@@ -126,7 +133,10 @@ class PositionBuilder:
                     quantity=matched_qty,
                     cost=cost,
                     proceeds=proceeds,
-                    realized_profit=profit,
+                    fx_buy=lot_fx_rate,
+                    fx_sell=tx.fx_rate,
+                    realized_profit=profit, # w walucie obcej
+                    realized_profit_pln=0.0 # na razie
                 )
             )
 
@@ -164,7 +174,8 @@ class PositionBuilder:
                     cost=cost,
                     fx_rate=lot['fx_rate'],
                     current_value=current_value,
-                    unrealized_profit=unrealized,
+                    unrealized_profit=unrealized, # w walucie instrumentu
+                    unrealized_profit_pln=0.0 # na razie
                 )
             )
 

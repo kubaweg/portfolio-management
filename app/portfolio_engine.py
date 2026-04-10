@@ -2,6 +2,7 @@ from typing import List, Tuple
 from app.schemas.models import Asset
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
+from app.schemas.fx_calculator import FXCalculator
 from app.position_builder import PositionBuilder
 
 from app.schemas.domain.types import (
@@ -92,7 +93,21 @@ class PortfolioEngine:
     # STEP 3 — AssetData + metryki do totals
     # ---------------------------------------------------------
     def _build_asset_data(self, asset, tt, pb_result, prices):
+
         open_positions = pb_result.open_positions
+        closed_positions = pb_result.closed_positions
+
+        for op in open_positions:
+            op.unrealized_profit_pln = FXCalculator.unrealized_pln(
+                op.cost, op.fx_rate, op.current_value, prices["effective_fx"]
+            )
+            
+        for cp in closed_positions:
+            cp.realized_profit_pln = FXCalculator.realized_pln(
+                cp.cost, cp.fx_buy, cp.proceeds, cp.fx_sell
+            )
+
+
         total_qty = sum(op.quantity for op in open_positions)
 
         # 1) Koszt historyczny w PLN (po historycznym FX z transakcji)
@@ -106,10 +121,14 @@ class PortfolioEngine:
         )
 
         # 3) Zysk zrealizowany w PLN (przeliczamy po bieżącym FX – uproszczenie)
-        realized_pln = pb_result.realized_profit * prices["effective_fx"]
+        realized_pln = sum(
+            cp.realized_profit_pln for cp in closed_positions
+        ) + pb_result.interest_profit
 
         # 4) Zysk niezrealizowany w PLN
-        unrealized_pln = current_value_pln - historical_cost_pln
+        unrealized_pln = sum(
+            op.unrealized_profit_pln for op in open_positions
+        )
 
         # 5) ROI bezwzględne
         roi = PercentTotal(
@@ -148,8 +167,8 @@ class PortfolioEngine:
             roi_percent=roi,
             annualized_roi=ann_roi,
             transactions=enriched_transactions,
-            open_positions=pb_result.open_positions,
-            closed_positions=pb_result.closed_positions,
+            open_positions=open_positions,
+            closed_positions=closed_positions,
             realized_profit_pln=realized_pln,
             unrealized_profit_pln=unrealized_pln,
         )

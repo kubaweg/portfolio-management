@@ -26,6 +26,7 @@ class TransactionData(BaseModel):
     roi: PercentTotal
 
 class AssetData(BaseModel):
+    
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     asset: Asset
