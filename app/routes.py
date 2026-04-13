@@ -84,7 +84,7 @@ def add_asset():
 def analysis():
     """Główny widok zakładki analizy."""
     # Filtrujemy bazę, żeby wyciągnąć tylko ETF-y
-    assets = Asset.query.filter_by(asset_type='ETF').with_entities(Asset.ticker).distinct().all()
+    assets = Asset.query.filter(Asset.asset_type.in_(['ETF', 'ETC'])).with_entities(Asset.ticker).distinct().all()
     tickers = [a.ticker for a in assets]
     return render_template('analysis.html', tickers=tickers)
 
@@ -110,7 +110,7 @@ def get_asset_history(ticker):
         # Wykorzystujemy nasz silnik do przeliczenia aktualnych statystyk tego assetu
         # Potrzebujemy listy [asset], bo silnik przyjmuje listę
         engine = PortfolioEngine()
-        portfolio_data, _ = engine.get_portfolio_summary([asset])
+        portfolio_data, _ = engine.build_portfolio([asset])
         
         # Pobieramy dane przeliczone dla tego konkretnego aktywa
         if portfolio_data:
@@ -122,10 +122,10 @@ def get_asset_history(ticker):
             # Mapujemy transakcje na punkty wykresu
             for t in asset.transactions:
                 transaction_points.append(ChartTransactionPoint(
-                    date=t.date.strftime('%Y-%m-%d'),
-                    type=t.transaction_type, # 'KUPNO', 'SPRZEDAZ', itp.
+                    date=t.timestamp.strftime('%Y-%m-%d'),
+                    type=t.type, # 'BUY', 'SELL', itp.
                     quantity=float(t.quantity),
-                    price=float(t.price_per_unit)
+                    price=float(t.price)
                 ))
 
     # 3. Pobieramy dane rynkowe (Yahoo Finance)

@@ -122,7 +122,7 @@
                 const tr = transMap.get(item.date);
                 if (tr) {
                     markerIndices.push(idx);
-                    markerColors.push(tr.type === "KUPNO" ? "#198754" : "#dc3545");
+                    markerColors.push(tr.type === "BUY" ? "#198754" : "#dc3545");
                 }
 
                 return { x: ts, y: [o, h, l, c] };
@@ -272,7 +272,7 @@
                     animations: { enabled: false }
                 },
                 series: [{ name: 'Wolumen', data: volumeData }],
-                xaxis: { type: 'datetime', labels: { show: true } },
+                xaxis: { type: 'datetime', labels: { show: true, format: 'yyyy-MM-dd' } },
                 yaxis: {
                     opposite: true,
                     labels: {
