@@ -11,7 +11,9 @@ from app import create_app, db
 app = create_app()
 
 
-from app.schemas.models import Asset, Transaction
+from app.schemas.asset import Asset
+from app.schemas.transaction import Transaction
+from app.schemas.domain.transactions import TransactionType
 
 def finalize_bond_import(input_file):
     print(f"Rozpoczynam inteligentny import z pliku: {input_file}...")
@@ -42,6 +44,7 @@ def finalize_bond_import(input_file):
             asset = Asset.query.filter_by(ticker=ticker).first()
             if not asset:
                 skipped_no_asset_count += 1
+                print(row)
                 continue
 
             # --- Przetwarzanie daty ---
@@ -62,14 +65,13 @@ def finalize_bond_import(input_file):
 
             # --- Mapowanie typów ---
             if "zakup papierów" in dyspozycja:
-                typ, ilosc, cena = 'KUPNO', kwota / 100.0, 100.0
+                typ, ilosc, cena = TransactionType.BUY, kwota / float(asset.nominal_value), float(asset.nominal_value)
             elif "naliczenie wykupu" in dyspozycja:
-                # Wykup kapitału: kwota operacji to ilosc sztuk * 100 PLN
+                # Wykup kapitału: kwota operacji to ilosc sztuk * asset.nominal_value
                 # Traktujemy to jako SPRZEDAŻ, aby zdjąć jednostki ze stanu
-                typ, ilosc, cena = 'SPRZEDAŻ', kwota / 100.0, 100.0
+                typ, ilosc, cena = TransactionType.SELL, kwota / float(asset.nominal_value), float(asset.nominal_value)
             elif "naliczenie odsetek" in dyspozycja or "wykup - odsetki" in dyspozycja:
-                ilosc, cena = 1.0, kwota
-                typ = 'KAPITALIZACJA' if (ticker.startswith('EDO') or ticker.startswith('TOS')) else 'ODSETKI'
+                typ, ilosc, cena =TransactionType.INTEREST, 1.0, kwota
             else:
                 continue
 
@@ -77,10 +79,10 @@ def finalize_bond_import(input_file):
             # Szukamy czy identyczna transakcja już jest w bazie
             existing = Transaction.query.filter_by(
                 asset_id=asset.id,
-                transaction_type=typ,
-                date=transaction_date,
+                type=typ,
+                timestamp=transaction_date,
                 quantity=ilosc,
-                price_per_unit=cena
+                price=cena
             ).first()
 
             if existing:
@@ -93,11 +95,14 @@ def finalize_bond_import(input_file):
             # Jeśli nie ma duplikatu - dodajemy
             new_trans = Transaction(
                 asset_id=asset.id,
-                transaction_type=typ,
+                type=typ,
                 quantity=ilosc,
-                price_per_unit=cena,
-                exchange_rate=1.0,
-                date=transaction_date
+                price=cena,
+                fx_rate=1.0,
+                fx_source_currency='PLN',
+                fx_target_currency='PLN',
+                timestamp=transaction_date,
+                created_at=datetime.now()
             )
             db.session.add(new_trans)
             added_count += 1
@@ -112,4 +117,4 @@ def finalize_bond_import(input_file):
         print("-" * 30)
 
 if __name__ == "__main__":
-    finalize_bond_import('HistoriaDyspozycji (1).xls')
+    finalize_bond_import('obligacjeskarbowe/HistoriaDyspozycji.xls')

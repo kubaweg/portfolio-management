@@ -15,4 +15,5 @@ dependencies = [
     "pyxirr>=0.10.8",
     "xlrd>=2.0.2",
     "yfinance>=1.2.0",
+    "pydantic",
 ]

@@ -13,8 +13,8 @@
     <div class="col-md-3">
         <div class="card bg-light shadow-sm">
             <div class="card-body">
-                <h6 class="card-title text-muted">Wartość aktywów (bez odsetek)</h6>
-                <h3>{{ total_current|format_pln }} PLN</h3>
+                <h6 class="card-title text-muted">Wartość aktywów</h6>
+                <h3>{{ (total_invested + total_profit )|format_pln }} PLN</h3>
             </div>
         </div>
     </div>
@@ -101,7 +101,7 @@
             labels: Object.keys(allocationData),
             datasets: [{
                 data: Object.values(allocationData),
-                backgroundColor: ['#0d6efd', '#198754'], // Niebieski (ETF), Zielony (Obligacje)
+                backgroundColor: ['#198754', '#ffc107', '#0d6efd',], // Niebieski (ETF), Zielony (Obligacje), Złoty (ETC)
                 borderWidth: 1
             }]
         },
@@ -137,7 +137,8 @@
     // Dynamiczne generowanie odcieni
     const generateColors = (data) => {
         const blueCount = data.filter(i => i.type === 'ETF').length;
-        const greenCount = data.filter(i => i.type === 'Obligacja').length;
+        const goldCount = data.filter(i => i.type === 'ETC').length;
+        const greenCount = data.filter(i => i.type === 'BOND').length;
         const colors = [];
         let bIdx = 0, gIdx = 0;
 
@@ -145,9 +146,14 @@
             if (item.type === 'ETF') {
                 colors.push(`hsl(210, 80%, ${70 - (bIdx / (blueCount || 1) * 40)}%)`);
                 bIdx++;
-            } else {
+            } else if (item.type === 'ETC') {
+                colors.push(`hsl(50, 90%, ${65 - (gIdx / (goldCount || 1) * 35)}%)`);
+                gIdx++;
+            } else if (item.type === 'BOND') {
                 colors.push(`hsl(140, 60%, ${65 - (gIdx / (greenCount || 1) * 35)}%)`);
                 gIdx++;
+            } else {
+                colors.push('gray'); // Domyślny kolor dla nieznanych typów
             }
         });
         return colors;
@@ -276,10 +282,10 @@
                         </td>
                         <td
                             class="text-end font-monospace {{ 'text-success' if item.profit_loss_pln > 0 else ('text-danger' if item.profit_loss_pln < 0 else 'text-dark') }}">
-                            <small class="text-muted" style="font-size: 0.75rem;">Wynik całkowity:</small><br>
+                            <small class="text-muted" style="font-size: 0.75rem;">Wynik całkowity</small><br>
                             <strong>{{ "+" if item.profit_loss_pln > 0 else "" }}{{ item.profit_loss_pln|format_pln
                                 }}</strong><br>
-                            <small class="text-muted" style="font-size: 0.75rem;">Zwrot z otwartych pozycji:</small><br>
+                            <small class="text-muted" style="font-size: 0.75rem;">Zwrot %</small><br>
                             <small>Całkowity zwrot: {{ item.roi_percent|format_pct }}</small><br>
                             <small title="Stopa zwrotu w skali roku (CAGR)">W skali roku: {{
                                 item.annualized_roi|format_pct }}</small>
@@ -310,7 +316,7 @@
                                             <td class="text-end">{{ (op.current_value *
                                                 item.fx_effective_rate)|format_pln }}</td>
                                             <td
-                                                class="text-end {{ 'text-success' if op.unrealized_profit_pln > 0 else 'text-danger' }}">
+                                                class="text-end {{ 'text-success' if op.unrealized_profit_pln > 0 else ('text-danger' if op.unrealized_profit_pln < 0 else 'text-dark') }}">
                                                 {{ op.unrealized_profit_pln|format_pln }}
                                             </td>
                                         </tr>
@@ -340,7 +346,7 @@
                                             <td class="text-end">{{ cp.cost|format_pln }}</td>
                                             <td class="text-end">{{ cp.proceeds|format_pln }}</td>
                                             <td
-                                                class="text-end {{ 'text-success' if cp.realized_profit_pln > 0 else 'text-danger' }}">
+                                                class="text-end {{ 'text-success' if cp.realized_profit_pln > 0 else ('text-danger' if cp.realized_profit_pln < 0 else 'text-dark') }}">
                                                 {{ cp.realized_profit_pln|format_pln }}
                                             </td>
                                         </tr>
@@ -354,14 +360,14 @@
                                 <!-- PODSUMOWANIE -->
                                 <h6 class="fw-bold mt-4">Podsumowanie</h6>
                                 <ul class="small">
-                                    <li>Zysk zrealizowany: <strong>{{ item.realized_profit_pln|format_pln }}</strong>
-                                    </li>
-                                    <li>Odsetki: <strong>{{ item.interest_profit_pln|format_pln }}</strong>
-                                    </li>
-                                    <li>Zysk niezrealizowany: <strong>{{ item.unrealized_profit_pln|format_pln
-                                            }}</strong></li>
-                                    <li>Całkowity wynik: <strong>{{ item.profit_loss_pln|format_pln }}</strong></li>
+                                    Zysk zrealizowany: <strong class="text-end {{ 'text-success' if item.realized_profit_pln > 0 else ('text-danger' if item.realized_profit_pln < 0 else 'text-dark') }}">{{ item.realized_profit_pln|format_pln }} PLN</strong><br>
+                                    Odsetki: <strong class="text-end {{ 'text-success' if item.interest_profit_pln > 0 else ('text-danger' if item.interest_profit_pln < 0 else 'text-dark') }}">{{ item.interest_profit_pln|format_pln }} PLN</strong><br>
+                                    Zysk niezrealizowany: <strong class="text-end {{ 'text-success' if item.unrealized_profit_pln > 0 else ('text-danger' if item.unrealized_profit_pln < 0 else 'text-dark') }}" >{{ item.unrealized_profit_pln|format_pln }} PLN</strong>
                                 </ul>
+                                <h6 class="fw-bold mt-4">Całkowity wynik</h6>
+                                <h7 class="text-end {{ 'text-success' if item.profit_loss_pln > 0 else ('text-danger' if item.profit_loss_pln < 0 else 'text-dark') }}">
+                                    <strong>{{ item.profit_loss_pln |format_pln }} PLN</strong>
+                                </h7>
 
                             </div>
                         </td>

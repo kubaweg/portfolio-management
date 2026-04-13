@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
-from ..models import Asset
+from ..asset import Asset
 from ..domain.types import PLN, CurrencyForeign, PercentTotal, PercentAnnual, AssetQuantity, FXRate
 from ..domain.positions import OpenPosition, ClosedPosition
 

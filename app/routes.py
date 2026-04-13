@@ -4,7 +4,8 @@ import pytz
 
 from app import db
 from app.market_data import MarketDataProvider
-from .schemas.models import Asset, Transaction
+from .schemas.asset import Asset
+from .schemas.transaction import Transaction
 from .portfolio_engine import PortfolioEngine
 from .schemas.dto.charts import ChartDataPoint, ChartResponse, ChartTransactionPoint
 

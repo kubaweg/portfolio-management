@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from app.schemas.models import Asset
+from app.schemas.asset import Asset
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
 from app.schemas.fx_calculator import FXCalculator
@@ -20,7 +20,6 @@ from app.market_data import MarketDataProvider
 class PortfolioEngine:
 
     CONVERSION_FEE = 0.005
-    SPREAD_PCT = 0.00135
 
     # ---------------------------------------------------------
     # PUBLIC API
@@ -73,12 +72,12 @@ class PortfolioEngine:
     def _get_market_prices(self, asset: Asset):
         raw_price = MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type)
         asset_price = CurrencyForeign(
-            raw_price * (1.0 if asset.asset_type != "ETF" else 1 - self.SPREAD_PCT)
+            raw_price * (1.0 - float(asset.spread))
         )
 
         fx_rate = FXRate(MarketDataProvider.get_fx_rate(asset.currency))
         effective_fx = FXRate(
-            fx_rate * (1 - self.CONVERSION_FEE) if asset.currency != "PLN" else 1.0
+            fx_rate * (1.0 - self.CONVERSION_FEE) if asset.currency != "PLN" else 1.0
         )
 
         return {
@@ -121,24 +120,26 @@ class PortfolioEngine:
         )
 
         # 3) Zysk zrealizowany w PLN (przeliczamy po bieżącym FX – uproszczenie)
-        realized_pln = sum(
+        realized_profit_pln = sum(
             cp.realized_profit_pln for cp in closed_positions
-        ) + pb_result.interest_profit
+        )
+        
+        interest_profit_pln = pb_result.interest_profit
 
         # 4) Zysk niezrealizowany w PLN
-        unrealized_pln = sum(
+        unrealized_profit_pln = sum(
             op.unrealized_profit_pln for op in open_positions
         )
 
         # 5) ROI bezwzględne
-        roi = PercentTotal(
-            (realized_pln + unrealized_pln) / historical_cost_pln
+        roi_percent = PercentTotal(
+            (realized_profit_pln + interest_profit_pln + unrealized_profit_pln) / historical_cost_pln
             if historical_cost_pln > 0
             else 0.0
         )
 
         # 6) Annualized ROI – na razie 0.0
-        ann_roi = PercentAnnual(0.0)
+        annualized_roi = PercentAnnual(0.0)
 
         # 7) Średnie ceny
         total_cost_currency = sum(op.cost for op in open_positions)
@@ -160,25 +161,26 @@ class PortfolioEngine:
             current_price=prices["asset_price"],
             current_price_datetime=prices["asset_dt"],
             current_value_pln=PLN(current_value_pln),
-            profit_loss_pln=PLN(realized_pln + unrealized_pln),
+            profit_loss_pln=PLN(realized_profit_pln + interest_profit_pln + unrealized_profit_pln),
             fx_rate=prices["fx_rate"],
             fx_effective_rate=prices["effective_fx"],
             fx_datetime=prices["fx_dt"],
-            roi_percent=roi,
-            annualized_roi=ann_roi,
+            roi_percent=roi_percent,
+            annualized_roi=annualized_roi,
             transactions=enriched_transactions,
             open_positions=open_positions,
             closed_positions=closed_positions,
-            realized_profit_pln=realized_pln,
-            unrealized_profit_pln=unrealized_pln,
-            interest_profit_pln=pb_result.interest_profit,
+            realized_profit_pln=realized_profit_pln,
+            unrealized_profit_pln=unrealized_profit_pln,
+            interest_profit_pln=interest_profit_pln,
         )
 
         metrics = {
             "historical_cost_pln": historical_cost_pln,
             "current_value_pln": current_value_pln,
-            "realized_pln": realized_pln,
-            "unrealized_pln": unrealized_pln,
+            "realized_profit_pln": realized_profit_pln,
+            "interest_profit_pln": interest_profit_pln,
+            "unrealized_profit_pln": unrealized_profit_pln,
         }
 
         return asset_data, metrics
@@ -216,11 +218,11 @@ class PortfolioEngine:
     def _update_totals(self, totals, asset_data: AssetData, metrics: dict):
         invested_pln = PLN(metrics["historical_cost_pln"])
         current_value_pln = PLN(metrics["current_value_pln"])
-        realized_pln = PLN(metrics["realized_pln"])
+        interest_profit_pln = PLN(metrics["interest_profit_pln"])
 
         totals.invested += invested_pln
         totals.current_value += current_value_pln
-        totals.interest += realized_pln  # tu traktujemy realized jako „interest/zysk zrealizowany”
+        totals.interest += interest_profit_pln  # tu traktujemy realized jako „interest/zysk zrealizowany”
 
         totals.instrument_data.append(
             {
