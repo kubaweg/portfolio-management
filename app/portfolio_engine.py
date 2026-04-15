@@ -2,7 +2,7 @@ from typing import List, Tuple
 from app.schemas.database.asset import Asset
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
-from app.schemas.fx_calculator import FXCalculator
+from app.core.fx_calculator import FXCalculator
 from app.position_builder import PositionBuilder
 
 from app.schemas.domain.types import (
