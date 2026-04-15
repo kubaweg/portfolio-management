@@ -9,6 +9,7 @@ def create_app():
 
     import locale
 
+
     @app.template_filter('format_pln')
     def format_pln(value):
         if value is None:
@@ -26,6 +27,10 @@ def create_app():
     # Konfiguracja bazy danych SQLite (plik portfolio.db powstanie w głównym folderze)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///portfolio_new.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+    app.register_blueprint(analysis_bp, url_prefix='/analysis')
+    app.register_blueprint(portfolio_bp, url_prefix='/portfolio')
     
     db.init_app(app)
     
