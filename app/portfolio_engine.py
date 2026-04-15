@@ -14,7 +14,7 @@ from app.schemas.domain.types import (
     AssetQuantity,
 )
 from app.schemas.dto.portfolio import AssetData, PortfolioTotals, TransactionData
-from app.market_data import MarketDataProvider
+from app.core.market_data import MarketDataProvider
 
 
 class PortfolioEngine:

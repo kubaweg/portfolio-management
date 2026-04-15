@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 
 from app import db
-from app.market_data import MarketDataProvider
+from app.core.market_data import MarketDataProvider
 from app.schemas.database.asset import Asset
 from app.schemas.database.transaction import Transaction
 from app.portfolio_engine import PortfolioEngine
