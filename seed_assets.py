@@ -1,5 +1,5 @@
 from app import db, create_app
-from app.schemas.asset import (
+from app.schemas.database.asset import (
     Asset, ETF, ETC, Bond,
     AssetType, Category1, Category2, GeoRegion, MarketType,
     DistributionPolicy, ReplicationMethod, CouponFrequency, InterestHandling

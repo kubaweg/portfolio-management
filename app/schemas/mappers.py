@@ -1,5 +1,5 @@
 from typing import List
-from .transaction import Transaction as SA_Transaction
+from .database.transaction import Transaction as SA_Transaction
 from .domain.transactions import (
     BuyTransaction,
     SellTransaction,

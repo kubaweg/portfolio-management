@@ -1,8 +1,8 @@
 import yfinance as yf
 from typing import Tuple, Optional, List
 from datetime import datetime
-from .schemas.dto.charts import ChartDataPoint, VolumeDataPoint
-from .schemas.asset import AssetType
+from app.schemas.dto.charts import ChartDataPoint, VolumeDataPoint
+from app.schemas.database.asset import AssetType
 
 import os
 import pandas as pd

@@ -4,10 +4,10 @@ import pytz
 
 from app import db
 from app.market_data import MarketDataProvider
-from .schemas.asset import Asset
-from .schemas.transaction import Transaction
-from .portfolio_engine import PortfolioEngine
-from .schemas.dto.charts import ChartDataPoint, ChartResponse, ChartTransactionPoint
+from app.schemas.database.asset import Asset
+from app.schemas.database.transaction import Transaction
+from app.portfolio_engine import PortfolioEngine
+from app.schemas.dto.charts import ChartDataPoint, ChartResponse, ChartTransactionPoint
 
 service = PortfolioEngine()
 

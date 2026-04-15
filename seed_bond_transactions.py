@@ -11,8 +11,8 @@ from app import create_app, db
 app = create_app()
 
 
-from app.schemas.asset import Asset
-from app.schemas.transaction import Transaction
+from app.schemas.database.asset import Asset
+from app.schemas.database.transaction import Transaction
 from app.schemas.domain.transactions import TransactionType
 
 def finalize_bond_import(input_file):

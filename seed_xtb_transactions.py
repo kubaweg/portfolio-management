@@ -1,7 +1,7 @@
 import pandas as pd
 from app import db, create_app
-from app.schemas.asset import Asset
-from app.schemas.transaction import Transaction
+from app.schemas.database.asset import Asset
+from app.schemas.database.transaction import Transaction
 from app.schemas.domain.transactions import TransactionType
 from decimal import Decimal
 from datetime import datetime

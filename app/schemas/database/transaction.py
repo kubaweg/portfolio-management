@@ -1,5 +1,5 @@
 from app import db
-from .domain.transactions import TransactionType
+from ..domain.transactions import TransactionType
 
 class Transaction(db.Model):
     __tablename__ = "transactions"
