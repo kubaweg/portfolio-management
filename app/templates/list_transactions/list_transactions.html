@@ -20,20 +20,21 @@
                 <tbody>
                     {% for t in transactions %}
                     <tr>
-                        <td>{{ t.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ t.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td><strong>{{ t.asset.ticker }}</strong></td>
                         <td>
                             <span
-                                class="badge {{ 'bg-success' if t.transaction_type in ['KUPNO', 'KAPITALIZACJA'] else 'bg-info text-dark' if t.transaction_type == 'ODSETKI' else 'bg-danger' }}">
-                                {{ t.transaction_type }}
+                                class="badge {{ 'bg-success' if t.type == 'KUPNO' else 'bg-danger' if t.type == 'SPRZEDAŻ' else 'bg-info text-dark' }}">
+                                {{ t.type }}
                             </span>
                         </td>
                         <td class="text-end">{{ "%.4f"|format(t.quantity) }}</td>
-                        <td class="text-end">{{ "%.2f"|format(t.price_per_unit) }} {{ t.asset.currency }}</td>
+                        <td class="text-end">{{ "%.2f"|format(t.price) }} {{ t.asset.currency }}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#deleteModal" data-url="{{ url_for('delete_transaction', id=t.id) }}"
-                                data-info="{{ t.asset.ticker }} ({{ t.date.strftime('%Y-%m-%d') }})">
+                                data-bs-target="#deleteModal"
+                                data-url="{{ url_for('delete_transaction.delete_transaction', id=t.id) }}"
+                                data-info="{{ t.asset.ticker }} ({{ t.timestamp.strftime('%Y-%m-%d') }})">
                                 Usuń
                             </button>
                         </td>

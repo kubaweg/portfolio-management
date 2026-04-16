@@ -1,5 +1,5 @@
 from typing import List
-from .schemas.domain.transactions import (
+from ..schemas.domain.transactions import (
     TickerTransactions,
     BaseTransaction,
     BuyTransaction,
@@ -7,7 +7,7 @@ from .schemas.domain.transactions import (
     InterestTransaction,
     CapitalizationTransaction,
 )
-from .schemas.domain.positions import OpenPosition, ClosedPosition
+from ..schemas.domain.positions import OpenPosition, ClosedPosition
 
 
 class PositionBuilderResult:

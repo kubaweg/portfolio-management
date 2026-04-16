@@ -1,9 +1,9 @@
 from typing import List, Tuple
-from app.schemas.asset import Asset
+from app.schemas.database.asset import Asset
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
-from app.schemas.fx_calculator import FXCalculator
-from app.position_builder import PositionBuilder
+from app.core.fx_calculator import FXCalculator
+from app.portfolio.position_builder import PositionBuilder
 
 from app.schemas.domain.types import (
     PLN,
@@ -14,7 +14,7 @@ from app.schemas.domain.types import (
     AssetQuantity,
 )
 from app.schemas.dto.portfolio import AssetData, PortfolioTotals, TransactionData
-from app.market_data import MarketDataProvider
+from app.core.market_data import MarketDataProvider
 
 
 class PortfolioEngine:
@@ -192,9 +192,9 @@ class PortfolioEngine:
                 TransactionData(
                     date=tx.date,
                     transaction_type=tx.type.value,
-                    quantity=getattr(tx, "quantity", 0.0),
-                    price_per_unit=getattr(tx, "price", 0.0),
-                    exchange_rate=getattr(tx, "fx_rate", 1.0),
+                    quantity=AssetQuantity(getattr(tx, "quantity", 0.0)),
+                    price_per_unit=CurrencyForeign(getattr(tx, "price", 0.0)),
+                    exchange_rate=FXRate(getattr(tx, "fx_rate", 1.0)),
                     roi=PercentTotal(0.0),  # na razie 0.0
                 )
             )

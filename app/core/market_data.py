@@ -1,8 +1,8 @@
 import yfinance as yf
 from typing import Tuple, Optional, List
 from datetime import datetime
-from .schemas.dto.charts import ChartDataPoint, VolumeDataPoint
-from .schemas.asset import AssetType
+from app.schemas.dto.charts import ChartDataPoint, VolumeDataPoint
+from app.schemas.database.asset import AssetType
 
 import os
 import pandas as pd
@@ -23,21 +23,21 @@ def _get_current_bond_price(ticker_symbol: str, input_file: str) -> float:
         return -999.0
     
     for index, row in df.iterrows():
-        total_current_value = float(row.get('WARTOŚĆ AKTUALNA', -999.0))
+        total_current_value = float(row.get('WARTOŚĆ AKTUALNA', 0.0))
         ticker = str(row.get('EMISJA', '')).strip().upper()
         total_quantity = int(row.get('DOSTĘPNA LICZBA OBLIGACJI', 0))
         
         if ticker == ticker_symbol: 
             return total_current_value / total_quantity
     
-    return -999.0
+    return 0.0
 
     
 class MarketDataProvider:
     """Klasa odpowiedzialna za pobieranie danych z rynków zewnętrznych."""
 
     @staticmethod
-    def get_asset_price(ticker_symbol: str, asset_type: AssetType, fallback_price: float = 0) -> float:
+    def get_asset_price(ticker_symbol: str, asset_type: AssetType, fallback_price: float = 0.0) -> float:
         """Pobiera aktualną cenę instrumentu z Yahoo Finance."""
         if asset_type == AssetType.BOND:
             return _get_current_bond_price(ticker_symbol=ticker_symbol, input_file=BOND_PRICES_INPUT_FILE)
@@ -47,6 +47,7 @@ class MarketDataProvider:
             # Używamy fast_info dla szybkości, ale z obsługa błędów
             price = ticker_yf.fast_info.get('lastPrice')
             return price if price is not None else fallback_price
+        
         except Exception:
             return fallback_price
        

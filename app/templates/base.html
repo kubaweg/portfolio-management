@@ -15,13 +15,13 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">📈 InvestTracker</a>
+            <a class="navbar-brand" href="{{ url_for('dashboard.dashboard') }}">📈 InvestTracker</a>
             <div class="navbar-nav">
-                <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-                <a class="nav-link" href="{{ url_for('analysis') }}">Analizy</a>
-                <a class="nav-link" href="{{ url_for('add_asset') }}">Dodaj aktywo</a>
-                <a class="nav-link" href="{{ url_for('add_transaction') }}">Dodaj transakcję</a>
-                <a class="nav-link" href="{{ url_for('list_transactions') }}">Historia/Usuń</a>
+                <a class="nav-link" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('analysis.analysis') }}">Analizy</a>
+                <a class="nav-link" href="{{ url_for('add_asset.add_asset') }}">Dodaj aktywo</a>
+                <a class="nav-link" href="{{ url_for('add_transaction.add_transaction') }}">Dodaj transakcję</a>
+                <a class="nav-link" href="{{ url_for('list_transactions.list_transactions') }}">Historia/Usuń</a>
             </div>
         </div>
         </div>
