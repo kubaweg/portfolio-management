@@ -82,7 +82,7 @@
         if (volumeChart) { try { await volumeChart.destroy(); } catch { } volumeChart = null; }
 
         try {
-            const response = await fetch(`/api/history/${ticker}?period=${period}`, { cache: "no-store" });
+            const response = await fetch(`/analysis/api/history/${ticker}?period=${period}`, { cache: "no-store" });
 
             if (!response.ok) throw new Error("Błąd HTTP: " + response.status);
 

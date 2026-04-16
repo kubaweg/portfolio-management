@@ -4,8 +4,8 @@ app = create_app()
 
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
-from app.position_builder import PositionBuilder
-from app.schemas.models import Asset
+from app.portfolio.position_builder import PositionBuilder
+from app.schemas.database.asset import Asset
 
 with app.app_context():
     asset = Asset.query.filter_by(ticker="4GLD.DE").first()
