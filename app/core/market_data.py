@@ -1,6 +1,6 @@
 import yfinance as yf
 from typing import Tuple, Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.schemas.dto.charts import ChartDataPoint, VolumeDataPoint
 from app.schemas.database.asset import AssetType
 
@@ -66,7 +66,7 @@ class MarketDataProvider:
             # Uwaga: .info jest wolne i czasem blokowane przez Yahoo
             timestamp_unix = ticker_yf.info.get('regularMarketTime')
             if timestamp_unix:
-                timestamp = datetime.fromtimestamp(timestamp_unix)
+                timestamp = datetime.fromtimestamp(timestamp_unix) - timedelta(minutes=15)
                 return timestamp
                 
             # Jeśli brak danych o czasie w .info, zwracamy czas bieżący
@@ -102,7 +102,7 @@ class MarketDataProvider:
             # Uwaga: .info jest wolne i czasem blokowane przez Yahoo
             timestamp_unix = fx_yf.info.get('regularMarketTime')
             if timestamp_unix:
-                timestamp = datetime.fromtimestamp(timestamp_unix)
+                timestamp = datetime.fromtimestamp(timestamp_unix) - timedelta(minutes=15)
                 return timestamp
                 
             # Jeśli brak danych o czasie w .info, zwracamy czas bieżący

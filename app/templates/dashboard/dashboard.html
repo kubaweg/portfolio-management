@@ -61,141 +61,21 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // 1. Rejestrujemy wtyczkę globalnie (tylko raz!)
-        Chart.register(ChartDataLabels);
+<div id="chart-data-provider" data-allocation='{{ allocation | tojson }}'
+    data-instruments='{{ instrument_data | tojson }}' style="display: none;"></div>
 
-        // --- DANE Z SERWERA ---
-        const allocationData = {{ allocation | tojson
-    }};
-    const instrData = {{ instrument_data | tojson }};
+<script type="module">
+    import { initDashboard } from "{{ url_for('static', filename='js/dashboard/charts.js') }}";
+    import { renderStatusTable } from "{{ url_for('static', filename='js/dashboard/table.js') }}";
 
-    // --- FUNKCJA POMOCNICZA DLA PROCENTÓW ---
-    const getLabelSettings = (fontSize = 12) => ({
-        color: '#fff',
-        font: { weight: 'bold', size: fontSize },
-        formatter: (value, context) => {
-            const dataset = context.chart.data.datasets[0].data;
-            const localSum = dataset.reduce((a, b) => a + b, 0);
-            if (localSum === 0) return '';
-            const percentage = (value / localSum * 100).toFixed(1);
-            // Wyświetlaj tylko jeśli wycinek ma więcej niż 3% (żeby nie było ścisku)
-            return (percentage > 3) ? percentage + '%' : '';
-        },
-        display: 'auto'
-    });
+    // Pobieramy dane z HTML
+    const provider = document.getElementById('chart-data-provider');
+    const allocationData = JSON.parse(provider.dataset.allocation);
+    const instrumentData = JSON.parse(provider.dataset.instruments);
 
-    const formatVolume = (v) => {
-        const num = Number(v);   // 🔥 zawsze konwersja na liczbę
-        if (isNaN(num)) return v;
-        return new Intl.NumberFormat('pl-PL', { useGrouping: true }).format(num);
-    };
+    // Inicjalizujemy dashboard
+    initDashboard(allocationData, instrumentData);
 
-
-    // --- 1. WYKRES: ALOKACJA AKTYWÓW ---
-    const ctxAlloc = document.getElementById('allocationChart').getContext('2d');
-    new Chart(ctxAlloc, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(allocationData),
-            datasets: [{
-                data: Object.values(allocationData),
-                backgroundColor: ['#198754', '#ffc107', '#0d6efd',], // Niebieski (ETF), Zielony (Obligacje), Złoty (ETC)
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                datalabels: getLabelSettings(14),
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            const label = context.label || '';
-                            const value = Math.round(parseFloat(context.raw));
-
-                            const dataset = context.chart.data.datasets[0].data.map(Number);
-                            const total = dataset.reduce((a, b) => a + b, 0);
-
-                            const percent = total ? ((value / total) * 100).toFixed(1) : 0;
-
-                            return ` Wartość [PLN]: ${formatVolume(value)} (${percent}%)`;
-                        }
-                    }
-                }
-            }
-
-
-        }
-    });
-
-    // --- 2. WYKRES: PODZIAŁ INSTRUMENTÓW ---
-    const ctxInstr = document.getElementById('instrumentChart').getContext('2d');
-
-    // Dynamiczne generowanie odcieni
-    const generateColors = (data) => {
-        const blueCount = data.filter(i => i.type === 'ETF').length;
-        const goldCount = data.filter(i => i.type === 'ETC').length;
-        const greenCount = data.filter(i => i.type === 'BOND').length;
-        const colors = [];
-        let bIdx = 0, gIdx = 0;
-
-        data.forEach(item => {
-            if (item.type === 'ETF') {
-                colors.push(`hsl(210, 80%, ${70 - (bIdx / (blueCount || 1) * 40)}%)`);
-                bIdx++;
-            } else if (item.type === 'ETC') {
-                colors.push(`hsl(50, 90%, ${65 - (gIdx / (goldCount || 1) * 35)}%)`);
-                gIdx++;
-            } else if (item.type === 'BOND') {
-                colors.push(`hsl(140, 60%, ${65 - (gIdx / (greenCount || 1) * 35)}%)`);
-                gIdx++;
-            } else {
-                colors.push('gray'); // Domyślny kolor dla nieznanych typów
-            }
-        });
-        return colors;
-    };
-
-    new Chart(ctxInstr, {
-        type: 'doughnut',
-        data: {
-            labels: instrData.map(i => i.label),
-            datasets: [{
-                data: instrData.map(i => i.value),
-                backgroundColor: generateColors(instrData),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                datalabels: getLabelSettings(11),
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            const label = context.label || '';
-                            const value = Math.round(parseFloat(context.raw));
-
-
-                            const dataset = context.chart.data.datasets[0].data.map(Number);
-                            const total = dataset.reduce((a, b) => a + b, 0);
-
-                            const percent = total ? ((value / total) * 100).toFixed(1) : 0;
-
-                            return ` Wartość [PLN]: ${formatVolume(value)} (${percent}%)`;
-                        }
-                    }
-                }
-            }
-
-
-        }
-    });
-    });
 </script>
 
 <div class="alert alert-info py-2 shadow-sm mb-4" style="font-size: 0.85rem;">
@@ -360,12 +240,19 @@
                                 <!-- PODSUMOWANIE -->
                                 <h6 class="fw-bold mt-4">Podsumowanie</h6>
                                 <ul class="small">
-                                    Zysk zrealizowany: <strong class="text-end {{ 'text-success' if item.realized_profit_pln > 0 else ('text-danger' if item.realized_profit_pln < 0 else 'text-dark') }}">{{ item.realized_profit_pln|format_pln }} PLN</strong><br>
-                                    Odsetki: <strong class="text-end {{ 'text-success' if item.interest_profit_pln > 0 else ('text-danger' if item.interest_profit_pln < 0 else 'text-dark') }}">{{ item.interest_profit_pln|format_pln }} PLN</strong><br>
-                                    Zysk niezrealizowany: <strong class="text-end {{ 'text-success' if item.unrealized_profit_pln > 0 else ('text-danger' if item.unrealized_profit_pln < 0 else 'text-dark') }}" >{{ item.unrealized_profit_pln|format_pln }} PLN</strong>
+                                    Zysk zrealizowany: <strong
+                                        class="text-end {{ 'text-success' if item.realized_profit_pln > 0 else ('text-danger' if item.realized_profit_pln < 0 else 'text-dark') }}">{{
+                                        item.realized_profit_pln|format_pln }} PLN</strong><br>
+                                    Odsetki: <strong
+                                        class="text-end {{ 'text-success' if item.interest_profit_pln > 0 else ('text-danger' if item.interest_profit_pln < 0 else 'text-dark') }}">{{
+                                        item.interest_profit_pln|format_pln }} PLN</strong><br>
+                                    Zysk niezrealizowany: <strong
+                                        class="text-end {{ 'text-success' if item.unrealized_profit_pln > 0 else ('text-danger' if item.unrealized_profit_pln < 0 else 'text-dark') }}">{{
+                                        item.unrealized_profit_pln|format_pln }} PLN</strong>
                                 </ul>
                                 <h6 class="fw-bold mt-4">Całkowity wynik</h6>
-                                <h7 class="text-end {{ 'text-success' if item.profit_loss_pln > 0 else ('text-danger' if item.profit_loss_pln < 0 else 'text-dark') }}">
+                                <h7
+                                    class="text-end {{ 'text-success' if item.profit_loss_pln > 0 else ('text-danger' if item.profit_loss_pln < 0 else 'text-dark') }}">
                                     <strong>{{ item.profit_loss_pln |format_pln }} PLN</strong>
                                 </h7>
 
@@ -388,7 +275,6 @@
             <h4 class="mb-0" data-bs-toggle="collapse" data-bs-target="#collapse-table" style="cursor: pointer;">
                 Aktualność danych
             </h4>
-
         </div>
 
         <div class="collapse" id="collapse-table">
@@ -401,33 +287,22 @@
                             <th class="text-end">Kurs instrumentu</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for item in portfolio %}
-                        <tr data-bs-toggle="collapse" data-bs-target="#collapse-{{ item.asset.id }}"
-                            style="cursor: pointer;">
-                            <td>
-                                <strong>{{ item.asset.ticker }}</strong><br>
-                                <small class="text-muted">{{ item.asset.name }}</small>
-                            </td>
-
-                            <td class="text-end font-monospace">
-                                {% if item.asset.currency != 'PLN' %}
-                                {{ item.fx_datetime }}
-
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-
-                            <td class="text-end font-monospace">
-                                {{ item.current_price_datetime }}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+                    <tbody id="status-table-body"></tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+
+<div id="status-data-provider" data-portfolio='{{ portfolio_json | safe }}' style="display: none;"></div>
+<script type="module">
+    import { renderStatusTable } from "{{ url_for('static', filename='js/dashboard/table.js') }}";
+
+    // Pobieramy dane z HTML
+    const portfolioData = JSON.parse(document.getElementById('status-data-provider').dataset.portfolio);
+
+    // Renderujemy tabelę
+    renderStatusTable(portfolioData);
+
+</script>
 {% endblock %}
