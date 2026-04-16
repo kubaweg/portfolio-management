@@ -32,9 +32,11 @@
                 <p>Pobieranie danych...</p>
             </div>
 
-            <div id="main-chart"></div>
-            <div style="border-bottom: 1px solid #ccc; margin: 40px 20px;"></div> <!-- 🔥 separator -->
-            <div id="volume-chart" style="margin-top: -35px;"></div>
+            <div id="charts-container" class="d-none" style="transition: opacity 0.3s ease-in-out; opacity: 0;">
+                <div id="main-chart"></div>
+                <div style="border-bottom: 1px solid #ccc; margin: 40px 20px;"></div>
+                <div id="volume-chart" style="margin-top: -35px;"></div>
+            </div>
 
             <div id="chart-error" class="alert alert-warning d-none m-3">
                 Błąd danych. Sprawdź konsolę (F12).
