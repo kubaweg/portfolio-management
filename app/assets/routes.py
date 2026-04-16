@@ -4,7 +4,6 @@ import pytz
 
 from app import db
 from app.schemas.database.asset import Asset
-from app.schemas.database.transaction import Transaction
 
 from . import add_asset_bp
 

@@ -17,15 +17,15 @@ def add_transaction():
         
         new_trans = Transaction(
             asset_id=request.form.get('asset_id'),
-            transaction_type=request.form.get('type'),
+            type=request.form.get('type'),
             quantity=float(request.form.get('quantity', -1.0)),
-            price_per_unit=float(request.form.get('price', -1.0)),
-            exchange_rate=float(request.form.get('exchange_rate', -1.0)),
-            date=warsaw_tz.localize(naive_dt)
+            price=float(request.form.get('price', -1.0)),
+            fx_rate=float(request.form.get('exchange_rate', -1.0)),
+            timestamp=warsaw_tz.localize(naive_dt)
         )
         db.session.add(new_trans)
         db.session.commit()
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('dashboard.dashboard'))
 
     return render_template('add_transaction/add_transaction.html', assets=assets)
 
@@ -39,4 +39,4 @@ def delete_transaction(id):
     transaction = Transaction.query.get_or_404(id)
     db.session.delete(transaction)
     db.session.commit()
-    return redirect(url_for('list_transactions'))
+    return redirect(url_for('list_transactions.list_transactions'))
