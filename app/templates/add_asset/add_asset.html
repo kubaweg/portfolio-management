@@ -15,182 +15,91 @@
 {% endmacro %}
 
 <div class="container mt-4 mb-5">
-    <h2><i class="fas fa-database me-2"></i>Zarządzaj Instrumentami</h2>
-    <hr>
-
     <div id="form-alert" class="alert d-none" role="alert"></div>
 
-    <div class="card shadow-sm mb-5">
-        <div class="card-header bg-light"><strong>Dodaj Nowy Instrument</strong></div>
-        <div class="card-body">
-            <form id="add-asset-form">
-
-                <h5 class="text-primary mb-3">1. Informacje Podstawowe</h5>
+    <form id="add-asset-form">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">Podstawowe informacje</div>
+            <div class="card-body">
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <label class="form-label">Typ Aktywa <span class="text-danger">*</span></label>
+                        <label class="form-label font-weight-bold">Typ Aktywa *</label>
                         <select class="form-select border-primary" id="asset_type" name="asset_type" required>
-                            <option value="" disabled selected>-- Wybierz Typ --</option>
-                            {% for opt in AssetType %}
-                            <option value="{{ opt }}">{{ opt }}</option>
-                            {% endfor %}
+                            <option value="">-- Wybierz --</option>
+                            {% for opt in AssetType %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Ticker <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="ticker" required>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Pełna Nazwa <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="name" required>
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">Waluta <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="currency" value="USD" required>
-                    </div>
+                    <div class="col-md-3 mb-3"><label class="form-label">Ticker *</label><input type="text"
+                            class="form-control" name="ticker" required></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Pełna Nazwa *</label><input type="text"
+                            class="form-control" name="name" required></div>
+                    <div class="col-md-2 mb-3"><label class="form-label">Waluta *</label><input type="text"
+                            class="form-control" name="currency" value="PLN" required></div>
                 </div>
-
                 <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">ISIN</label>
-                        <input type="text" class="form-control" name="isin">
-                    </div>
+                    <div class="col-md-3 mb-3"><label class="form-label">ISIN</label><input type="text"
+                            class="form-control" name="isin"></div>
                     {{ render_select('category1', 'Kategoria 1', Category1, required=True) }}
                     {{ render_select('category2', 'Kategoria 2', Category2) }}
-                    {{ render_select('geo_region', 'Region Geo.', GeoRegion) }}
+                </div>
+                <div class="row">
+                    {{ render_select('geo_region', 'Region Geograficzny', GeoRegion) }}
                     {{ render_select('market_type', 'Typ Rynku', MarketType) }}
-
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">Spread (%)</label>
-                        <input type="number" step="0.0001" class="form-control" name="spread" value="0">
-                    </div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Spread (%)</label><input type="number"
+                            step="0.0001" class="form-control" name="spread" value="0"></div>
                 </div>
-
-                <div id="section-exchange" class="dynamic-section d-none bg-light p-3 rounded mb-3 border">
-                    <h5 class="text-secondary mb-3"><i class="fas fa-building"></i> Dane Giełdowe (ETF/ETC)</h5>
-                    <div class="row">
-                        <div class="col-md-3 mb-2"><label class="form-label">Emitent</label><input type="text"
-                                class="form-control" name="issuer"></div>
-                        <div class="col-md-3 mb-2"><label class="form-label">Giełda (Venue)</label><input type="text"
-                                class="form-control" name="listing_venue"></div>
-                        <div class="col-md-3 mb-2"><label class="form-label">Domicyl</label><input type="text"
-                                class="form-control" name="domicile"></div>
-                        <div class="col-md-3 mb-2"><label class="form-label">Koszty TER (%)</label><input type="number"
-                                step="0.0001" class="form-control" name="ter"></div>
-                    </div>
-                </div>
-
-                <div id="section-etf" class="dynamic-section d-none bg-light p-3 rounded mb-3 border border-top-0">
-                    <div class="row">
-                        <div class="col-md-4 mb-2"><label class="form-label">Benchmark</label><input type="text"
-                                class="form-control" name="benchmark"></div>
-                        {{ render_select('distribution_policy', 'Dystrybucja', DistributionPolicy) }}
-                        {{ render_select('replication_method', 'Replikacja', ReplicationMethod) }}
-                    </div>
-                </div>
-
-                <div id="section-etc" class="dynamic-section d-none bg-light p-3 rounded mb-3 border border-top-0">
-                    <div class="row">
-                        <div class="col-md-4 mb-2"><label class="form-label">Mnożnik</label><input type="number"
-                                step="0.000001" class="form-control" name="multiplier" value="1.0"></div>
-                        <div class="col-md-4 mt-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="physical_backing"
-                                    name="physical_backing" checked>
-                                <label class="form-check-label" for="physical_backing">Fizyczne pokrycie</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="section-bond" class="dynamic-section d-none bg-light p-3 rounded mb-3 border">
-                    <h5 class="text-secondary mb-3"><i class="fas fa-file-invoice-dollar"></i> Dane Obligacji</h5>
-                    <div class="row">
-                        <div class="col-md-3 mb-2"><label class="form-label">Data Emisji</label><input type="date"
-                                class="form-control" name="issue_date"></div>
-                        <div class="col-md-3 mb-2"><label class="form-label">Data Zapadalności <span
-                                    class="text-danger">*</span></label><input type="date" class="form-control"
-                                name="maturity_date" id="req_maturity"></div>
-                        <div class="col-md-3 mb-2"><label class="form-label">Wartość Nominalna <span
-                                    class="text-danger">*</span></label><input type="number" step="0.01"
-                                class="form-control" name="nominal_value" id="req_nominal"></div>
-                        {{ render_select('interest_handling', 'Obsługa odsetek', InterestHandling) }}
-                    </div>
-                    <div class="row">
-                        {{ render_select('coupon_frequency', 'Kupon', CouponFrequency) }}
-                        <div class="col-md-3 mb-2"><label class="form-label">Oprocent. początkowe</label><input
-                                type="number" step="0.0001" class="form-control" name="initial_rate"></div>
-                        <div class="col-md-3 mb-2"><label class="form-label">Marża</label><input type="number"
-                                step="0.0001" class="form-control" name="margin"></div>
-                        <div class="col-md-3 mb-2"><label class="form-label">Indeks Inflacji</label><input type="text"
-                                class="form-control" name="inflation_index"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3 mt-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="is_indexed">
-                                <label class="form-check-label">Indeksowana</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mt-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="secured" checked>
-                                <label class="form-check-label">Zabezpieczona</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-2"><label class="form-label">Seria Detaliczna</label><input type="text"
-                                class="form-control" name="retail_series_code"></div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Notatki / Opis</label>
-                    <textarea class="form-control" name="notes" rows="2"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 mt-2" id="submit-btn">
-                    <span class="spinner-border spinner-border-sm d-none me-2" id="submit-spinner"></span> Zapisz Aktywo
-                </button>
-            </form>
+            </div>
         </div>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-light"><strong>Baza Aktywów</strong></div>
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Typ</th>
-                        <th>Ticker</th>
-                        <th>Nazwa</th>
-                        <th>Akcja</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for asset in assets %}
-                    <tr id="row-{{ asset.id }}">
-                        <td>{{ asset.id }}</td>
-                        <td><span class="badge bg-secondary">{{ asset.asset_type.value }}</span></td>
-                        <td><strong>{{ asset.ticker }}</strong></td>
-                        <td>{{ asset.name }}</td>
-                        <td>
-                            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ asset.id }}">Usuń</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% if not assets %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted p-3">Brak dodanych instrumentów</td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+        <div id="section-exchange" class="card shadow-sm mb-4 dynamic-section d-none">
+            <div class="card-header bg-secondary text-white">Dane Giełdowe (Mixin)</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2"><label class="form-label">Emitent</label><input type="text"
+                            class="form-control" name="issuer"></div>
+                    <div class="col-md-3 mb-2"><label class="form-label">TER (%)</label><input type="number"
+                            step="0.0001" class="form-control" name="ter"></div>
+                    <div class="col-md-3 mb-2"><label class="form-label">Giełda</label><input type="text"
+                            class="form-control" name="listing_venue"></div>
+                    <div class="col-md-3 mb-2"><label class="form-label">Domicyl</label><input type="text"
+                            class="form-control" name="domicile"></div>
+                </div>
+                <div id="sub-section-etf" class="row mt-3 d-none">
+                    <div class="col-md-4 mb-2"><label class="form-label">Benchmark</label><input type="text"
+                            class="form-control" name="benchmark"></div>
+                    {{ render_select('distribution_policy', 'Dystrybucja', DistributionPolicy) }}
+                    {{ render_select('replication_method', 'Replikacja', ReplicationMethod) }}
+                </div>
+                <div id="sub-section-etc" class="row mt-3 d-none">
+                    <div class="col-md-6 mb-2"><label class="form-label">Mnożnik</label><input type="number"
+                            step="0.000001" class="form-control" name="multiplier"></div>
+                    <div class="col-md-6 mt-4">
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox"
+                                name="physical_backing" checked><label class="form-check-label">Fizyczne
+                                pokrycie</label></div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
+        <div id="section-bond" class="card shadow-sm mb-4 dynamic-section d-none">
+            <div class="card-header bg-info text-white">Specyfikacja Obligacji</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2"><label class="form-label">Data Emisji</label><input type="date"
+                            class="form-control" name="issue_date"></div>
+                    <div class="col-md-3 mb-2"><label class="form-label">Zapadalność *</label><input type="date"
+                            class="form-control" name="maturity_date" id="req_maturity"></div>
+                    <div class="col-md-3 mb-2"><label class="form-label">Nominał *</label><input type="number"
+                            step="0.01" class="form-control" name="nominal_value" id="req_nominal"></div>
+                    {{ render_select('interest_handling', 'Obsługa odsetek *', InterestHandling) }}
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg w-100" id="submit-btn">Zapisz Instrument</button>
+    </form>
 </div>
 
-<script type="module" src="{{ url_for('static', filename='js/asset/manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/asset/manager.js') }}"></script>
 {% endblock %}
