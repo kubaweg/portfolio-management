@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from app.schemas.database.asset import Asset
+from app.schemas.database.asset import Asset, AssetType
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
 from app.core.fx_calculator import FXCalculator
@@ -15,6 +15,8 @@ from app.schemas.domain.types import (
 )
 from app.schemas.dto.portfolio import AssetData, PortfolioTotals, TransactionData
 from app.core.market_data import MarketDataProvider
+
+import pandas as pd
 
 
 class PortfolioEngine:
@@ -49,6 +51,10 @@ class PortfolioEngine:
             self._update_totals(totals, asset_data, metrics)
 
         self._finalize_totals(totals)
+        self._aggregate_totals(totals)
+
+        pd.DataFrame(totals.instrument_data_aggregated).to_excel('test/test.xlsx', index=False)
+
         return asset_data_list, totals
 
     # ---------------------------------------------------------
@@ -213,6 +219,7 @@ class PortfolioEngine:
             annualized_roi=PercentAnnual(0.0),
             allocation={},
             instrument_data=[],
+            instrument_data_aggregated=[]
         )
 
     def _update_totals(self, totals, asset_data: AssetData, metrics: dict):
@@ -227,6 +234,7 @@ class PortfolioEngine:
         totals.instrument_data.append(
             {
                 "label": asset_data.asset.ticker,
+                "category": asset_data.asset.category2.value,
                 "value": current_value_pln,
                 "type": asset_data.asset.asset_type,
             }
@@ -243,6 +251,15 @@ class PortfolioEngine:
             totals.profit / totals.invested if totals.invested > 0 else 0.0
         )
         totals.annualized_roi = PercentAnnual(0.0)  # na razie 0.0
+
+    def _aggregate_totals(self, totals):
+
+        df = totals.instrument_data
+        df = pd.DataFrame(df)
+        df = df.groupby(['category', 'type'])['value'].sum().reset_index()
+        df = df.to_dict('records')
+
+        totals.instrument_data_aggregated = df
 
     # ---------------------------------------------------------
     # HELPERS

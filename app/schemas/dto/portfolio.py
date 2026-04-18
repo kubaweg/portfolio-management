@@ -16,6 +16,7 @@ class PortfolioTotals(BaseModel):
     annualized_roi: PercentAnnual
     allocation: dict[str, PLN]
     instrument_data: list[CurrentInstrumentData]
+    instrument_data_aggregated: list[CurrentInstrumentData]
 
 class TransactionData(BaseModel):
     date: datetime

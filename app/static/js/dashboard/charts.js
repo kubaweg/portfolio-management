@@ -46,7 +46,7 @@ const generateColors = (data) => {
     });
 };
 
-export function initDashboard(allocationData, instrumentData) {
+export function initDashboard(allocationData, instrumentData, instrumentDataAgg) {
     if (typeof ChartDataLabels !== 'undefined') {
         Chart.register(ChartDataLabels);
     }
@@ -59,8 +59,16 @@ export function initDashboard(allocationData, instrumentData) {
     );
     const sortedAllocValues = sortedAllocKeys.map(key => allocationData[key]);
 
-    // Sortowanie Wykresu 2 (Instrumenty)
+    // Sortowanie Wykresów
     const sortedInstruments = [...instrumentData].sort((a, b) => {
+        const orderA = TYPE_ORDER[a.type] || 99;
+        const orderB = TYPE_ORDER[b.type] || 99;
+        // Jeśli ten sam typ, sortuj malejąco po wartości (większe instrumenty najpierw)
+        if (orderA === orderB) return b.value - a.value;
+        return orderA - orderB;
+    });
+
+    const sortedInstrumentsAgg = [...instrumentDataAgg].sort((a, b) => {
         const orderA = TYPE_ORDER[a.type] || 99;
         const orderB = TYPE_ORDER[b.type] || 99;
         // Jeśli ten sam typ, sortuj malejąco po wartości (większe instrumenty najpierw)
@@ -111,6 +119,39 @@ export function initDashboard(allocationData, instrumentData) {
                 datasets: [{
                     data: sortedInstruments.map(i => i.value),
                     backgroundColor: generateColors(sortedInstruments),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    datalabels: getLabelSettings(11),
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = Math.round(parseFloat(context.raw));
+                                const total = context.chart.data.datasets[0].data.reduce((a, b) => a + Number(b), 0);
+                                const percent = total ? ((value / total) * 100).toFixed(1) : 0;
+                                return ` Wartość [PLN]: ${formatVolume(value)} (${percent}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- WYKRES ANALITYCZNY ---
+    const ctxAnalytics = document.getElementById('analyticsChart')?.getContext('2d');
+    if (ctxAnalytics) {
+        new Chart(ctxAnalytics, {
+            type: 'doughnut',
+            data: {
+                labels: sortedInstrumentsAgg.map(i => i.category),
+                datasets: [{
+                    data: sortedInstrumentsAgg.map(i => i.value),
+                    backgroundColor: generateColors(sortedInstrumentsAgg),
                     borderWidth: 1
                 }]
             },

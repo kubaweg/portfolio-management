@@ -42,6 +42,13 @@
 
 
 <div class="row mb-4">
+    <div class="d-flex justify-content-center mb-2">
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" id="btnCategory" class="btn btn-outline-dark active">Kategorie</button>
+            <button type="button" id="btnInstruments" class="btn btn-outline-dark">Instrumenty</button>
+        </div>
+    </div>
+
     <div class="col-md-6">
         <div class="card shadow-sm h-100">
             <div class="card-body text-center">
@@ -51,18 +58,59 @@
         </div>
     </div>
 
-    <div class="col-md-6">
+    <div id="chartCategory" class="col-md-6">
         <div class="card shadow-sm h-100">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-3">Podział Instrumentów</h6>
+                <h6 class="text-muted mb-3">Instrumenty według kategorii</h6>
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="chartInstruments" class="col-md-6" d-none>
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">Szczegółowe rozbicie</h6>
                 <canvas id="instrumentChart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btnCat = document.getElementById('btnCategory');
+        const btnInst = document.getElementById('btnInstruments');
+        const cardCat = document.getElementById('chartCategory');
+        const cardInst = document.getElementById('chartInstruments');
+
+        function toggleCharts(showCategory) {
+            if (showCategory) {
+                cardCat.classList.remove('d-none');
+                cardInst.classList.add('d-none');
+                btnCat.classList.add('active');
+                btnInst.classList.remove('active');
+            } else {
+                cardCat.classList.add('d-none');
+                cardInst.classList.remove('d-none');
+                btnInst.classList.add('active');
+                btnCat.classList.remove('active');
+            }
+
+            // Ważne: Wymusza odświeżenie rozmiaru wykresów, by nie były "zgniecione"
+            window.dispatchEvent(new Event('resize'));
+        }
+
+        // Obsługa kliknięć
+        btnCat.addEventListener('click', () => toggleCharts(true));
+        btnInst.addEventListener('click', () => toggleCharts(false));
+    });
+
+</script>
+
 <div id="chart-data-provider" data-allocation='{{ allocation | tojson }}'
-    data-instruments='{{ instrument_data | tojson }}' style="display: none;"></div>
+    data-instruments='{{ instrument_data | tojson }}' style="display: none;"
+    data-instruments_agg='{{ instrument_data_aggregated | tojson }}' style="display: none;"></div>
 
 <script type="module">
     import { initDashboard } from "{{ url_for('static', filename='js/dashboard/charts.js') }}";
@@ -72,10 +120,10 @@
     const provider = document.getElementById('chart-data-provider');
     const allocationData = JSON.parse(provider.dataset.allocation);
     const instrumentData = JSON.parse(provider.dataset.instruments);
+    const instrumentDataAgg = JSON.parse(provider.dataset.instruments_agg);
 
     // Inicjalizujemy dashboard
-    initDashboard(allocationData, instrumentData);
-
+    initDashboard(allocationData, instrumentData, instrumentDataAgg);
 </script>
 
 <div class="alert alert-info py-2 shadow-sm mb-4" style="font-size: 0.85rem;">

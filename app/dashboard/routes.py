@@ -37,5 +37,6 @@ def dashboard():
         total_roi=totals.roi,
         total_roi_pa=totals.annualized_roi,
         allocation=totals.allocation,
-        instrument_data=totals.instrument_data
+        instrument_data=totals.instrument_data,
+        instrument_data_aggregated=totals.instrument_data_aggregated
     )
