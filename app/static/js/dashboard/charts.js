@@ -1,6 +1,15 @@
 // app/static/js/dashboard/main.js
 
-// --- POMOCNICY (Helpers) ---
+// 1. Definiujemy sztywną kolejność (BOND = 1, ETF = 2, ETC = 3)
+const TYPE_ORDER = { 'BOND': 1, 'ETF': 2, 'ETC': 3 };
+
+// Kolory techniczne dla alokacji (spójne z typami)
+const ALLOC_COLORS = {
+    'BOND': '#198754', // Zielony
+    'ETF': '#0d6efd',  // Niebieski
+    'ETC': '#ffc107'   // Złoty/Żółty
+};
+
 const formatVolume = (v) => {
     const num = Number(v);
     if (isNaN(num)) return v;
@@ -29,6 +38,7 @@ const generateColors = (data) => {
     let idx = { 'ETF': 0, 'ETC': 0, 'BOND': 0 };
 
     return data.map(item => {
+        // Generujemy odcienie wewnątrz danej grupy
         if (item.type === 'ETF') return `hsl(210, 80%, ${70 - (idx.ETF++ / (counts.ETF || 1) * 40)}%)`;
         if (item.type === 'ETC') return `hsl(50, 90%, ${65 - (idx.ETC++ / (counts.ETC || 1) * 35)}%)`;
         if (item.type === 'BOND') return `hsl(140, 60%, ${65 - (idx.BOND++ / (counts.BOND || 1) * 35)}%)`;
@@ -36,23 +46,38 @@ const generateColors = (data) => {
     });
 };
 
-// --- GŁÓWNA FUNKCJA INICJUJĄCA ---
 export function initDashboard(allocationData, instrumentData) {
-    // 1. Rejestracja wtyczki (zakładamy, że Chart jest dostępny globalnie z base.html)
     if (typeof ChartDataLabels !== 'undefined') {
         Chart.register(ChartDataLabels);
     }
 
-    // 2. Wykres Alokacji
+    // --- LOGIKA SORTOWANIA ---
+
+    // Sortowanie Wykresu 1 (Alokacja)
+    const sortedAllocKeys = Object.keys(allocationData).sort((a, b) =>
+        (TYPE_ORDER[a] || 99) - (TYPE_ORDER[b] || 99)
+    );
+    const sortedAllocValues = sortedAllocKeys.map(key => allocationData[key]);
+
+    // Sortowanie Wykresu 2 (Instrumenty)
+    const sortedInstruments = [...instrumentData].sort((a, b) => {
+        const orderA = TYPE_ORDER[a.type] || 99;
+        const orderB = TYPE_ORDER[b.type] || 99;
+        // Jeśli ten sam typ, sortuj malejąco po wartości (większe instrumenty najpierw)
+        if (orderA === orderB) return b.value - a.value;
+        return orderA - orderB;
+    });
+
+    // --- WYKRES ALOKACJI ---
     const ctxAlloc = document.getElementById('allocationChart')?.getContext('2d');
     if (ctxAlloc) {
         new Chart(ctxAlloc, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(allocationData),
+                labels: sortedAllocKeys,
                 datasets: [{
-                    data: Object.values(allocationData),
-                    backgroundColor: ['#198754', '#ffc107', '#0d6efd'],
+                    data: sortedAllocValues,
+                    backgroundColor: sortedAllocKeys.map(key => ALLOC_COLORS[key] || '#6c757d'),
                     borderWidth: 1
                 }]
             },
@@ -76,16 +101,16 @@ export function initDashboard(allocationData, instrumentData) {
         });
     }
 
-    // 3. Wykres Instrumentów
+    // --- WYKRES INSTRUMENTÓW ---
     const ctxInstr = document.getElementById('instrumentChart')?.getContext('2d');
     if (ctxInstr) {
         new Chart(ctxInstr, {
             type: 'doughnut',
             data: {
-                labels: instrumentData.map(i => i.label),
+                labels: sortedInstruments.map(i => i.label),
                 datasets: [{
-                    data: instrumentData.map(i => i.value),
-                    backgroundColor: generateColors(instrumentData),
+                    data: sortedInstruments.map(i => i.value),
+                    backgroundColor: generateColors(sortedInstruments),
                     borderWidth: 1
                 }]
             },
