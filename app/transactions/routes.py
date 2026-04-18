@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, jsonify
 from datetime import datetime
 import pytz
 
@@ -11,23 +11,39 @@ from . import add_transaction_bp, list_transactions_bp, delete_transaction_bp
 @add_transaction_bp.route('/', methods=['GET', 'POST'])
 def add_transaction():
     assets = Asset.query.all()
-    if request.method == 'POST':
+    return render_template('add_transaction/add_transaction.html', assets=assets)
+
+@add_transaction_bp.route('/api/add', methods=['POST'])
+def api_add_transaction():
+
+    # Funkcja pomocnicza: puste stringi zamienia na None, żeby baza nie płakała
+    def get_val(key):
+        val = data.get(key)
+        return val if val and str(val).strip() != "" else None
+    
+    data = request.get_json()
+
+    try:
         warsaw_tz = pytz.timezone('Europe/Warsaw')
-        naive_dt = datetime.strptime(request.form.get('date', '9999-12-31T23:59:00'), '%Y-%m-%dT%H:%M')
+        naive_dt = datetime.strptime(get_val('timestamp') or '9999-12-31T23:59', '%Y-%m-%dT%H:%M')
         
         new_trans = Transaction(
-            asset_id=request.form.get('asset_id'),
-            type=request.form.get('type'),
-            quantity=float(request.form.get('quantity', -1.0)),
-            price=float(request.form.get('price', -1.0)),
-            fx_rate=float(request.form.get('exchange_rate', -1.0)),
-            timestamp=warsaw_tz.localize(naive_dt)
+            asset_id=get_val('asset_id'),
+            type=get_val('type'),
+            timestamp=warsaw_tz.localize(naive_dt),
+            quantity=float(get_val('quantity') or -1.0),
+            price=float(get_val('price') or -1.0),
+            fx_rate=float(get_val('exchange_rate') or -1.0),
+            fx_source_currency=get_val('fx_source_currency'),
+            fx_target_currency=get_val('fx_source_currency')
         )
         db.session.add(new_trans)
         db.session.commit()
-        return redirect(url_for('dashboard.dashboard'))
 
-    return render_template('add_transaction/add_transaction.html', assets=assets)
+        return jsonify({"status": "success", "message": "Pomyślnie dodano transakcję"}), 201
+
+    except:
+        return jsonify({"status": "error", "message": "Nieoczekiwany błąd"}), 500
 
 @list_transactions_bp.route('/')
 def list_transactions():
