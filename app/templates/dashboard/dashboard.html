@@ -67,7 +67,7 @@
         </div>
     </div>
 
-    <div id="chartInstruments" class="col-md-6" d-none>
+    <div id="chartInstruments" class="col-md-6 d-none">
         <div class="card shadow-sm h-100">
             <div class="card-body text-center">
                 <h6 class="text-muted mb-3">Szczegółowe rozbicie</h6>
@@ -248,20 +248,22 @@
                                         {% for op in item.open_positions %}
                                         <tr>
                                             <td>{{ op.quantity |format_quantity }}</td>
-                                            <td class="text-end">{{ (op.cost * op.fx_rate) |format_pln }}</td>
-                                            <td class="text-end">{{ op.fx_rate |format_fx }}</td>
+                                            <td class="text-end">{{ (op.value_buy * op.fx_buy) |format_pln }}</td>
+                                            <td class="text-end">{{ op.fx_buy |format_fx }}</td>
                                             <td class="text-end">{{ (op.current_value * item.fx_effective_rate)
                                                 |format_pln }}</td>
                                             <td class="text-end">{{ item.fx_effective_rate |format_fx }}</td>
 
-                                            <td class="text-end">{{ ((op.current_value / op.cost) - 1)|format_pct }}
+                                            <td class="text-end">{{ ((op.current_value / op.value_buy) - 1)|format_pct
+                                                }}
                                             </td>
-                                            <td class="text-end">{{ ((item.fx_effective_rate / op.fx_rate) -
+                                            <td class="text-end">{{ ((item.fx_effective_rate / op.fx_buy) -
                                                 1)|format_pct }}</td>
 
                                             <td
                                                 class="text-end {{ 'text-success' if op.unrealized_profit_pln > 0 else ('text-danger' if op.unrealized_profit_pln < 0 else 'text-dark') }}">
-                                                {{ (op.unrealized_profit_pln / (op.cost * op.fx_rate)) |format_pct }}
+                                                {{ (op.unrealized_profit_pln / (op.value_buy * op.fx_buy)) |format_pct
+                                                }}
                                             </td>
 
                                             <td
@@ -300,17 +302,18 @@
                                         {% for cp in item.closed_positions %}
                                         <tr>
                                             <td>{{ cp.quantity |format_quantity }}</td>
-                                            <td class="text-end">{{ (cp.cost * cp.fx_buy) |format_pln }}</td>
+                                            <td class="text-end">{{ (cp.value_buy * cp.fx_buy) |format_pln }}</td>
                                             <td class="text-end">{{ cp.fx_buy|format_fx }}</td>
-                                            <td class="text-end">{{ (cp.proceeds * cp.fx_sell) |format_pln }}</td>
+                                            <td class="text-end">{{ (cp.value_sell * cp.fx_sell) |format_pln }}</td>
                                             <td class="text-end">{{ cp.fx_sell|format_fx }}</td>
 
-                                            <td class="text-end">{{ ((cp.proceeds / cp.cost) - 1)|format_pct }}</td>
+                                            <td class="text-end">{{ ((cp.value_sell / cp.value_buy) - 1)|format_pct }}
+                                            </td>
                                             <td class="text-end">{{ ((cp.fx_sell / cp.fx_buy) - 1)|format_pct }}</td>
 
                                             <td
                                                 class="text-end {{ 'text-success' if cp.realized_profit_pln > 0 else ('text-danger' if cp.realized_profit_pln < 0 else 'text-dark') }}">
-                                                {{ (cp.realized_profit_pln / (cp.cost * cp.fx_buy))|format_pct }}
+                                                {{ (cp.realized_profit_pln / (cp.value_buy * cp.fx_buy))|format_pct }}
                                             </td>
 
                                             <td

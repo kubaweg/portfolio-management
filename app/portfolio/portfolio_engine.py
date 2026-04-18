@@ -50,7 +50,7 @@ class PortfolioEngine:
             self._update_totals(totals, asset_data, metrics)
 
         self._finalize_totals(totals)
-        self._aggregate_totals(totals)
+        self._aggregate_totals(totals, grouper='category2')
 
         pd.DataFrame(totals.instrument_data_aggregated).to_excel('test/test.xlsx', index=False)
 
@@ -101,12 +101,12 @@ class PortfolioEngine:
 
         for op in open_positions:
             op.unrealized_profit_pln = FXCalculator.unrealized_pln(
-                op.cost, op.fx_rate, op.current_value, prices["effective_fx"]
+                op.value_buy, op.fx_buy, op.current_value, prices["effective_fx"]
             )
             
         for cp in closed_positions:
             cp.realized_profit_pln = FXCalculator.realized_pln(
-                cp.cost, cp.fx_buy, cp.proceeds, cp.fx_sell
+                cp.value_buy, cp.fx_buy, cp.value_sell, cp.fx_sell
             )
 
 
@@ -114,7 +114,7 @@ class PortfolioEngine:
 
         # 1) Koszt historyczny w PLN (po historycznym FX z transakcji)
         historical_cost_pln = sum(
-            op.cost * op.fx_rate for op in open_positions
+            op.value_buy * op.fx_buy for op in open_positions
         )
 
         # 2) Wartość bieżąca w PLN (po bieżącym FX)
@@ -145,7 +145,7 @@ class PortfolioEngine:
         annualized_roi = PercentAnnual(0.0)
 
         # 7) Średnie ceny
-        total_cost_currency = sum(op.cost for op in open_positions)
+        total_cost_currency = sum(op.value_buy for op in open_positions)
         avg_price_currency = (
             total_cost_currency / total_qty if total_qty > 0 else 0.0
         )
@@ -231,14 +231,15 @@ class PortfolioEngine:
         totals.instrument_data.append(
             {
                 "label": asset_data.asset.ticker,
-                "category": asset_data.asset.category2.value,
+                "category1": asset_data.asset.category1.name,
+                "category2": asset_data.asset.category2.name,
                 "value": current_value_pln,
-                "type": asset_data.asset.asset_type,
+                "type": asset_data.asset.asset_type.name,
             }
         )
 
-        totals.allocation[asset_data.asset.asset_type] = (
-            totals.allocation.get(asset_data.asset.asset_type, MoneyAmount(0.0))
+        totals.allocation[asset_data.asset.asset_type.name] = (
+            totals.allocation.get(asset_data.asset.asset_type.name, MoneyAmount(0.0))
             + current_value_pln
         )
 
@@ -249,11 +250,11 @@ class PortfolioEngine:
         )
         totals.annualized_roi = PercentAnnual(0.0)  # na razie 0.0
 
-    def _aggregate_totals(self, totals):
+    def _aggregate_totals(self, totals, grouper: str):
 
         df = totals.instrument_data
         df = pd.DataFrame(df)
-        df = df.groupby(['category', 'type'])['value'].sum().reset_index()
+        df = df.groupby([grouper, 'type'])['value'].sum().reset_index()
         df = df.to_dict('records')
 
         totals.instrument_data_aggregated = df

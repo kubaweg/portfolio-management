@@ -1,13 +1,13 @@
 from typing import List
 from ..schemas.domain.transactions import (
     TickerTransactions,
-    BaseTransaction,
     BuyTransaction,
     SellTransaction,
     InterestTransaction,
     CapitalizationTransaction,
 )
 from ..schemas.domain.positions import OpenPosition, ClosedPosition
+from ..schemas.domain.types import MoneyAmount, AssetQuantity, FXRate
 
 
 class PositionBuilderResult:
@@ -15,9 +15,9 @@ class PositionBuilderResult:
         self,
         open_positions: List[OpenPosition],
         closed_positions: List[ClosedPosition],
-        realized_profit: float,
-        unrealized_profit: float,
-        interest_profit: float = 0.0
+        realized_profit: MoneyAmount,
+        unrealized_profit: MoneyAmount,
+        interest_profit: MoneyAmount = MoneyAmount(0.0)
 
     ):
         self.open_positions = open_positions
@@ -33,13 +33,13 @@ class PositionBuilder:
     listy transakcji domenowych (FIFO).
     """
 
-    def build(self, tt: TickerTransactions, current_price: float) -> PositionBuilderResult:
+    def build(self, tt: TickerTransactions, current_price: MoneyAmount) -> PositionBuilderResult:
         """
         tt: TickerTransactions (posortowane po dacie)
         current_price: bieżąca cena instrumentu (w walucie instrumentu)
         """
 
-        buy_lots: List[dict] = []  # każdy lot: {"qty": float, "price": float}
+        buy_lots: List[dict] = []  # każdy lot: {"qty": AssetQuantity, "price": MoneyAmount}
         open_positions: List[OpenPosition] = []
         closed_positions: List[ClosedPosition] = []
 
@@ -50,9 +50,6 @@ class PositionBuilder:
         for tx in tt.transactions:
             if isinstance(tx, BuyTransaction):
                 self._handle_buy(tx, buy_lots)
-
-            elif isinstance(tx, CapitalizationTransaction):
-                self._handle_capitalization(tx, buy_lots)
 
             elif isinstance(tx, SellTransaction):
                 rp, closed = self._handle_sell(tx, buy_lots)
@@ -72,9 +69,9 @@ class PositionBuilder:
         return PositionBuilderResult(
             open_positions=open_positions,
             closed_positions=closed_positions,
-            realized_profit=realized_profit,
-            unrealized_profit=unrealized_profit,
-            interest_profit=interest_profit
+            realized_profit=MoneyAmount(realized_profit),
+            unrealized_profit=MoneyAmount(unrealized_profit),
+            interest_profit=MoneyAmount(interest_profit)
         )
 
     # --- Metody pomocnicze ---
@@ -82,20 +79,9 @@ class PositionBuilder:
     def _handle_buy(self, tx: BuyTransaction, buy_lots: List[dict]) -> None:
         buy_lots.append(
             {
-                "qty": tx.quantity,
-                "price": tx.price,  # cena w walucie instrumentu,
-                "fx_rate": tx.fx_rate,      # historyczny kurs walutowy
-            }
-        )
-
-    def _handle_capitalization(self, tx: CapitalizationTransaction, buy_lots: List[dict]) -> None:
-        # Kapitalizacja to de facto "dokupienie" jednostek po danej cenie,
-        # ale bez zewnętrznego cashflow (zysk jest wirtualny do momentu sprzedaży).
-        buy_lots.append(
-            {
-                "qty": tx.quantity,
-                "price": tx.price,
-                "fx_rate": tx.fx_rate,
+                "quantity": AssetQuantity(tx.quantity),
+                "value_buy": MoneyAmount(tx.price),  # cena w walucie instrumentu,
+                "fx_buy": FXRate(tx.fx_rate),      # historyczny kurs walutowy
             }
         )
         
@@ -110,7 +96,7 @@ class PositionBuilder:
         - listę ClosedPosition (może być kilka, jeśli sprzedaż konsumuje kilka lotów)
         """
 
-        buy_lots.sort(key=lambda x: x["price"])
+        buy_lots.sort(key=lambda x: x["value_buy"])
         
         remaining_qty = tx.quantity
         realized_profit = 0.0
@@ -118,9 +104,9 @@ class PositionBuilder:
 
         while remaining_qty > 0 and buy_lots:
             lot = buy_lots[0]
-            lot_qty = lot["qty"]
-            lot_price = lot["price"]
-            lot_fx_rate = lot["fx_rate"]
+            lot_qty = lot["quantity"]
+            lot_price = lot["value_buy"]
+            lot_fx_rate = lot["fx_buy"]
 
             matched_qty = min(remaining_qty, lot_qty)
 
@@ -133,20 +119,20 @@ class PositionBuilder:
             closed_positions.append(
                 ClosedPosition(
                     ticker=tx.ticker,
-                    quantity=matched_qty,
-                    cost=cost,
-                    proceeds=proceeds,
-                    fx_buy=lot_fx_rate,
-                    fx_sell=tx.fx_rate,
-                    realized_profit=profit, # w walucie obcej
-                    realized_profit_pln=0.0 # na razie
+                    quantity=AssetQuantity(matched_qty),
+                    value_buy=MoneyAmount(cost),
+                    value_sell=MoneyAmount(proceeds),
+                    fx_buy=FXRate(lot_fx_rate),
+                    fx_sell=FXRate(tx.fx_rate),
+                    realized_profit=MoneyAmount(profit), # w walucie obcej
+                    realized_profit_pln=MoneyAmount(0.0) # na razie
                 )
             )
 
-            lot["qty"] -= matched_qty
+            lot["quantity"] -= matched_qty
             remaining_qty -= matched_qty
 
-            if lot["qty"] <= 0:
+            if lot["quantity"] <= 0:
                 buy_lots.pop(0)
 
         # Jeśli remaining_qty > 0 i nie ma lotów → dane niespójne (sprzedaż > kupno)
@@ -164,8 +150,8 @@ class PositionBuilder:
         total_unrealized = 0.0
 
         for lot in buy_lots:
-            qty = lot["qty"]
-            cost = qty * lot["price"]
+            qty = lot["quantity"]
+            cost = qty * lot["value_buy"]
             current_value = qty * current_price
             unrealized = current_value - cost
             total_unrealized += unrealized
@@ -173,12 +159,12 @@ class PositionBuilder:
             open_positions.append(
                 OpenPosition(
                     ticker=ticker,
-                    quantity=qty,
-                    cost=cost,
-                    fx_rate=lot['fx_rate'],
-                    current_value=current_value,
-                    unrealized_profit=unrealized, # w walucie instrumentu
-                    unrealized_profit_pln=0.0 # na razie
+                    quantity=AssetQuantity(qty),
+                    value_buy=MoneyAmount(cost),
+                    fx_buy=FXRate(lot['fx_buy']),
+                    current_value=MoneyAmount(current_value),
+                    unrealized_profit=MoneyAmount(unrealized), # w walucie instrumentu
+                    unrealized_profit_pln=MoneyAmount(0.0) # na razie
                 )
             )
 
