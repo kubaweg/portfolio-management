@@ -109,6 +109,9 @@ class PositionBuilder:
         - realized_profit z tej sprzedaży
         - listę ClosedPosition (może być kilka, jeśli sprzedaż konsumuje kilka lotów)
         """
+
+        buy_lots.sort(key=lambda x: x["price"])
+        
         remaining_qty = tx.quantity
         realized_profit = 0.0
         closed_positions: List[ClosedPosition] = []

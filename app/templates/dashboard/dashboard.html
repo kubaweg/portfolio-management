@@ -179,25 +179,46 @@
                                 <!-- POZYCJE OTWARTE -->
                                 <h6 class="fw-bold mt-3">Pozycje otwarte</h6>
                                 {% if item.open_positions %}
-                                <table class="table table-sm table-bordered bg-white mb-3" style="font-size: 0.85rem;">
+                                <table class="table table-sm table-bordered bg-white mb-3" style="font-size: 0.75rem;">
                                     <thead class="table-secondary">
                                         <tr>
-                                            <th>Ilość</th>
-                                            <th class="text-end">Koszt (PLN)</th>
-                                            <th class="text-end">Wartość bieżąca (PLN)</th>
+                                            <th>Wolumen</th>
+                                            <th class="text-end">Wartość początkowa (PLN)</th>
+                                            <th class="text-end">Kurs walutowy początkowy</th>
+
+                                            <th class="text-end">Wartość końcowa (PLN)</th>
+                                            <th class="text-end">Kurs walutowy końcowy</th>
+
+                                            <th class="text-end">Zmiana wartości [%]</th>
+                                            <th class="text-end">Zmiana kursu walutowego [%]</th>
+
+                                            <th class="text-end">Zysk niezrealizowany [%]</th>
                                             <th class="text-end">Zysk niezrealizowany</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for op in item.open_positions %}
                                         <tr>
-                                            <td>{{ "%.4f"|format(op.quantity) }}</td>
-                                            <td class="text-end">{{ (op.cost * op.fx_rate)|format_pln }}</td>
-                                            <td class="text-end">{{ (op.current_value *
-                                                item.fx_effective_rate)|format_pln }}</td>
+                                            <td>{{ op.quantity |format_quantity }}</td>
+                                            <td class="text-end">{{ (op.cost * op.fx_rate) |format_pln }}</td>
+                                            <td class="text-end">{{ op.fx_rate |format_fx }}</td>
+                                            <td class="text-end">{{ (op.current_value * item.fx_effective_rate)
+                                                |format_pln }}</td>
+                                            <td class="text-end">{{ item.fx_effective_rate |format_fx }}</td>
+
+                                            <td class="text-end">{{ ((op.current_value / op.cost) - 1)|format_pct }}
+                                            </td>
+                                            <td class="text-end">{{ ((item.fx_effective_rate / op.fx_rate) -
+                                                1)|format_pct }}</td>
+
                                             <td
                                                 class="text-end {{ 'text-success' if op.unrealized_profit_pln > 0 else ('text-danger' if op.unrealized_profit_pln < 0 else 'text-dark') }}">
-                                                {{ op.unrealized_profit_pln|format_pln }}
+                                                {{ (op.unrealized_profit_pln / (op.cost * op.fx_rate)) |format_pct }}
+                                            </td>
+
+                                            <td
+                                                class="text-end {{ 'text-success' if op.unrealized_profit_pln > 0 else ('text-danger' if op.unrealized_profit_pln < 0 else 'text-dark') }}">
+                                                {{ op.unrealized_profit_pln |format_pln }}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -210,21 +231,40 @@
                                 <!-- POZYCJE ZAMKNIĘTE -->
                                 <h6 class="fw-bold mt-4">Pozycje zamknięte</h6>
                                 {% if item.closed_positions %}
-                                <table class="table table-sm table-bordered bg-white mb-3" style="font-size: 0.85rem;">
+                                <table class="table table-sm table-bordered bg-white mb-3" style="font-size: 0.75rem;">
                                     <thead class="table-secondary">
                                         <tr>
-                                            <th>Ilość</th>
-                                            <th class="text-end">Koszt (PLN)</th>
-                                            <th class="text-end">Przychód (PLN)</th>
+                                            <th>Wolumen</th>
+                                            <th class="text-end">Wartość początkowa (PLN)</th>
+                                            <th class="text-end">Kurs walutowy początkowy</th>
+
+                                            <th class="text-end">Wartość końcowa (PLN)</th>
+                                            <th class="text-end">Kurs walutowy końcowy</th>
+
+                                            <th class="text-end">Zmiana wartości [%]</th>
+                                            <th class="text-end">Zmiana kursu walutowego [%]</th>
+
+                                            <th class="text-end">Zysk zrealizowany [%]</th>
                                             <th class="text-end">Zysk zrealizowany</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for cp in item.closed_positions %}
                                         <tr>
-                                            <td>{{ "%.4f"|format(cp.quantity) }}</td>
-                                            <td class="text-end">{{ cp.cost|format_pln }}</td>
-                                            <td class="text-end">{{ cp.proceeds|format_pln }}</td>
+                                            <td>{{ cp.quantity |format_quantity }}</td>
+                                            <td class="text-end">{{ (cp.cost * cp.fx_buy) |format_pln }}</td>
+                                            <td class="text-end">{{ cp.fx_buy|format_fx }}</td>
+                                            <td class="text-end">{{ (cp.proceeds * cp.fx_sell) |format_pln }}</td>
+                                            <td class="text-end">{{ cp.fx_sell|format_fx }}</td>
+
+                                            <td class="text-end">{{ ((cp.proceeds / cp.cost) - 1)|format_pct }}</td>
+                                            <td class="text-end">{{ ((cp.fx_sell / cp.fx_buy) - 1)|format_pct }}</td>
+
+                                            <td
+                                                class="text-end {{ 'text-success' if cp.realized_profit_pln > 0 else ('text-danger' if cp.realized_profit_pln < 0 else 'text-dark') }}">
+                                                {{ (cp.realized_profit_pln / (cp.cost * cp.fx_buy))|format_pct }}
+                                            </td>
+
                                             <td
                                                 class="text-end {{ 'text-success' if cp.realized_profit_pln > 0 else ('text-danger' if cp.realized_profit_pln < 0 else 'text-dark') }}">
                                                 {{ cp.realized_profit_pln|format_pln }}

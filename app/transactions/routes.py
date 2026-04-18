@@ -33,9 +33,10 @@ def api_add_transaction():
             timestamp=warsaw_tz.localize(naive_dt),
             quantity=float(get_val('quantity') or -1.0),
             price=float(get_val('price') or -1.0),
-            fx_rate=float(get_val('exchange_rate') or -1.0),
+            fx_rate=float(get_val('fx_rate') or -1.0),
             fx_source_currency=get_val('fx_source_currency'),
-            fx_target_currency=get_val('fx_source_currency')
+            fx_target_currency=get_val('fx_source_currency'),
+            notes=get_val('notes')
         )
         db.session.add(new_trans)
         db.session.commit()

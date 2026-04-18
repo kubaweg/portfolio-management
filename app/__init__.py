@@ -9,6 +9,20 @@ def create_app():
 
     import locale
 
+    @app.template_filter('format_quantity')
+    def format_quantity(value):
+        if value is None:
+            return "0.0000"
+        # Formatowanie: tysiące oddzielone spacją, 2 miejsca po przecinku
+        return "{:,.4f}".format(value).replace(",", " ")
+    
+    @app.template_filter('format_fx')
+    def format_fx(value):
+        if value is None:
+            return "0.0000"
+        # Formatowanie: tysiące oddzielone spacją, 2 miejsca po przecinku
+        return "{:,.4f}".format(value).replace(",", " ")
+    
     @app.template_filter('format_pln')
     def format_pln(value):
         if value is None:
