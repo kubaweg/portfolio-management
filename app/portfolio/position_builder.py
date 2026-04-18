@@ -61,7 +61,7 @@ class PositionBuilder:
 
             elif isinstance(tx, InterestTransaction):
                 # Odsetki traktujemy jako zysk zrealizowany (cashflow)
-                interest_profit += tx.amount
+                interest_profit += tx.value
 
         # Po przejściu wszystkich transakcji budujemy pozycje otwarte
         total_unrealized, open_positions = self._build_open_positions(

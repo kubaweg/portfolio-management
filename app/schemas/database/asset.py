@@ -1,20 +1,12 @@
 from app import db
 from ..domain.assets import (
-    AssetType, Category1, Category2, GeoRegion, GeoCountry, MarketType, DistributionPolicy, ReplicationMethod, InterestHandling, CouponFrequency
+    AssetType, 
+    Category1, Category2, 
+    GeoRegion, GeoCountry, MarketType, 
+    DistributionPolicy, ReplicationMethod, 
+    
+    InterestHandling, CouponFrequency, RetailBondBenchmark
 )
-from datetime import date
-
-
-# --- MIXINY (WSPÓLNE POLA DLA GIEŁDY) ---
-
-class ExchangeTradedMixin:
-    isin = db.Column(db.String, unique=True, nullable=False)
-    issuer = db.Column(db.String)
-    ter = db.Column(db.Numeric(6, 4))
-    listing_venue = db.Column(db.String)
-    domicile = db.Column(db.String)
-    spread = db.Column(db.Numeric(10, 6), default=0, nullable=False)
-
 
 
 # --- MODELE BAZY DANYCH ---
@@ -48,6 +40,16 @@ class Asset(db.Model):
         "polymorphic_identity": "BASE"
     }
 
+# --- MIXINY (WSPÓLNE POLA DLA GIEŁDY) ---
+
+class ExchangeTradedMixin:
+    isin = db.Column(db.String, unique=True, nullable=False)
+    issuer = db.Column(db.String)
+    ter = db.Column(db.Numeric(6, 4))
+    listing_venue = db.Column(db.String)
+    domicile = db.Column(db.String)
+    spread = db.Column(db.Numeric(10, 6), default=0, nullable=False)
+
 
 class ETF(Asset, ExchangeTradedMixin):
     __tablename__ = "assets_etf"
@@ -75,13 +77,22 @@ class ETC(Asset, ExchangeTradedMixin):
         "polymorphic_identity": AssetType.ETC
     }
 
-class EQUITY(Asset, ExchangeTradedMixin):
+class Equity(Asset, ExchangeTradedMixin):
     __tablename__ = "assets_akcje"
 
     id = db.Column(db.Integer, db.ForeignKey('assets.id'), primary_key=True)
 
     __mapper_args__ = {
         "polymorphic_identity": AssetType.EQUITY
+    }
+
+class Crypto(Asset, ExchangeTradedMixin):
+    __tablename__ = "assets_crypto"
+
+    id = db.Column(db.Integer, db.ForeignKey('assets.id'), primary_key=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": AssetType.CRYPTO
     }
 
 
@@ -94,6 +105,7 @@ class Bond(Asset):
 
     issue_date = db.Column(db.Date, nullable=False)
     maturity_date = db.Column(db.Date, nullable=False)
+    
     nominal_value = db.Column(db.Numeric(20, 4), nullable=False)
     
     interest_handling = db.Column(db.Enum(InterestHandling), nullable=False)
@@ -103,7 +115,7 @@ class Bond(Asset):
 
     is_indexed = db.Column(db.Boolean, default=False)
     margin = db.Column(db.Numeric(6, 4))
-    benchmark = db.Column(db.String)
+    benchmark = db.Column(db.Enum(RetailBondBenchmark))
     
     early_redemption_penalty = db.Column(db.Numeric(10, 4))
     

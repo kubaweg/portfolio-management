@@ -4,7 +4,6 @@ from app.schemas.database.asset import Asset
 from app.schemas.database.transaction import Transaction
 from app.schemas.domain.transactions import TransactionType
 from decimal import Decimal
-from datetime import datetime
 
 def import_from_excel(file_path):
     app = create_app()
@@ -62,8 +61,6 @@ def import_from_excel(file_path):
                     quantity=Decimal(str(row['quantity'])),
                     price=Decimal(str(row['price'])),
                     fx_rate=Decimal(str(row['fx_rate'])),
-                    fx_source_currency=str(row['fx_source_currency']),
-                    fx_target_currency=str(row['fx_target_currency']),
                     notes=str(row['notes']) if pd.notna(row['notes']) else None
                 )
 

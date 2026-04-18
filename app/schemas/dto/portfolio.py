@@ -2,28 +2,29 @@ from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
 from ..database.asset import Asset
-from ..domain.types import PLN, CurrencyForeign, PercentTotal, PercentAnnual, AssetQuantity, FXRate
+from ..domain.types import MoneyAmount, AssetQuantity, PercentTotal, PercentAnnual, FXRate
 from ..domain.positions import OpenPosition, ClosedPosition
+from ..domain.transactions import TransactionType
 
 CurrentInstrumentData = dict
 
 class PortfolioTotals(BaseModel):
-    invested: PLN = Field(ge=0)
-    current_value: PLN = Field(ge=0)
-    interest: PLN = Field(ge=0)
-    profit: PLN
+    invested: float = Field(ge=0)
+    current_value: float = Field(ge=0)
+    interest: float = Field(ge=0)
+    profit: float
     roi: PercentTotal
     annualized_roi: PercentAnnual
-    allocation: dict[str, PLN]
+    allocation: dict[str, float]
     instrument_data: list[CurrentInstrumentData]
     instrument_data_aggregated: list[CurrentInstrumentData]
 
 class TransactionData(BaseModel):
-    date: datetime
-    transaction_type: str
+    timestamp: datetime
+    type: TransactionType
     quantity: AssetQuantity
-    price_per_unit: PLN | CurrencyForeign
-    exchange_rate: FXRate
+    price: MoneyAmount
+    fx_rate: FXRate
     roi: PercentTotal
 
 class AssetData(BaseModel):
@@ -32,12 +33,12 @@ class AssetData(BaseModel):
 
     asset: Asset
     quantity: AssetQuantity
-    avg_price_currency: CurrencyForeign
-    avg_price_pln: PLN
-    current_price: CurrencyForeign
+    avg_price_currency: MoneyAmount
+    avg_price_pln: MoneyAmount
+    current_price: MoneyAmount
     current_price_datetime: datetime
-    current_value_pln: PLN
-    profit_loss_pln: PLN
+    current_value_pln: MoneyAmount
+    profit_loss_pln: MoneyAmount
     fx_rate: FXRate
     fx_effective_rate: FXRate
     fx_datetime: datetime
@@ -46,6 +47,6 @@ class AssetData(BaseModel):
     transactions: list[TransactionData]
     open_positions: list[OpenPosition]
     closed_positions: list[ClosedPosition]
-    realized_profit_pln: float
-    unrealized_profit_pln: float
-    interest_profit_pln: float
+    realized_profit_pln: MoneyAmount
+    unrealized_profit_pln: MoneyAmount
+    interest_profit_pln: MoneyAmount

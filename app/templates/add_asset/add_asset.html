@@ -16,9 +16,9 @@
                             <select class="form-select form-select-lg border-primary" id="assetType" name="asset_type"
                                 required>
                                 <option value="" selected disabled>-- Wybierz --</option>
-                                <option value="ETF">ETF</option>
-                                <option value="ETC">ETC</option>
-                                <option value="BOND">Obligacja</option>
+                                {% for asset in AssetType %}
+                                <option value="{{ asset.name }}">{{ asset.value }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                     </div>
@@ -47,23 +47,18 @@
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Kategoria 1</label>
                                     <select class="form-select" name="category1" required>
-                                        <option value="EQUITY">Akcje</option>
-                                        <option value="BOND">Obligacje</option>
-                                        <option value="COMMODITY">Towary/surowce</option>
-                                        <option value="MIXED">Mix</option>
-                                        <option value="CASH">Cash</option>
+                                        {% for cat in Category1 %}
+                                        <option value="{{ cat.name }}">{{ cat.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Kategoria 2</label>
                                     <select class="form-select" name="category2">
                                         <option value="">-- Brak --</option>
-                                        <option value="EQUITY_GLOBAL">Akcje globalne</option>
-                                        <option value="EQUITY_REGION">Akcje regionalne</option>
-                                        <option value="EQUITY_SECTOR">Akcje sektorowe</option>
-                                        <option value="BOND_RETAIL_INFLATION_LINKED">Obligacja detaliczna indeksowana
-                                            inflacją</option>
-                                        <option value="COMMODITY_GOLD">Złoto</option>
+                                        {% for cat in Category2 %}
+                                        <option value="{{ cat.name }}">{{ cat.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
@@ -74,20 +69,17 @@
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Region</label>
                                     <select class="form-select" name="geo_region">
-                                        <option value="GLOBAL">Cały świat</option>
-                                        <option value="EUROPE">Europa</option>
-                                        <option value="NORTH_AMERICA">Ameryka Północna</option>
-                                        <option value="POLAND">Polska</option>
-                                        <option value="USA">USA</option>
+                                        {% for region in GeoRegion %}
+                                        <option value="{{ region.name }}">{{ region.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Typ Rynku</label>
                                     <select class="form-select" name="market_type">
-                                        <option value="DEVELOPED">Rozwinięty</option>
-                                        <option value="EMERGING">Wschodzący</option>
-                                        <option value="FRONTIER">Nierozwinięty</option>
-                                        <option value="MIXED">Mix</option>
+                                        {% for market in MarketType %}
+                                        <option value="{{ market.name }}">{{ market.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
@@ -111,8 +103,7 @@
                     </div>
 
                     <div id="section-ETF" class="card shadow-sm mb-4 d-none">
-                        <div class="card-header bg-danger text-white"><strong>Szczegóły Techniczne ETF</strong>
-                        </div>
+                        <div class="card-header bg-danger text-white"><strong>Szczegóły Techniczne ETF</strong></div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-12 mb-3">
@@ -136,15 +127,17 @@
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Polityka dywidend</label>
                                     <select class="form-select" name="distribution_policy">
-                                        <option value="ACCUMULATING">Akumulujący</option>
-                                        <option value="DISTRIBUTING">Dystrybuujący</option>
+                                        {% for policy in DistributionPolicy %}
+                                        <option value="{{ policy.name }}">{{ policy.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Metoda replikacji</label>
                                     <select class="form-select" name="replication_method">
-                                        <option value="PHYSICAL">Fizyczna</option>
-                                        <option value="SYNTHETIC">Syntetyczna</option>
+                                        {% for method in ReplicationMethod %}
+                                        <option value="{{ method.name }}">{{ method.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
@@ -203,18 +196,17 @@
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Obsługa odsetek</label>
                                     <select class="form-select" name="interest_handling">
-                                        <option value="PAYOUT">Wypłata</option>
-                                        <option value="CAPITALIZATION">Kapitalizacja</option>
+                                        {% for handling in InterestHandling %}
+                                        <option value="{{ handling.name }}">{{ handling.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Częstotliwość kuponu</label>
                                     <select class="form-select" name="coupon_frequency">
-                                        <option value="MONTHLY">Co miesiąc</option>
-                                        <option value="QUARTERLY">Co kwartał</option>
-                                        <option value="SEMI_ANNUALLY">Co pół roku</option>
-                                        <option value="YEARLY">Co roku</option>
-                                        <option value="AT_THE_END">Przy wykupie</option>
+                                        {% for freq in CouponFrequency %}
+                                        <option value="{{ freq.name }}">{{ freq.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
@@ -240,8 +232,9 @@
                                     <label class="form-label">Benchmark</label>
                                     <select class="form-select" name="inflation_index">
                                         <option value="">-- Brak --</option>
-                                        <option value="NBP">Stopa referencyjna NBP</option>
-                                        <option value="CPI">Inflacja CPI wg GUS</option>
+                                        {% for benchmark in RetailBondBenchmark %}
+                                        <option value="{{ benchmark.name }}">{{ benchmark.value }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">

@@ -6,12 +6,11 @@ from app.core.fx_calculator import FXCalculator
 from app.portfolio.position_builder import PositionBuilder
 
 from app.schemas.domain.types import (
-    PLN,
-    CurrencyForeign,
-    FXRate,
+    MoneyAmount,
+    AssetQuantity,
     PercentTotal,
     PercentAnnual,
-    AssetQuantity,
+    FXRate
 )
 from app.schemas.dto.portfolio import AssetData, PortfolioTotals, TransactionData
 from app.core.market_data import MarketDataProvider
@@ -77,9 +76,7 @@ class PortfolioEngine:
     # ---------------------------------------------------------
     def _get_market_prices(self, asset: Asset):
         raw_price = MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type)
-        asset_price = CurrencyForeign(
-            raw_price * (1.0 - float(asset.spread))
-        )
+        asset_price = raw_price * (1.0 if asset.asset_type == AssetType.BOND else (1.0 - float(asset.spread)))
 
         fx_rate = FXRate(MarketDataProvider.get_fx_rate(asset.currency))
         effective_fx = FXRate(
@@ -162,12 +159,12 @@ class PortfolioEngine:
         asset_data = AssetData(
             asset=asset,
             quantity=AssetQuantity(total_qty),
-            avg_price_currency=CurrencyForeign(avg_price_currency),
-            avg_price_pln=PLN(avg_price_pln),
+            avg_price_currency=MoneyAmount(avg_price_currency),
+            avg_price_pln=MoneyAmount(avg_price_pln),
             current_price=prices["asset_price"],
             current_price_datetime=prices["asset_dt"],
-            current_value_pln=PLN(current_value_pln),
-            profit_loss_pln=PLN(realized_profit_pln + interest_profit_pln + unrealized_profit_pln),
+            current_value_pln=MoneyAmount(current_value_pln),
+            profit_loss_pln=MoneyAmount(realized_profit_pln + interest_profit_pln + unrealized_profit_pln),
             fx_rate=prices["fx_rate"],
             fx_effective_rate=prices["effective_fx"],
             fx_datetime=prices["fx_dt"],
@@ -176,9 +173,9 @@ class PortfolioEngine:
             transactions=enriched_transactions,
             open_positions=open_positions,
             closed_positions=closed_positions,
-            realized_profit_pln=realized_profit_pln,
-            unrealized_profit_pln=unrealized_profit_pln,
-            interest_profit_pln=interest_profit_pln,
+            realized_profit_pln=MoneyAmount(realized_profit_pln),
+            unrealized_profit_pln=MoneyAmount(unrealized_profit_pln),
+            interest_profit_pln=MoneyAmount(interest_profit_pln),
         )
 
         metrics = {
@@ -196,11 +193,11 @@ class PortfolioEngine:
         for tx in txs:
             dto.append(
                 TransactionData(
-                    date=tx.date,
-                    transaction_type=tx.type.value,
+                    timestamp=tx.timestamp,
+                    type=tx.type.value,
                     quantity=AssetQuantity(getattr(tx, "quantity", 0.0)),
-                    price_per_unit=CurrencyForeign(getattr(tx, "price", 0.0)),
-                    exchange_rate=FXRate(getattr(tx, "fx_rate", 1.0)),
+                    price=MoneyAmount(getattr(tx, "price", 0.0)),
+                    fx_rate=FXRate(getattr(tx, "fx_rate", 1.0)),
                     roi=PercentTotal(0.0),  # na razie 0.0
                 )
             )
@@ -211,10 +208,10 @@ class PortfolioEngine:
     # ---------------------------------------------------------
     def _init_totals(self):
         return PortfolioTotals(
-            invested=PLN(0.0),
-            current_value=PLN(0.0),
-            interest=PLN(0.0),
-            profit=PLN(0.0),
+            invested=MoneyAmount(0.0),
+            current_value=MoneyAmount(0.0),
+            interest=MoneyAmount(0.0),
+            profit=MoneyAmount(0.0),
             roi=PercentTotal(0.0),
             annualized_roi=PercentAnnual(0.0),
             allocation={},
@@ -223,9 +220,9 @@ class PortfolioEngine:
         )
 
     def _update_totals(self, totals, asset_data: AssetData, metrics: dict):
-        invested_pln = PLN(metrics["historical_cost_pln"])
-        current_value_pln = PLN(metrics["current_value_pln"])
-        interest_profit_pln = PLN(metrics["interest_profit_pln"])
+        invested_pln = MoneyAmount(metrics["historical_cost_pln"])
+        current_value_pln = MoneyAmount(metrics["current_value_pln"])
+        interest_profit_pln = MoneyAmount(metrics["interest_profit_pln"])
 
         totals.invested += invested_pln
         totals.current_value += current_value_pln
@@ -241,12 +238,12 @@ class PortfolioEngine:
         )
 
         totals.allocation[asset_data.asset.asset_type] = (
-            totals.allocation.get(asset_data.asset.asset_type, PLN(0.0))
+            totals.allocation.get(asset_data.asset.asset_type, MoneyAmount(0.0))
             + current_value_pln
         )
 
     def _finalize_totals(self, totals):
-        totals.profit = PLN(totals.current_value + totals.interest - totals.invested)
+        totals.profit = MoneyAmount(totals.current_value + totals.interest - totals.invested)
         totals.roi = PercentTotal(
             totals.profit / totals.invested if totals.invested > 0 else 0.0
         )

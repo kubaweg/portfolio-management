@@ -1,35 +1,34 @@
 from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel
-from .types import FXRate
+from .types import FXRate, AssetQuantity, AssetPrice
 
 class TransactionType(str, Enum):
-    BUY = "KUPNO"
-    SELL = "SPRZEDAŻ"
-    INTEREST = "ODSETKI"
-    CAPITALIZATION = "KAPITALIZACJA"
+    BUY = "Kupno"
+    SELL = "Sprzedaż"
+    INTEREST = "Odsetki"
 
 class BaseTransaction(BaseModel):
     ticker: str
-    date: datetime
+    timestamp: datetime
     type: TransactionType
 
 class BuyTransaction(BaseTransaction):
-    quantity: float
-    price: float
+    quantity: AssetQuantity
+    price: AssetPrice
     fx_rate: FXRate
 
 class SellTransaction(BaseTransaction):
-    quantity: float
-    price: float
+    quantity: AssetQuantity
+    price: AssetPrice
     fx_rate: FXRate
 
 class InterestTransaction(BaseTransaction):
-    amount: float
+    value: AssetQuantity
 
 class CapitalizationTransaction(BaseTransaction):
-    quantity: float
-    price: float
+    quantity: AssetQuantity
+    price: AssetPrice
     fx_rate: FXRate
 
 class TickerTransactions(BaseModel):

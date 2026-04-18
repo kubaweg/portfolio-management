@@ -1,7 +1,7 @@
 from typing import NewType
 
-PLN = NewType('PLN', float)
-CurrencyForeign = NewType('CurrencyForeign', float)
+AssetPrice = NewType('AssetPrice', float)
+MoneyAmount = NewType('MoneyAmount', float)
 
 PercentTotal = NewType('PercentTotal', float)
 PercentAnnual = NewType('PercentAnnual', float)

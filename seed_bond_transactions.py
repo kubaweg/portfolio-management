@@ -71,7 +71,7 @@ def finalize_bond_import(input_file):
                 # Traktujemy to jako SPRZEDAŻ, aby zdjąć jednostki ze stanu
                 typ, ilosc, cena = TransactionType.SELL, kwota / float(asset.nominal_value), float(asset.nominal_value)
             elif "naliczenie odsetek" in dyspozycja or "wykup - odsetki" in dyspozycja:
-                typ, ilosc, cena =TransactionType.INTEREST, 1.0, kwota
+                typ, ilosc, cena = TransactionType.INTEREST, 1.0, kwota
             else:
                 continue
 
@@ -96,13 +96,11 @@ def finalize_bond_import(input_file):
             new_trans = Transaction(
                 asset_id=asset.id,
                 type=typ,
+                timestamp=transaction_date,
+                created_at=datetime.now(),
                 quantity=ilosc,
                 price=cena,
-                fx_rate=1.0,
-                fx_source_currency='PLN',
-                fx_target_currency='PLN',
-                timestamp=transaction_date,
-                created_at=datetime.now()
+                fx_rate=1.0
             )
             db.session.add(new_trans)
             added_count += 1

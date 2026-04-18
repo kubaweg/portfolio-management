@@ -18,8 +18,6 @@ class Transaction(db.Model):
     price = db.Column(db.Numeric(18, 8))
 
     fx_rate = db.Column(db.Numeric(18, 8))
-    fx_source_currency = db.Column(db.String)
-    fx_target_currency = db.Column(db.String)
 
     notes = db.Column(db.String)
     

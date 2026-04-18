@@ -18,7 +18,7 @@ class TransactionMapper:
         if ttype == TransactionType.BUY.value:
             return BuyTransaction(
                 ticker=ticker,
-                date=tx.timestamp,
+                timestamp=tx.timestamp,
                 type=TransactionType.BUY,
                 quantity=tx.quantity,
                 price=tx.price,
@@ -28,7 +28,7 @@ class TransactionMapper:
         if ttype == TransactionType.SELL.value:
             return SellTransaction(
                 ticker=ticker,
-                date=tx.timestamp,
+                timestamp=tx.timestamp,
                 type=TransactionType.SELL,
                 quantity=tx.quantity,
                 price=tx.price,
@@ -38,9 +38,9 @@ class TransactionMapper:
         if ttype == TransactionType.INTEREST.value:
             return InterestTransaction(
                 ticker=ticker,
-                date=tx.timestamp,
+                timestamp=tx.timestamp,
                 type=TransactionType.INTEREST,
-                amount=tx.price * tx.fx_rate,
+                value=tx.price * tx.fx_rate,
             )
 
         raise ValueError(f"Unknown transaction_type: {ttype}")

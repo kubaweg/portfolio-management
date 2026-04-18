@@ -14,7 +14,7 @@ def group_by_ticker(domain_txs: List[BaseTransaction]) -> List[TickerTransaction
     return [
         TickerTransactions(
             ticker=ticker,
-            transactions=sorted(txs, key=lambda t: t.date)
+            transactions=sorted(txs, key=lambda t: t.timestamp)
         )
         for ticker, txs in buckets.items()
     ]

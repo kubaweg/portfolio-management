@@ -5,28 +5,37 @@ class AssetType(str, enum.Enum):
     ETC = "ETC"
     BOND = "Obligacja"
     EQUITY = "Akcja"
+    CRYPTO = "Kryptowaluta"
 
 class Category1(str, enum.Enum):
     EQUITY = "Akcje"
-    MIXED = "Mix"
     BOND = "Obligacje"
     COMMODITY = "Surowce/towary"
-    CASH = "Cash"
+    CRYPTO = "Kryptowaluty"
+    MIXED = "Mix"
+
 
 class Category2(str, enum.Enum):
-    EQUITY_GLOBAL = "Akcje ogólnoświatowe"
-    EQUITY_REGION = "Akcje regionalne"
-    EQUITY_COUNTRY = "Akcje krajowe"
-    EQUITY_FACTOR = "Akcje faktorowe"
-    EQUITY_SECTOR = "Akcje sektorowe"
+    EQUITY_GLOBAL = "Akcje - cały świat"
+    EQUITY_REGION = "Akcje - region"
+    EQUITY_COUNTRY = "Akcje - kraj"
+    EQUITY_FACTOR = "Akcje - faktor"
+    EQUITY_SECTOR = "Akcje - sektor"
+
     BOND_RETAIL_FIXED_RATE = "Obligacje skarbowe o stopie stałej"
     BOND_RETAIL_INFLATION_LINKED = "Obligacje skarbowe indeksowane inflacją"
     BOND_RETAIL_INTEREST_LINKED = "Obligacje skarbowe indeksowane stopą referencyjną"
+
     BOND_CORP_FIXED = "Obligacje korporacyjne o stopie stałej"
-    BOND_CORP_FLOATING = "Obligacje skarbowe zmiennoprocentowe"
+    BOND_CORP_FLOATING = "Obligacje korporacyjne zmiennoprocentowe"
+
     COMMODITY_GOLD = "Surowce - złoto"
     COMMODITY_SILVER = "Surowce - srebro"
     COMMODITY_BROAD = "Surowce - inne"
+
+    CRYPTO = "Kryptowaluty"
+    
+    MIXED = "Mix"
 
 # Naprawione: Tylko lokalizacje geograficzne
 class GeoRegion(str, enum.Enum):
@@ -74,3 +83,7 @@ class CouponFrequency(str, enum.Enum):
 class InterestHandling(str, enum.Enum):
     PAYOUT = "Wypłata"
     CAPITALIZATION = "Kapitalizacja"
+
+class RetailBondBenchmark(str, enum.Enum):
+    CPI = "Inflacja CPI wg GUS"
+    NBP = "Stopa referencyjna NBP"
