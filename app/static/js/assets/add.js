@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertBox = $('#form-alert');
     const submitBtn = $('#submit-btn');
     const assetTypeSelect = $('#assetType');
+    const formBody = $('#form-body'); // NOWE: Odniesienie do głównego ciała formularza
 
     // Lista sekcji musi zgadzać się z ID w HTML
     const extraSections = ['section-ETF', 'section-ETC', 'section-BOND'];
@@ -16,12 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOGIKA WIDOCZNOŚCI ---
 
     const updateVisibleSections = (selectedType) => {
+        // 1. Zarządzanie widocznością całego ciała formularza
+        if (selectedType) {
+            if (formBody) formBody.classList.remove('d-none');
+        } else {
+            if (formBody) formBody.classList.add('d-none');
+        }
+
+        // 2. Zarządzanie widocznością dedykowanych sekcji
         extraSections.forEach(id => {
             const section = $(`#${id}`);
             if (section) {
                 section.classList.add('d-none');
-                // Opcjonalne: czyścimy pola ukrytej sekcji przy zmianie typu
-                // section.querySelectorAll('input, select').forEach(i => i.value = '');
             }
         });
 
@@ -52,14 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {};
 
         // 2. INTELIGENTNE PRZETWARZANIE DANYCH
-        // Musimy ręcznie obsłużyć checkboxy i puste pola
-
-        // Pobieramy listę wszystkich nazw pól, które są checkboxami w Twoim HTML
         const checkboxNames = ['active', 'is_indexed', 'physical_backing', 'secured'];
 
-        // Iterujemy po wszystkich polach formularza
         for (let [key, value] of formData.entries()) {
-            // Jeśli pole jest puste, zamień na null (ważne dla bazy danych!)
             if (value === "" && key !== 'ticker') {
                 data[key] = null;
             } else {
@@ -67,16 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Specjalna obsługa checkboxów (jeśli nie ma go w formData, znaczy że false)
         checkboxNames.forEach(name => {
-            // Sprawdzamy czy dany checkbox w ogóle istnieje w formularzu
             if (form.querySelector(`input[name="${name}"]`)) {
                 data[name] = formData.has(name);
             }
         });
 
         try {
-            const response = await fetch('/asset/api/add', {
+            const response = await fetch('/add_asset/api/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

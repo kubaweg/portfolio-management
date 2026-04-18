@@ -2,237 +2,263 @@
 {% block content %}
 <div class="container mt-4 mb-5">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <h2 class="mb-4 text-primary"><i class="fas fa-database me-2"></i>Nowy Asset w Bazie</h2>
+
+        <div class="col-md-8 col-lg-6">
+            <h2 class="mb-4"><i class="fas fa-database me-2"></i>Dodaj nowy instrument</h2>
 
             <form id="add-asset-form">
+
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-dark text-white fw-bold">1. Dane podstawowe (Wspólne)</div>
-                    <div class="card-body bg-light">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Ticker *</label>
-                                <input type="text" class="form-control" name="ticker" required placeholder="np. CSPX.L">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Nazwa instrumentu *</label>
-                                <input type="text" class="form-control" name="name" required
-                                    placeholder="np. iShares Core S&P 500">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">ISIN</label>
-                                <input type="text" class="form-control" name="isin" placeholder="IE00B5BMR087">
-                            </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Rodzaj aktywa (Polymorphic) *</label>
-                                <select class="form-select border-primary" id="assetType" name="asset_type" required>
-                                    <option value="" selected disabled>-- Wybierz --</option>
-                                    <option value="ETF">ETF</option>
-                                    <option value="ETC">ETC</option>
-                                    <option value="BOND">OBLIGACJA (BOND)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Kategoria 1 *</label>
-                                <select class="form-select" name="category1" required>
-                                    <option value="EQUITY">EQUITY</option>
-                                    <option value="BOND">BOND</option>
-                                    <option value="COMMODITY">COMMODITY</option>
-                                    <option value="MIXED">MIXED</option>
-                                    <option value="CASH">CASH</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Kategoria 2</label>
-                                <select class="form-select" name="category2">
-                                    <option value="">-- Brak --</option>
-                                    <option value="EQUITY_GLOBAL">EQUITY_GLOBAL</option>
-                                    <option value="EQUITY_REGION">EQUITY_REGION</option>
-                                    <option value="EQUITY_SECTOR">EQUITY_SECTOR</option>
-                                    <option value="BOND_RETAIL_INFLATION_LINKED">BOND_RETAIL_INFLATION</option>
-                                    <option value="COMMODITY_GOLD">COMMODITY_GOLD</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Waluta *</label>
-                                <input type="text" class="form-control" name="currency" required value="USD"
-                                    maxlength="3">
-                            </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label">Region (GeoRegion)</label>
-                                <select class="form-select" name="geo_region">
-                                    <option value="GLOBAL">GLOBAL</option>
-                                    <option value="EUROPE">EUROPE</option>
-                                    <option value="NORTH_AMERICA">NORTH_AMERICA</option>
-                                    <option value="POLAND">POLAND</option>
-                                    <option value="USA">USA</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Typ Rynku (MarketType)</label>
-                                <select class="form-select" name="market_type">
-                                    <option value="DEVELOPED">DEVELOPED</option>
-                                    <option value="EMERGING">EMERGING</option>
-                                    <option value="FRONTIER">FRONTIER</option>
-                                    <option value="MIXED">MIXED</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Spread</label>
-                                <input type="number" step="0.000001" class="form-control" name="spread" value="0">
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="active" id="activeCheck"
-                                        checked>
-                                    <label class="form-check-label" for="activeCheck">Aktywny (Widoczny)</label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Notatki</label>
-                                <textarea class="form-control" name="notes" rows="2"></textarea>
-                            </div>
+                    <div class="card-header bg-dark text-white fw-bold">Rodzaj Instrumentu</div>
+                    <div class="card-body">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Wybierz rodzaj instrumentu, aby rozpocząć</label>
+                            <select class="form-select form-select-lg border-primary" id="assetType" name="asset_type"
+                                required>
+                                <option value="" selected disabled>-- Wybierz --</option>
+                                <option value="ETF">ETF</option>
+                                <option value="ETC">ETC</option>
+                                <option value="BOND">Obligacja</option>
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                <div id="section-ETF" class="card shadow-sm mb-4 d-none border-success">
-                    <div class="card-header bg-success text-white"><strong>2. Szczegóły Techniczne ETF</strong></div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Emitent (Issuer)</label>
-                                <input type="text" class="form-control" name="issuer" placeholder="np. BlackRock">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">TER (Koszty)</label>
-                                <input type="number" step="0.0001" class="form-control" name="ter">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Miejsce Notowania</label>
-                                <input type="text" class="form-control" name="listing_venue">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Benchmark</label>
-                                <input type="text" class="form-control" name="benchmark">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Polityka dywidend (DistPolicy)</label>
-                                <select class="form-select" name="distribution_policy">
-                                    <option value="ACCUMULATING">ACCUMULATING</option>
-                                    <option value="DISTRIBUTING">DISTRIBUTING</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Replikacja (Method)</label>
-                                <select class="form-select" name="replication_method">
-                                    <option value="PHYSICAL">PHYSICAL</option>
-                                    <option value="SYNTHETIC">SYNTHETIC</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Domicyl (Kraj rej.)</label>
-                                <input type="text" class="form-control" name="domicile" placeholder="np. Ireland">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div id="form-body" class="d-none">
 
-                <div id="section-ETC" class="card shadow-sm mb-4 d-none border-warning">
-                    <div class="card-header bg-warning"><strong>2. Szczegóły Techniczne ETC</strong></div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Emitent (Issuer)</label>
-                                <input type="text" class="form-control" name="issuer">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">TER</label>
-                                <input type="number" step="0.0001" class="form-control" name="ter">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Mnożnik (Multiplier)</label>
-                                <input type="number" step="0.000001" class="form-control" name="multiplier" value="1.0">
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox" name="physical_backing" checked>
-                                    <label class="form-check-label fw-bold">Zabezpieczenie fizyczne</label>
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-dark text-white fw-bold">1. Dane podstawowe</div>
+                        <div class="card-body bg-light">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Ticker</label>
+                                    <input type="text" class="form-control" name="ticker" required
+                                        placeholder="np. IUSQ.DE">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Pełna nazwa instrumentu</label>
+                                    <input type="text" class="form-control" name="name" required
+                                        placeholder="np. iShares Core S&P 500">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">ISIN</label>
+                                    <input type="text" class="form-control" name="isin" placeholder="np. IE00B5BMR087">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Kategoria 1</label>
+                                    <select class="form-select" name="category1" required>
+                                        <option value="EQUITY">Akcje</option>
+                                        <option value="BOND">Obligacje</option>
+                                        <option value="COMMODITY">Towary/surowce</option>
+                                        <option value="MIXED">Mix</option>
+                                        <option value="CASH">Cash</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Kategoria 2</label>
+                                    <select class="form-select" name="category2">
+                                        <option value="">-- Brak --</option>
+                                        <option value="EQUITY_GLOBAL">Akcje globalne</option>
+                                        <option value="EQUITY_REGION">Akcje regionalne</option>
+                                        <option value="EQUITY_SECTOR">Akcje sektorowe</option>
+                                        <option value="BOND_RETAIL_INFLATION_LINKED">Obligacja detaliczna indeksowana
+                                            inflacją</option>
+                                        <option value="COMMODITY_GOLD">Złoto</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Waluta</label>
+                                    <input type="text" class="form-control" name="currency" required value="PLN"
+                                        maxlength="3">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Region</label>
+                                    <select class="form-select" name="geo_region">
+                                        <option value="GLOBAL">Cały świat</option>
+                                        <option value="EUROPE">Europa</option>
+                                        <option value="NORTH_AMERICA">Ameryka Północna</option>
+                                        <option value="POLAND">Polska</option>
+                                        <option value="USA">USA</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Typ Rynku</label>
+                                    <select class="form-select" name="market_type">
+                                        <option value="DEVELOPED">Rozwinięty</option>
+                                        <option value="EMERGING">Wschodzący</option>
+                                        <option value="FRONTIER">Nierozwinięty</option>
+                                        <option value="MIXED">Mix</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Spread</label>
+                                    <input type="number" step="0.001" class="form-control" name="spread" required
+                                        value="0">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="active" id="activeCheck"
+                                            checked>
+                                        <label class="form-check-label" for="activeCheck">Aktywny (Widoczny)</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Notatki</label>
+                                    <textarea class="form-control" name="notes" rows="2"></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div id="section-BOND" class="card shadow-sm mb-4 d-none border-info">
-                    <div class="card-header bg-info text-white"><strong>2. Szczegóły Obligacji</strong></div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Data Emisji</label>
-                                <input type="date" class="form-control" name="issue_date">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Data Zapadalności *</label>
-                                <input type="date" class="form-control" name="maturity_date">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Nominał *</label>
-                                <input type="number" step="0.01" class="form-control" name="nominal_value">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Obsługa odsetek *</label>
-                                <select class="form-select" name="interest_handling">
-                                    <option value="PAYOUT">PAYOUT (Wypłata)</option>
-                                    <option value="CAPITALIZATION">CAPITALIZATION (Kapitalizacja)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Częstotliwość kuponu</label>
-                                <select class="form-select" name="coupon_frequency">
-                                    <option value="MONTHLY">MONTHLY</option>
-                                    <option value="QUARTERLY">QUARTERLY</option>
-                                    <option value="SEMI_ANNUALLY">SEMI_ANNUALLY</option>
-                                    <option value="YEARLY">YEARLY</option>
-                                    <option value="AT_THE_END">AT THE END</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Stawka pocz.</label>
-                                <input type="number" step="0.0001" class="form-control" name="initial_rate">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Marża</label>
-                                <input type="number" step="0.0001" class="form-control" name="margin">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Kod serii (detaliczne)</label>
-                                <input type="text" class="form-control" name="retail_series_code"
-                                    placeholder="np. EDO0534">
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="is_indexed">
-                                    <label class="form-check-label fw-bold">Indeksowana (np. inflacją)</label>
+                    <div id="section-ETF" class="card shadow-sm mb-4 d-none">
+                        <div class="card-header bg-danger text-white"><strong>Szczegóły Techniczne ETF</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Emitent</label>
+                                    <input type="text" class="form-control" name="issuer" placeholder="np. BlackRock"
+                                        required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">TER (Koszty roczne)</label>
+                                    <input type="number" step="0.0001" class="form-control" name="ter" required
+                                        value="0">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Giełda notowania</label>
+                                    <input type="text" class="form-control" name="listing_venue" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Benchmark</label>
+                                    <input type="text" class="form-control" name="benchmark" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Polityka dywidend</label>
+                                    <select class="form-select" name="distribution_policy">
+                                        <option value="ACCUMULATING">Akumulujący</option>
+                                        <option value="DISTRIBUTING">Dystrybuujący</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Metoda replikacji</label>
+                                    <select class="form-select" name="replication_method">
+                                        <option value="PHYSICAL">Fizyczna</option>
+                                        <option value="SYNTHETIC">Syntetyczna</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Kraj rezydencji podatkowej</label>
+                                    <input type="text" class="form-control" name="domicile" placeholder="np. Irlandia">
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Rating / Seniority</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" name="rating" placeholder="Rating">
+                        </div>
+                    </div>
+
+                    <div id="section-ETC" class="card shadow-sm mb-4 d-none">
+                        <div class="card-header bg-danger text-white"><strong>Szczegóły Techniczne ETC</strong></div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Emitent</label>
+                                    <input type="text" class="form-control" name="issuer">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">TER</label>
+                                    <input type="number" step="0.001" class="form-control" name="ter" value="0">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Mnożnik</label>
+                                    <input type="number" step="0.001" class="form-control" name="multiplier"
+                                        value="1.0">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="physical_backing" checked>
+                                        <label class="form-check-label">Zabezpieczenie fizyczne</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="section-BOND" class="card shadow-sm mb-4 d-none">
+                        <div class="card-header bg-danger text-white"><strong>Szczegóły techniczne Obligacji</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Data emisji</label>
+                                    <input type="date" class="form-control" name="issue_date" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Data zapadalności</label>
+                                    <input type="date" class="form-control" name="maturity_date" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Wartość nominalna</label>
+                                    <input type="number" step="0.01" class="form-control" name="nominal_value" required
+                                        value="100">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Obsługa odsetek</label>
+                                    <select class="form-select" name="interest_handling">
+                                        <option value="PAYOUT">Wypłata</option>
+                                        <option value="CAPITALIZATION">Kapitalizacja</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Częstotliwość kuponu</label>
+                                    <select class="form-select" name="coupon_frequency">
+                                        <option value="MONTHLY">Co miesiąc</option>
+                                        <option value="QUARTERLY">Co kwartał</option>
+                                        <option value="SEMI_ANNUALLY">Co pół roku</option>
+                                        <option value="YEARLY">Co roku</option>
+                                        <option value="AT_THE_END">Przy wykupie</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Oprocentowanie początkowe</label>
+                                    <input type="number" step="0.0001" class="form-control" name="initial_rate">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Marża</label>
+                                    <input type="number" step="0.0001" class="form-control" name="margin">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Kod serii (detaliczne)</label>
+                                    <input type="text" class="form-control" name="retail_series_code"
+                                        placeholder="np. EDO0534">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="is_indexed">
+                                        <label class="form-check-label">Oprocentowanie zmienne</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Benchmark</label>
+                                    <select class="form-select" name="inflation_index">
+                                        <option value="">-- Brak --</option>
+                                        <option value="NBP">Stopa referencyjna NBP</option>
+                                        <option value="CPI">Inflacja CPI wg GUS</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Rating</label>
+                                    <input type="text" class="form-control mb-2" name="rating" placeholder="Rating">
+                                    <label class="form-label">Seniority</label>
                                     <input type="text" class="form-control" name="seniority" placeholder="Seniority">
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="d-flex justify-content-end gap-3 mt-4">
-                    <button type="reset" class="btn btn-outline-secondary px-4 shadow-sm">Wyczyść</button>
-                    <button type="submit" id="submit-btn" class="btn btn-primary btn-lg px-5 shadow">Zapisz Instrument w
-                        Bazie</button>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" id="submit-btn" class="btn btn-dark btn-lg shadow">Zapisz</button>
+                        <button type="reset" class="btn btn-outline-secondary shadow-sm">Wyczyść formularz</button>
+                    </div>
+
                 </div>
             </form>
         </div>
