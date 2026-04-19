@@ -121,20 +121,20 @@ def seed_database():
 
         # Dane odczytane ze zdjęcia: (Ticker, Data wykupu, Kara za przedterminowy wykup, Stopa początkowa, Marża ponad benchmark)
         bonds_data = [
-            ("OTS0326", date(2026, 3, 26), "0.00", "0.0200", None),
-            ("ROR0526", date(2026, 5, 5), "0.50", "0.0575", "0.0"),
-            ("DOR1126", date(2026, 11, 28), "0.70", "0.0590", "0.015"),
-            ("DOR1226", date(2026, 12, 3), "0.70", "0.0590", "0.015"),
-            ("TOS0428", date(2028, 4, 3), "1.00", "0.0595", None),
-            ("TOS0628", date(2028, 6, 27), "1.00", "0.0565", None),
-            ("TOS0828", date(2028, 8, 25), "1.00", "0.0540", None),
-            ("COI1228", date(2028, 12, 3), "2.00", "0.0630", "0.0150"),
-            ("COI0329", date(2029, 3, 20), "2.00", "0.0630", "0.0150"),
-            ("COI0429", date(2029, 4, 15), "2.00", "0.0630", "0.0150"),
-            ("COI1129", date(2029, 11, 28), "2.00", "0.0525", "0.0150")
+            ("OTS0326", date(2026, 3, 26), "0.00", "0.0200", None, False),
+            ("ROR0526", date(2026, 5, 5), "0.50", "0.0575", "0.0", False),
+            ("DOR1126", date(2026, 11, 28), "0.70", "0.0590", "0.015", False),
+            ("DOR1226", date(2026, 12, 3), "0.70", "0.0590", "0.015", False),
+            ("TOS0428", date(2028, 4, 3), "1.00", "0.0595", None, False),
+            ("TOS0628", date(2028, 6, 27), "1.00", "0.0565", None, False),
+            ("TOS0828", date(2028, 8, 25), "1.00", "0.0540", None, False),
+            ("COI1228", date(2028, 12, 3), "2.00", "0.0630", "0.0150", False),
+            ("COI0329", date(2029, 3, 20), "2.00", "0.0630", "0.0150", False),
+            ("COI0429", date(2029, 4, 15), "2.00", "0.0630", "0.0150", False),
+            ("COI1129", date(2029, 11, 28), "2.00", "0.0525", "0.0150", False)
         ]
 
-        for ticker, maturity, penalty, initial_rate, margin in bonds_data:
+        for ticker, maturity, penalty, initial_rate, margin, active in bonds_data:
             if not Asset.query.filter_by(ticker=ticker).first():
                 prefix = ticker[:3]
                 cfg = bond_configs[prefix]
@@ -156,6 +156,8 @@ def seed_database():
                     market_type=MarketType.EMERGING,
 
                     currency="PLN",
+
+                    active=active,
                     
                     # Pola specyficzne dla Bond
                     retail_series_type=ticker[:3],

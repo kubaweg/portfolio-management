@@ -29,7 +29,7 @@ class PortfolioEngine:
         domain_map = self._map_sqlalchemy_to_domain(assets)
         grouped = group_by_ticker(self._flatten(domain_map))
 
-        asset_data_list: List[AssetData] = []
+        portfolio: List[AssetData] = []
         totals = self._init_totals()
         pb = PositionBuilder()
 
@@ -45,7 +45,7 @@ class PortfolioEngine:
                 pb_result=pb_result,
                 prices=prices,
             )
-            asset_data_list.append(asset_data)
+            portfolio.append(asset_data)
 
             self._update_totals(totals, asset_data, metrics)
 
@@ -54,7 +54,7 @@ class PortfolioEngine:
 
         pd.DataFrame(totals.instrument_data_aggregated).to_excel('test/test.xlsx', index=False)
 
-        return asset_data_list, totals
+        return portfolio, totals
 
     # ---------------------------------------------------------
     # STEP 1 — Mapowanie SQLAlchemy → domena
@@ -110,11 +110,17 @@ class PortfolioEngine:
             )
 
 
-        total_qty = sum(op.quantity for op in open_positions)
+        total_qty = sum(
+            op.quantity for op in open_positions
+        ) + sum(
+            cp.quantity for cp in closed_positions
+        )
 
         # 1) Koszt historyczny w PLN (po historycznym FX z transakcji)
         historical_cost_pln = sum(
             op.value_buy * op.fx_buy for op in open_positions
+        ) + sum(
+            cp.value_buy * cp.fx_buy for cp in closed_positions
         )
 
         # 2) Wartość bieżąca w PLN (po bieżącym FX)

@@ -10,11 +10,11 @@ service = PortfolioEngine()
 @dashboard_bp.route('/')
 def dashboard():
     assets = Asset.query.all()
-    portfolio_data, totals = service.build_portfolio(assets)
+    portfolio, totals = service.build_portfolio(assets)
 
     # Tworzymy prostą listę słowników (tylko to, co chce tabela JS)
     status_data_for_js = []
-    for item in portfolio_data:
+    for item in portfolio:
         status_data_for_js.append({
             "asset_id": str(item.asset.id), # rzutujemy na str, żeby nie było błędu UUID/Object
             "ticker": item.asset.ticker,
@@ -28,7 +28,7 @@ def dashboard():
 
     return render_template(
         'dashboard/dashboard.html', 
-        portfolio=portfolio_data, 
+        portfolio=portfolio, 
         portfolio_json=json.dumps(status_data_for_js),
         total_invested=totals.invested,
         total_current=totals.current_value,

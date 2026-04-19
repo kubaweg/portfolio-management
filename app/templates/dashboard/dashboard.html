@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-md-6">
         <div class="card bg-light shadow-sm">
             <div class="card-body">
                 <h6 class="card-title text-muted">Zainwestowano</h6>
@@ -10,7 +10,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6">
         <div class="card bg-light shadow-sm">
             <div class="card-body">
                 <h6 class="card-title text-muted">Wartość aktywów</h6>
@@ -18,26 +18,37 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white shadow-sm {{ 'bg-success' if total_profit >= 0 else 'bg-danger' }}">
+</div>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div
+            class="card text-white shadow-sm {{ 'bg-success' if (total_profit - total_cash_interest) > 0 else ('bg-danger' if (total_profit - total_cash_interest) < 0 else 'bg-dark') }}">
+            <div class="card-body">
+                <h6 class="card-title">Zmiana wartości aktywów</h6>
+                <h3>{{ (total_profit - total_cash_interest)|format_pln }} PLN</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div
+            class="card text-white shadow-sm {{ 'bg-success' if total_cash_interest > 0 else ('bg-danger' if total_cash_interest < 0 else 'bg-dark') }}">
+            <div class="card-body">
+                <h6 class="card-title">Naliczone odsetki</h6>
+                <h3>{{ total_cash_interest|format_pln }} PLN</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div
+            class="card text-white shadow-sm {{ 'bg-success' if total_profit > 0 else ('bg-danger' if total_profit < 0 else 'bg-dark') }}">
             <div class="card-body">
                 <h6 class="card-title">Całkowity Zysk / Strata</h6>
                 <h3>{{ total_profit|format_pln }} PLN</h3>
-                <small>w tym odsetki: {{ total_cash_interest|format_pln }} PLN</small><br>
-                <small>zmiana wartości aktywów: {{ (total_profit - total_cash_interest)|format_pln }} PLN</small><br>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white shadow-sm {{ 'bg-success' if total_profit >= 0 else 'bg-danger' }}">
-            <div class="card-body">
                 <h6 class="card-title">ROI</h6>
                 <h3>{{ total_roi|format_pct }}</h3>
-                <small>w skali roku: {{ total_roi_pa|format_pct }}</small>
             </div>
         </div>
     </div>
-
 </div>
 
 
@@ -156,11 +167,10 @@
                             <strong>{{ item.asset.ticker }}</strong><br>
                             <small class="text-muted">{{ item.asset.name }}</small>
                         </td>
-                        <td class="text-end">{{ "%.4f"|format(item.quantity) if item.asset.asset_type != 'Obligacja'
-                            else item.quantity }}</td>
+                        <td class="text-end">{{ item.quantity |format_quantity }}</td>
                         <td class="text-end font-monospace">
                             <strong>
-                                {{ (item.avg_price_currency * item.quantity)|format_pln }}
+                                {{ (item.avg_price_currency * item.quantity) |format_pln }}
                                 {{ item.asset.currency}}
                             </strong><br>
                             <small class="text-muted" style="font-size: 0.75rem;">
@@ -169,7 +179,7 @@
                             {% if item.asset.currency != 'PLN' %}
                             <br>
                             <small class="text-muted" style="font-size: 0.75rem;">
-                                {{ item.avg_price_currency|format_pln}} {{ item.asset.currency}}
+                                {{ item.avg_price_currency |format_pln}} {{ item.asset.currency}}
                             </small>
                             {% endif %}
                             <br>
