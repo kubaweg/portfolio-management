@@ -15,9 +15,9 @@
                             <label class="form-label fw-bold">Rodzaj instrumentu</label>
                             <select class="form-select form-select-lg border-dark" id="assetTypeSelect">
                                 <option value="" selected disabled>-- Wybierz rodzaj --</option>
-                                <option value="AssetType.ETF">ETF</option>
-                                <option value="AssetType.ETC">ETC</option>
-                                <option value="AssetType.BOND">Obligacja</option>
+                                {% for asset_type in AssetType %}
+                                <option value="{{ asset_type.name }}">{{asset_type.value }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
@@ -27,7 +27,7 @@
                                 <option value="" data-type="" selected disabled>-- Wybierz instrument z bazy --
                                 </option>
                                 {% for asset in assets %}
-                                <option value="{{ asset.id }}" data-type="{{ asset.asset_type }}">
+                                <option value="{{ asset.id }}" data-type="{{ asset.asset_type.value }}">
                                     {{ asset.ticker }} - {{asset.name }}
                                 </option>
                                 {% endfor %}
@@ -45,9 +45,10 @@
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Typ transakcji</label>
                                     <select class="form-select" name="type" required>
-                                        <option value="KUPNO">Kupno</option>
-                                        <option value="SPRZEDAŻ">Sprzedaż</option>
-                                        <option value="ODSETKI">Odsetki</option>
+                                        {% for transaction_type in TransactionType %}
+                                        <option value="{{ transaction_type.name }}">{{ transaction_type.value }}
+                                        </option>
+                                        {% endfor %}
                                     </select>
                                 </div>
 
@@ -64,8 +65,8 @@
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Cena jednostkowa</label>
                                     <input type="number" step="0.0001" class="form-control" name="price">
-                                    <div class="form-text">Dla odsetek/kapitalizacji możesz zostawić
-                                        puste lub wpisać 1.
+                                    <div class="form-text">Dla odsetek możesz zostawić
+                                        puste.
                                     </div>
                                 </div>
                             </div>
@@ -78,17 +79,7 @@
                             <div class="row">
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Kurs wymiany (FX Rate)</label>
-                                    <input type="number" step="0.00000001" class="form-control" name="fx_rate">
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <label class="form-label">Waluta źródłowa</label>
-                                    <input type="text" class="form-control" name="fx_source_currency" maxlength="3"
-                                        required value="PLN">
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <label class="form-label">Waluta docelowa</label>
-                                    <input type="text" class="form-control" name="fx_target_currency" maxlength="3"
-                                        required placeholder="np. EUR">
+                                    <input type="number" step="0.0001" class="form-control" name="fx_rate">
                                 </div>
                             </div>
                         </div>

@@ -5,13 +5,15 @@ import pytz
 from app import db
 from app.schemas.database.asset import Asset
 from app.schemas.database.transaction import Transaction
+from app.schemas.domain.transactions import TransactionType
+from app.schemas.domain.assets import AssetType
 
 from . import add_transaction_bp, list_transactions_bp, delete_transaction_bp
 
 @add_transaction_bp.route('/', methods=['GET', 'POST'])
 def add_transaction():
     assets = Asset.query.all()
-    return render_template('add_transaction/add_transaction.html', assets=assets)
+    return render_template('add_transaction/add_transaction.html', assets=assets, AssetType=AssetType, TransactionType=TransactionType)
 
 @add_transaction_bp.route('/api/add', methods=['POST'])
 def api_add_transaction():

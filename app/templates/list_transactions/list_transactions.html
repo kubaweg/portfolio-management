@@ -25,7 +25,7 @@
                         <td>
                             <span
                                 class="badge {{ 'bg-success' if t.type.name == 'BUY' else 'bg-danger' if t.type.name == 'SELL' else 'bg-info text-dark' }}">
-                                {{ t.type.name }}
+                                {{ t.type.value }}
                             </span>
                         </td>
                         <td class="text-end">{{ "%.4f"|format(t.quantity) }}</td>

@@ -112,15 +112,15 @@ class PortfolioEngine:
 
         total_qty = sum(
             op.quantity for op in open_positions
-        ) + sum(
-            cp.quantity for cp in closed_positions
         )
 
-        # 1) Koszt historyczny w PLN (po historycznym FX z transakcji)
+        # 1) Koszt historyczny (po historycznym FX z transakcji)
         historical_cost_pln = sum(
             op.value_buy * op.fx_buy for op in open_positions
-        ) + sum(
-            cp.value_buy * cp.fx_buy for cp in closed_positions
+        )
+
+        historical_cost = sum(
+            op.value_buy for op in open_positions
         )
 
         # 2) Wartość bieżąca w PLN (po bieżącym FX)
@@ -151,9 +151,8 @@ class PortfolioEngine:
         annualized_roi = PercentAnnual(0.0)
 
         # 7) Średnie ceny
-        total_cost_currency = sum(op.value_buy for op in open_positions)
         avg_price_currency = (
-            total_cost_currency / total_qty if total_qty > 0 else 0.0
+            historical_cost / total_qty if total_qty > 0 else 0.0
         )
         avg_price_pln = (
             historical_cost_pln / total_qty if total_qty > 0 else 0.0

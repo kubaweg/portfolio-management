@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            console.log(option.dataset.type, selectedType)
             // Pokaż tylko te aktywa, których data-type zgadza się z wybranym rodzajem
             if (option.dataset.type === selectedType) {
                 option.hidden = false;
