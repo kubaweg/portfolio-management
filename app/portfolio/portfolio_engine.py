@@ -231,8 +231,8 @@ class PortfolioEngine:
         totals.instrument_data.append(
             {
                 "label": asset_data.asset.ticker,
-                "category1": asset_data.asset.category1.name,
-                "category2": asset_data.asset.category2.name,
+                "category1": asset_data.asset.category1.value,
+                "category2": asset_data.asset.category2.value,
                 "value": current_value_pln,
                 "type": asset_data.asset.asset_type.name,
             }
@@ -255,6 +255,7 @@ class PortfolioEngine:
         df = totals.instrument_data
         df = pd.DataFrame(df)
         df = df.groupby([grouper, 'type'])['value'].sum().reset_index()
+        df = df.rename(columns={grouper: 'category'})
         df = df.to_dict('records')
 
         totals.instrument_data_aggregated = df

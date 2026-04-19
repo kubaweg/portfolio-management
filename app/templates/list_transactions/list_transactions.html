@@ -9,12 +9,12 @@
             <table class="table table-hover align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th>Data</th>
-                        <th>Aktywo</th>
+                        <th>Czas</th>
+                        <th>Instrument</th>
                         <th>Typ</th>
-                        <th class="text-end">Ilość</th>
+                        <th class="text-end">Wolumen</th>
                         <th class="text-end">Cena</th>
-                        <th class="text-center">Akcje</th>
+                        <th class="text-center"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -24,8 +24,8 @@
                         <td><strong>{{ t.asset.ticker }}</strong></td>
                         <td>
                             <span
-                                class="badge {{ 'bg-success' if t.type == 'KUPNO' else 'bg-danger' if t.type == 'SPRZEDAŻ' else 'bg-info text-dark' }}">
-                                {{ t.type }}
+                                class="badge {{ 'bg-success' if t.type.name == 'BUY' else 'bg-danger' if t.type.name == 'SELL' else 'bg-info text-dark' }}">
+                                {{ t.type.name }}
                             </span>
                         </td>
                         <td class="text-end">{{ "%.4f"|format(t.quantity) }}</td>
