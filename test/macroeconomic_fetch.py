@@ -77,5 +77,5 @@ if __name__ == "__main__":
     df_stopy = get_ref()
 
     if df_stopy is not None:
-        print("Pobrano dane pomyślnie. Ostatnie 10 zmian:")
+        print("\n--- STOPA REFERENCYJNA (Ostatnie rekordy) ---")
         print(df_stopy.tail())
