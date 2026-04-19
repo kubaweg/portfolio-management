@@ -21,8 +21,9 @@ def get_cpi():
     df = df.rename(columns={'Wartość': 'CPI'})
     df = df[['Miesiąc', 'CPI']]
     df = df.sort_values('Miesiąc')
+    df = df.dropna()
 
-    return df.dropna()
+    return df
 
 
 def get_ref():
@@ -67,7 +68,7 @@ def get_ref():
 
     except Exception as e:
         print(f"Błąd podczas pobierania lub parsowania: {e}")
-        return None
+        return pd.DataFrame()
 
 
 if __name__ == "__main__":
