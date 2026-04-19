@@ -15,7 +15,7 @@ def init_macro_data():
         # Tutaj wywołujesz swoje parsery
         df_infl = get_cpi()
         df_nbp = get_ref()
-        
+
         # Zapis do bazy
         added_infl = sync_inflation_data(db, df_infl)
         added_nbp = sync_interest_rates(db, df_nbp)

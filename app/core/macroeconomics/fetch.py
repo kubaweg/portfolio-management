@@ -9,8 +9,8 @@ def get_cpi():
     df = pd.read_excel(f'gus/{filename}')
 
     if df.empty:
-        print(f"Błąd: Pobrany arkusz jest pusty.")
-        return None
+        print("Błąd: Pobrany arkusz jest pusty.")
+        return pd.DataFrame()
 
     df = df[df['Sposób prezentacji'] == 'Analogiczny miesiąc poprzedniego roku = 100']
 
