@@ -41,10 +41,6 @@
                                         placeholder="np. iShares Core S&P 500">
                                 </div>
                                 <div class="col-12 mb-3">
-                                    <label class="form-label">ISIN</label>
-                                    <input type="text" class="form-control" name="isin" placeholder="np. IE00B5BMR087">
-                                </div>
-                                <div class="col-12 mb-3">
                                     <label class="form-label">Kategoria 1</label>
                                     <select class="form-select" name="category1" required>
                                         {% for cat in Category1 %}
@@ -75,17 +71,21 @@
                                     </select>
                                 </div>
                                 <div class="col-12 mb-3">
+                                    <label class="form-label">Kraj</label>
+                                    <select class="form-select" name="geo_country">
+                                        <option value=""> -- Brak -- </option>
+                                        {% for country in GeoCountry %}
+                                        <option value="{{ country.name }}">{{ country.value }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
                                     <label class="form-label">Typ Rynku</label>
                                     <select class="form-select" name="market_type">
                                         {% for market in MarketType %}
                                         <option value="{{ market.name }}">{{ market.value }}</option>
                                         {% endfor %}
                                     </select>
-                                </div>
-                                <div class="col-12 mb-3">
-                                    <label class="form-label">Spread</label>
-                                    <input type="number" step="0.001" class="form-control" name="spread" required
-                                        value="0">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <div class="form-check mt-2">
@@ -107,22 +107,25 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-12 mb-3">
-                                    <label class="form-label">Emitent</label>
-                                    <input type="text" class="form-control" name="issuer" placeholder="np. BlackRock"
+                                    <label class="form-label">ISIN</label>
+                                    <input type="text" class="form-control" name="isin" placeholder="np. IE00B5BMR087"
                                         required>
                                 </div>
                                 <div class="col-12 mb-3">
+                                    <label class="form-label">Emitent</label>
+                                    <input type="text" class="form-control" name="issuer" placeholder="np. BlackRock">
+                                </div>
+                                <div class="col-12 mb-3">
                                     <label class="form-label">TER (Koszty roczne)</label>
-                                    <input type="number" step="0.0001" class="form-control" name="ter" required
-                                        value="0">
+                                    <input type="number" step="0.0001" class="form-control" name="ter" value="0">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Giełda notowania</label>
-                                    <input type="text" class="form-control" name="listing_venue" required>
+                                    <input type="text" class="form-control" name="listing_venue">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Benchmark</label>
-                                    <input type="text" class="form-control" name="benchmark" required>
+                                    <input type="text" class="form-control" name="benchmark">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Polityka dywidend</label>
@@ -144,6 +147,11 @@
                                     <label class="form-label">Kraj rezydencji podatkowej</label>
                                     <input type="text" class="form-control" name="domicile" placeholder="np. Irlandia">
                                 </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Spread</label>
+                                    <input type="number" step="0.001" class="form-control" name="spread" required
+                                        value="0">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -152,6 +160,10 @@
                         <div class="card-header bg-danger text-white"><strong>Szczegóły Techniczne ETC</strong></div>
                         <div class="card-body">
                             <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">ISIN</label>
+                                    <input type="text" class="form-control" name="isin" placeholder="np. IE00B5BMR087">
+                                </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Emitent</label>
                                     <input type="text" class="form-control" name="issuer">
@@ -171,6 +183,10 @@
                                         <label class="form-check-label">Zabezpieczenie fizyczne</label>
                                     </div>
                                 </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Spread</label>
+                                    <input type="number" step="0.001" class="form-control" name="spread" value="0">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -182,16 +198,15 @@
                             <div class="row">
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Data emisji</label>
-                                    <input type="date" class="form-control" name="issue_date" required>
+                                    <input type="date" class="form-control" name="issue_date">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Data zapadalności</label>
-                                    <input type="date" class="form-control" name="maturity_date" required>
+                                    <input type="date" class="form-control" name="maturity_date">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Wartość nominalna</label>
-                                    <input type="number" step="0.01" class="form-control" name="nominal_value" required
-                                        value="100">
+                                    <input type="number" step="0.01" class="form-control" name="nominal_value">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Obsługa odsetek</label>
@@ -219,8 +234,8 @@
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Kod serii (detaliczne)</label>
-                                    <input type="text" class="form-control" name="retail_series_code"
-                                        placeholder="np. EDO0534">
+                                    <input type="text" class="form-control" name="retail_series_type"
+                                        placeholder="np. EDO, TOS">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <div class="form-check mt-2">
@@ -230,7 +245,7 @@
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Benchmark</label>
-                                    <select class="form-select" name="inflation_index">
+                                    <select class="form-select" name="benchmark">
                                         <option value="">-- Brak --</option>
                                         {% for benchmark in RetailBondBenchmark %}
                                         <option value="{{ benchmark.name }}">{{ benchmark.value }}</option>

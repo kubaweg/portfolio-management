@@ -39,7 +39,7 @@ def add_asset():
 def api_add_asset():
     """Przyjmuje payload JSON z JS i tworzy odpowiedni obiekt."""
     data = request.get_json()
-    
+        
     # Funkcja pomocnicza: puste stringi zamienia na None, żeby baza nie płakała
     def get_val(key):
         val = data.get(key)

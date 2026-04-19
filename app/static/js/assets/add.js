@@ -7,9 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertBox = $('#form-alert');
     const submitBtn = $('#submit-btn');
     const assetTypeSelect = $('#assetType');
-    const formBody = $('#form-body'); // NOWE: Odniesienie do głównego ciała formularza
+    const formBody = $('#form-body');
 
-    // Lista sekcji musi zgadzać się z ID w HTML
     const extraSections = ['section-ETF', 'section-ETC', 'section-BOND'];
 
     if (!form) return;
@@ -17,30 +16,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOGIKA WIDOCZNOŚCI ---
 
     const updateVisibleSections = (selectedType) => {
-        // 1. Zarządzanie widocznością całego ciała formularza
         if (selectedType) {
             if (formBody) formBody.classList.remove('d-none');
         } else {
             if (formBody) formBody.classList.add('d-none');
         }
 
-        // 2. Zarządzanie widocznością dedykowanych sekcji
         extraSections.forEach(id => {
             const section = $(`#${id}`);
             if (section) {
-                section.classList.add('d-none');
+                const isActive = (id === `section-${selectedType}`);
+
+                // Przełącz widoczność
+                section.classList.toggle('d-none', !isActive);
+
+                // KLUCZOWA ZMIANA: Wyłączamy pola w nieaktywnych sekcjach, 
+                // żeby FormData je ignorowało
+                section.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = !isActive;
+                });
             }
         });
-
-        if (selectedType) {
-            const activeSection = $(`#section-${selectedType}`);
-            if (activeSection) activeSection.classList.remove('d-none');
-        }
     };
 
     assetTypeSelect.addEventListener('change', (e) => updateVisibleSections(e.target.value));
 
-    // Obsługa przycisku Wyczyść (Reset)
     form.addEventListener('reset', () => {
         setTimeout(() => updateVisibleSections(null), 10);
         if (alertBox) alertBox.classList.add('d-none');
@@ -51,14 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // UI: Start
         if (submitBtn) submitBtn.disabled = true;
 
-        // 1. Pobranie surowych danych
+        // FormData teraz automatycznie pominie pola z atrybutem 'disabled'
         const formData = new FormData(form);
         const data = {};
 
-        // 2. INTELIGENTNE PRZETWARZANIE DANYCH
         const checkboxNames = ['active', 'is_indexed', 'physical_backing', 'secured'];
 
         for (let [key, value] of formData.entries()) {
@@ -70,7 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         checkboxNames.forEach(name => {
-            if (form.querySelector(`input[name="${name}"]`)) {
+            const cb = form.querySelector(`input[name="${name}"]`);
+            // Checkboxy sprawdzamy tylko jeśli nie są disabled
+            if (cb && !cb.disabled) {
                 data[name] = formData.has(name);
             }
         });
