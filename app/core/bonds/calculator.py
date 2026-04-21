@@ -1,9 +1,10 @@
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from flask_sqlalchemy import SQLAlchemy
-from schemas.domain.bonds import BondAsset
-from schemas.database.macroeconomics import Inflation, InterestRate
 from sqlalchemy import desc
+
+from app.schemas.domain.bonds import BondAsset
+from app.schemas.database.macroeconomics import Inflation, InterestRate
 
 def get_nbp_rate_for_date(db: SQLAlchemy, target_date: date) -> float:
     """

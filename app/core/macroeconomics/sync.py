@@ -10,18 +10,12 @@ def sync_inflation_data(db: SQLAlchemy, df_infl: pd.DataFrame) -> int:
     if df_infl is None or df_infl.empty:
         return 0
 
-    print('CPI: wszedłem!')
-
     # 1. Pobierz miesiące, które już są w bazie danych
     existing_records = db.session.query(Inflation.month).all()
     existing_months = [record[0] for record in existing_records] # Set dla szybkiego wyszukiwania
 
-    print(existing_months)
-
     # 2. Odfiltruj ramkę Pandas - zostaw tylko te miesiące, których nie ma w secie
-    df_new = df_infl[~df_infl['Miesiąc'].isin(existing_months)]
-
-    print(df_new)
+    df_new = df_infl[~df_infl['Miesiąc'].astype(str).isin(existing_months)]
 
     if df_new.empty:
         return 0
@@ -47,8 +41,6 @@ def sync_interest_rates(db: SQLAlchemy, df_rates: pd.DataFrame) -> int:
     if df_rates is None or df_rates.empty:
         return 0
     
-    print('REF: wszedłem!')
-
     # Upewnijmy się, że kolumna daty w Pandas to faktycznie obiekty daty
     df_rates['ObowiązujeOd'] = pd.to_datetime(df_rates['ObowiązujeOd']).dt.date
 

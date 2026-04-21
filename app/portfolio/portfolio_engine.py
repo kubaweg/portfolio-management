@@ -52,8 +52,6 @@ class PortfolioEngine:
         self._finalize_totals(totals)
         self._aggregate_totals(totals, grouper='category2')
 
-        pd.DataFrame(totals.instrument_data_aggregated).to_excel('test/test.xlsx', index=False)
-
         return portfolio, totals
 
     # ---------------------------------------------------------
@@ -259,11 +257,20 @@ class PortfolioEngine:
 
         df = totals.instrument_data
         df = pd.DataFrame(df)
-        df = df.groupby([grouper, 'type'])['value'].sum().reset_index()
-        df = df.rename(columns={grouper: 'category'})
-        df = df.to_dict('records')
 
-        totals.instrument_data_aggregated = df
+        try:
+        
+            df = df.groupby([grouper, 'type'])['value'].sum().reset_index()
+            df = df.rename(columns={grouper: 'category'})
+            df = df.to_dict('records')
+
+            totals.instrument_data_aggregated = df
+        
+        except KeyError as e:
+
+            print(str(e).strip())
+
+            totals.instrument_data_aggregated = []
 
     # ---------------------------------------------------------
     # HELPERS

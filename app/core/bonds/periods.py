@@ -1,6 +1,6 @@
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from schemas.domain.bonds import BondAsset
+from app.schemas.domain.bonds import BondAsset
 
 def generate_periods(bond: BondAsset) -> list[tuple[int, date, date]]:
     """
