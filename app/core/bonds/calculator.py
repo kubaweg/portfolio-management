@@ -32,4 +32,4 @@ def get_cpi_for_period(db: SQLAlchemy, period_start: date) -> float:
         Inflation.month == target_month_str
     ).first()
     
-    return inflation.value if inflation else 0.0
+    return inflation.value - 100 if inflation else 0.0
