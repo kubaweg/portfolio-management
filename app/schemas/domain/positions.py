@@ -1,23 +1,23 @@
 from pydantic import BaseModel
-from .types import AssetQuantity, MoneyAmount, FXRate
+# from .types import AssetQuantity, MoneyAmount, FXRate
 
 class OpenPosition(BaseModel):
     ticker: str
-    quantity: AssetQuantity
-    value_buy: MoneyAmount
-    fx_buy: FXRate  # historyczny FX
-    current_value: MoneyAmount
-    unrealized_profit: MoneyAmount
-    unrealized_profit_pln: MoneyAmount
+    quantity: float
+    value_buy: float
+    fx_buy: float  # historyczny FX
+    current_value: float
+    unrealized_profit: float
+    unrealized_profit_pln: float
 
 
 class ClosedPosition(BaseModel):
     ticker: str
-    quantity: AssetQuantity
-    value_buy: MoneyAmount
-    value_sell: MoneyAmount
-    fx_buy: FXRate
-    fx_sell: FXRate
-    realized_profit: MoneyAmount
-    realized_profit_pln: MoneyAmount
+    quantity: float
+    value_buy: float
+    value_sell: float
+    fx_buy: float
+    fx_sell: float
+    realized_profit: float
+    realized_profit_pln: float
 

@@ -1,7 +1,7 @@
 from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel
-from .types import MoneyAmount, AssetQuantity, FXRate
+# from .types import MoneyAmount, AssetQuantity, FXRate
 
 class TransactionType(str, Enum):
     BUY = "Kupno"
@@ -14,22 +14,22 @@ class BaseTransaction(BaseModel):
     type: TransactionType
 
 class BuyTransaction(BaseTransaction):
-    quantity: AssetQuantity
-    price: MoneyAmount
-    fx_rate: FXRate
+    quantity: float
+    price: float
+    fx_rate: float
 
 class SellTransaction(BaseTransaction):
-    quantity: AssetQuantity
-    price: MoneyAmount
-    fx_rate: FXRate
+    quantity: float
+    price: float
+    fx_rate: float
 
 class InterestTransaction(BaseTransaction):
-    value: AssetQuantity
+    value: float
 
 class CapitalizationTransaction(BaseTransaction):
-    quantity: AssetQuantity
-    price: MoneyAmount
-    fx_rate: FXRate
+    quantity: float
+    price: float
+    fx_rate: float
 
 class TickerTransactions(BaseModel):
     ticker: str
