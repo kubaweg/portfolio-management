@@ -1,4 +1,8 @@
-from app import db
+# Nowy kod (Czyste SQLAlchemy dla FastAPI)
+from sqlalchemy import Column, Integer, Numeric, String, Enum, Boolean, Text, ForeignKey, Date
+from sqlalchemy.orm import relationship
+from app import Base # Importujemy naszą bazę
+
 from ..domain.assets import (
     AssetType, 
     Category1, Category2, 
@@ -11,29 +15,29 @@ from ..domain.assets import (
 
 # --- MODELE BAZY DANYCH ---
 
-class Asset(db.Model):
+class Asset(Base):
     __tablename__ = "assets"
 
-    id = db.Column(db.Integer, primary_key=True)
-    ticker = db.Column(db.String, unique=True, nullable=False)
-    name = db.Column(db.String, nullable=False)
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
 
-    asset_type = db.Column(db.Enum(AssetType), nullable=False)
+    asset_type = Column(Enum(AssetType), nullable=False)
     
-    category1 = db.Column(db.Enum(Category1), nullable=False)
-    category2 = db.Column(db.Enum(Category2))
+    category1 = Column(Enum(Category1), nullable=False)
+    category2 = Column(Enum(Category2))
     
     # Rozłączne pola geografii i typu rynku
-    geo_region = db.Column(db.Enum(GeoRegion), nullable=False)
-    geo_country = db.Column(db.Enum(GeoCountry))
-    market_type = db.Column(db.Enum(MarketType), nullable=False)
+    geo_region = Column(Enum(GeoRegion), nullable=False)
+    geo_country = Column(Enum(GeoCountry))
+    market_type = Column(Enum(MarketType), nullable=False)
 
-    currency = db.Column(db.String(3), nullable=False)
+    currency = Column(String(3), nullable=False)
 
-    active = db.Column(db.Boolean, default=True)
-    notes = db.Column(db.Text)
+    active = Column(Boolean, default=True)
+    notes = Column(Text)
 
-    transactions = db.relationship("Transaction", back_populates="asset")
+    transactions = relationship("Transaction", back_populates="asset")
 
     __mapper_args__ = {
         "polymorphic_on": asset_type,
@@ -43,22 +47,22 @@ class Asset(db.Model):
 # --- MIXINY (WSPÓLNE POLA DLA GIEŁDY) ---
 
 class ExchangeTradedMixin:
-    isin = db.Column(db.String, unique=True, nullable=False)
-    issuer = db.Column(db.String)
-    ter = db.Column(db.Numeric(6, 4))
-    listing_venue = db.Column(db.String)
-    domicile = db.Column(db.String)
-    spread = db.Column(db.Numeric(10, 6), default=0, nullable=False)
+    isin = Column(String, unique=True, nullable=False)
+    issuer = Column(String)
+    ter = Column(Numeric(6, 4))
+    listing_venue = Column(String)
+    domicile = Column(String)
+    spread = Column(Numeric(10, 6), default=0, nullable=False)
 
 
 class ETF(Asset, ExchangeTradedMixin):
     __tablename__ = "assets_etf"
 
-    id = db.Column(db.Integer, db.ForeignKey('assets.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
 
-    benchmark = db.Column(db.String)
-    distribution_policy = db.Column(db.Enum(DistributionPolicy))
-    replication_method = db.Column(db.Enum(ReplicationMethod))
+    benchmark = Column(String)
+    distribution_policy = Column(Enum(DistributionPolicy))
+    replication_method = Column(Enum(ReplicationMethod))
 
     __mapper_args__ = {
         "polymorphic_identity": AssetType.ETF
@@ -68,10 +72,10 @@ class ETF(Asset, ExchangeTradedMixin):
 class ETC(Asset, ExchangeTradedMixin):
     __tablename__ = "assets_etc"
 
-    id = db.Column(db.Integer, db.ForeignKey('assets.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
 
-    multiplier = db.Column(db.Numeric(14, 6), default=1.0)
-    physical_backing = db.Column(db.Boolean, default=True)
+    multiplier = Column(Numeric(14, 6), default=1.0)
+    physical_backing = Column(Boolean, default=True)
 
     __mapper_args__ = {
         "polymorphic_identity": AssetType.ETC
@@ -80,7 +84,7 @@ class ETC(Asset, ExchangeTradedMixin):
 class Equity(Asset, ExchangeTradedMixin):
     __tablename__ = "assets_akcje"
 
-    id = db.Column(db.Integer, db.ForeignKey('assets.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
 
     __mapper_args__ = {
         "polymorphic_identity": AssetType.EQUITY
@@ -89,7 +93,7 @@ class Equity(Asset, ExchangeTradedMixin):
 class Crypto(Asset, ExchangeTradedMixin):
     __tablename__ = "assets_crypto"
 
-    id = db.Column(db.Integer, db.ForeignKey('assets.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
 
     __mapper_args__ = {
         "polymorphic_identity": AssetType.CRYPTO
@@ -99,28 +103,28 @@ class Crypto(Asset, ExchangeTradedMixin):
 class Bond(Asset):
     __tablename__ = "assets_obligacje"
 
-    id = db.Column(db.Integer, db.ForeignKey('assets.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('assets.id'), primary_key=True)
 
-    retail_series_type = db.Column(db.String)
+    retail_series_type = Column(String)
 
-    issue_date = db.Column(db.Date, nullable=False)
-    maturity_date = db.Column(db.Date, nullable=False)
+    issue_date = Column(Date, nullable=False)
+    maturity_date = Column(Date, nullable=False)
     
-    nominal_value = db.Column(db.Numeric(20, 4), nullable=False)
+    nominal_value = Column(Numeric(20, 4), nullable=False)
     
-    interest_handling = db.Column(db.Enum(InterestHandling), nullable=False)
-    coupon_frequency = db.Column(db.Enum(CouponFrequency))
+    interest_handling = Column(Enum(InterestHandling), nullable=False)
+    coupon_frequency = Column(Enum(CouponFrequency))
     
-    initial_rate = db.Column(db.Numeric(6, 4))
+    initial_rate = Column(Numeric(6, 4))
 
-    is_indexed = db.Column(db.Boolean, default=False)
-    margin = db.Column(db.Numeric(6, 4))
-    benchmark = db.Column(db.Enum(RetailBondBenchmark))
+    is_indexed = Column(Boolean, default=False)
+    margin = Column(Numeric(6, 4))
+    benchmark = Column(Enum(RetailBondBenchmark))
     
-    early_redemption_penalty = db.Column(db.Numeric(10, 4))
+    early_redemption_penalty = Column(Numeric(10, 4))
     
-    rating = db.Column(db.String)
-    secured = db.Column(db.Boolean, default=False)
+    rating = Column(String)
+    secured = Column(Boolean, default=False)
 
     __mapper_args__ = {
         "polymorphic_identity": AssetType.BOND

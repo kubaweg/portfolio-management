@@ -1,63 +1,62 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+# database.py
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Inicjalizacja obiektu bazy danych
-db = SQLAlchemy()
+# Podmień na swój adres bazy (np. PostgreSQL lub SQLite)
+# Skoro baza już istnieje, FastAPI po prostu się do niej podłączy.
+SQLALCHEMY_DATABASE_URL = 'sqlite:///portfolio_new.db'
 
-def create_app():
-    app = Flask(__name__)
+# Tworzymy silnik bazy danych
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
-    import locale
+# Tworzymy fabrykę sesji (będzie używana przy każdym żądaniu do API)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    @app.template_filter('format_quantity')
-    def format_quantity(value):
-        if value is None:
-            return "0.0000"
-        # Formatowanie: tysiące oddzielone spacją, 2 miejsca po przecinku
-        return "{:,.4f}".format(value).replace(",", " ")
-    
-    @app.template_filter('format_fx')
-    def format_fx(value):
-        if value is None:
-            return "0.0000"
-        # Formatowanie: tysiące oddzielone spacją, 2 miejsca po przecinku
-        return "{:,.4f}".format(value).replace(",", " ")
-    
-    @app.template_filter('format_pln')
-    def format_pln(value):
-        if value is None:
-            return "0.00"
-        # Formatowanie: tysiące oddzielone spacją, 2 miejsca po przecinku
-        return "{:,.2f}".format(value).replace(",", " ")
-    
-    @app.template_filter('format_pct')
-    def format_pct(value):
-        if value is None:
-            return "0.00%"
-        # Formatowanie: tysiące oddzielone spacją, 2 miejsca po przecinku
-        return "{:,.2%}".format(value).replace(",", " ")
-    
-    # Konfiguracja bazy danych SQLite (plik portfolio.db powstanie w głównym folderze)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///portfolio_new.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    db.init_app(app)
+# To jest odpowiednik Twojego `db.Model` z Flask-SQLAlchemy.
+# Po tej klasie będą dziedziczyć wszystkie Twoje modele.
+Base = declarative_base()
 
-    with app.app_context():
+# Funkcja pomocnicza (Dependency), która zarządza życiem sesji.
+# Otwiera połączenie, gdy przychodzi zapytanie, i zamyka, gdy się kończy.
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-        # Tutaj importujemy blueprinty
-        from app.dashboard import dashboard_bp
-        from app.analysis import analysis_bp
-        from app.portfolio import portfolio_bp
-        from app.assets import add_asset_bp
-        from app.transactions import add_transaction_bp, list_transactions_bp, delete_transaction_bp
+###########################################################################
 
-        app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-        app.register_blueprint(analysis_bp, url_prefix='/analysis')
-        app.register_blueprint(portfolio_bp, url_prefix='/portfolio')
-        app.register_blueprint(add_asset_bp, url_prefix='/add_asset')
-        app.register_blueprint(add_transaction_bp, url_prefix='/add_transaction')
-        app.register_blueprint(list_transactions_bp, url_prefix='/list_transactions')
-        app.register_blueprint(delete_transaction_bp, url_prefix='/delete_transaction')
-    
-    return app
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+
+# (Opcjonalnie) Importujemy modele i routery, które stworzysz później
+# import models
+# import routers.portfolio as portfolio_router
+
+# Inicjalizacja aplikacji FastAPI
+app = FastAPI(
+    title="Portfolio Monitor API",
+    description="Backend aplikacji do monitorowania inwestycji",
+    version="1.0.0"
+)
+
+# Konfiguracja CORS - pozwala frontendowi (Next.js na porcie 3000) na odpytywanie API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"], # Adres Twojego frontendu
+    allow_credentials=True,
+    allow_methods=["*"], # Zezwala na GET, POST, PUT, DELETE itd.
+    allow_headers=["*"],
+)
+
+# Testowy endpoint, wstrzykujący sesję bazy danych (Depends(get_db))
+@app.get("/api/health")
+def health_check(db: Session = Depends(get_db)):
+    # Możesz tu np. wykonać szybkie zapytanie "SELECT 1", 
+    # aby sprawdzić czy baza odpowiada, ale na razie zwrócimy prosty status.
+    return {"status": "ok", "message": "API i baza danych są gotowe!"}
+
+# Tutaj w przyszłości podepniesz swoje endpointy, np.:
+# app.include_router(portfolio_router.router, prefix="/api/portfolio")

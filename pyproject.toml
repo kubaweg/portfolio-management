@@ -16,4 +16,5 @@ dependencies = [
     "xlrd>=2.0.2",
     "yfinance>=1.2.0",
     "pydantic",
+    "fastapi>=0.136.1",
 ]

@@ -7,7 +7,7 @@ from . import dashboard_bp
 
 service = PortfolioEngine()
 
-@dashboard_bp.route('/api')
+@dashboard_bp.route('/')
 def dashboard():
     assets = Asset.query.all()
     portfolio, totals = service.build_portfolio(assets)
