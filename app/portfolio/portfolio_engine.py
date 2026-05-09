@@ -1,4 +1,6 @@
 from typing import List, Tuple
+from datetime import datetime
+
 from app.schemas.database.asset import Asset, AssetType
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
@@ -6,7 +8,10 @@ from app.core.fx_calculator import FXCalculator
 from app.portfolio.position_builder import PositionBuilder
 
 
-from app.schemas.dto.portfolio import AssetData, PortfolioTotals, TransactionData
+from app.schemas.dto.portfolio import (
+    AssetBaseData, AssetSummary, AssetFXData, AssetCurrentData, AssetData, 
+    PortfolioTotals, TransactionData
+)
 from app.core.market_data import MarketDataProvider
 
 import pandas as pd
@@ -71,29 +76,81 @@ class PortfolioEngine:
         asset_price = raw_price * (1.0 if asset.asset_type == AssetType.BOND else (1.0 - float(asset.spread)))
 
         fx_rate = MarketDataProvider.get_fx_rate(asset.currency)
-        effective_fx = (
+        fx_effective_rate = (
             fx_rate * (1.0 - self.CONVERSION_FEE) if asset.currency != "PLN" else 1.0
         )
 
+        # TODO: tutaj trzeba refactor na pydantic zrobić
         return {
-            "asset_price": asset_price,
-            "asset_dt": MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type),
+            "price": asset_price,
+            "price_datetime": MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type),
             "fx_rate": fx_rate,
-            "fx_dt": MarketDataProvider.get_fx_time(asset.currency),
-            "effective_fx": effective_fx,
+            "fx_effective_rate": fx_effective_rate,
+            "fx_datetime": MarketDataProvider.get_fx_time(asset.currency),
+
         }
 
     # ---------------------------------------------------------
     # STEP 3 — AssetData + metryki do totals
     # ---------------------------------------------------------
-    def _build_asset_data(self, asset, tt, pb_result, prices):
+    def _build_asset_base_data(self, **kwargs) -> AssetBaseData:
+        return AssetBaseData(
+            ticker=kwargs.get("ticker", "-"),
+            name=kwargs.get("name", "-"),
+            type=kwargs.get("asset_type", "-"),
+            category1=kwargs.get("category1", "-"),
+            category2=kwargs.get("category2", "-"),
+            currency=kwargs.get("currency", "-")
+        )
+    
+    def _build_asset_summary(self, **kwargs) -> AssetSummary:
+        return AssetSummary(
+            quantity=kwargs.get("quantity", 0.0),
+            avg_price=kwargs.get("avg_price", 0.0),
+            avg_price_pln=kwargs.get("avg_price_pln", 0.0),
+            avg_fx_rate=kwargs.get("avg_fx_rate", 0.0),
+            realized_profit=kwargs.get("realized_profit", 0.0),
+            realized_profit_pln=kwargs.get("realized_profit_pln", 0.0),
+            unrealized_profit=kwargs.get("unrealized_profit", 0.0),
+            unrealized_profit_pln=kwargs.get("unrealized_profit_pln", 0.0),
+            interest_profit=kwargs.get("interest_profit", 0.0),
+            interest_profit_pln=kwargs.get("interest_profit_pln", 0.0),
+            profit_loss=kwargs.get("profit_loss", 0.0),
+            profit_loss_pln=kwargs.get("profit_loss_pln", 0.0),
+            roi=kwargs.get("roi", 0.0),
+            roi_pln=kwargs.get("roi_pln", 0.0),
+            roi_pa=kwargs.get("roi_pa", 0.0),
+            roi_pa_pln=kwargs.get("roi_pa_pln", 0.0),
+        )
+    
+    def _build_asset_fx_data(self, **kwargs) -> AssetFXData:
+        return AssetFXData(
+            currency=kwargs.get("currency", "-"),
+            fx_rate=kwargs.get("fx_rate", 0.0),
+            fx_effective_rate=kwargs.get("fx_effective_rate", 0.0),
+            fx_datetime=kwargs.get("fx_datetime", datetime(year=1900, month=1, day=1))
+        )
+    
+    def _build_asset_current_data(self, **kwargs) -> AssetCurrentData:
+
+        fx_data = self._build_asset_fx_data(**kwargs)
+
+        return AssetCurrentData(
+            price=kwargs.get("price", 0.0),
+            value=kwargs.get("value", 0.0),
+            value_pln=kwargs.get("value_pln", 0.0),
+            fx_data=fx_data,
+            price_datetime=kwargs.get("price_datetime", datetime(year=1900, month=1, day=1))
+        )
+    
+    def _build_asset_data(self, asset: Asset, tt, pb_result, prices):
 
         open_positions = pb_result.open_positions
         closed_positions = pb_result.closed_positions
 
         for op in open_positions:
             op.unrealized_profit_pln = FXCalculator.unrealized_pln(
-                op.value_buy, op.fx_buy, op.current_value, prices["effective_fx"]
+                op.value_buy, op.fx_buy, op.current_value, prices["fx_effective_rate"]
             )
             
         for cp in closed_positions:
@@ -102,79 +159,152 @@ class PortfolioEngine:
             )
 
 
-        total_qty = sum(
+        quantity = sum(
             op.quantity for op in open_positions
         )
 
         # 1) Koszt historyczny (po historycznym FX z transakcji)
-        historical_cost_pln = sum(
-            op.value_buy * op.fx_buy for op in open_positions
-        )
-
         historical_cost = sum(
             op.value_buy for op in open_positions
         )
 
-        # 2) Wartość bieżąca w PLN (po bieżącym FX)
-        current_value_pln = sum(
-            op.current_value * prices["effective_fx"] for op in open_positions
+        historical_cost_pln = sum(
+            op.value_buy * op.fx_buy for op in open_positions
         )
 
-        # 3) Zysk zrealizowany w PLN (przeliczamy po bieżącym FX – uproszczenie)
+        # 2) Wartość bieżąca w PLN (po bieżącym FX)
+        current_value = sum(
+            op.current_value for op in open_positions
+        )
+
+        current_value_pln = sum(
+            op.current_value * prices["fx_effective_rate"] for op in open_positions
+        )
+
+        # 3) Zysk zrealizowany
+        realized_profit = sum(
+            cp.realized_profit for cp in closed_positions
+        )
+
         realized_profit_pln = sum(
             cp.realized_profit_pln for cp in closed_positions
         )
-        
-        interest_profit_pln = pb_result.interest_profit
 
-        # 4) Zysk niezrealizowany w PLN
+        # 4) Zysk niezrealizowany
+        unrealized_profit = sum(
+            op.unrealized_profit for op in open_positions
+        )
+
         unrealized_profit_pln = sum(
             op.unrealized_profit_pln for op in open_positions
         )
 
-        # 5) ROI bezwzględne
-        roi_percent = (
-            (realized_profit_pln + interest_profit_pln + unrealized_profit_pln) / historical_cost_pln
+        # 5) Zysk z odsetek (uproszczenie: na razie tylko w PLN)
+        interest_profit = 0.0
+        interest_profit_pln = pb_result.interest_profit
+
+        # Zysk nominalny
+        profit_loss = realized_profit + interest_profit + unrealized_profit
+        profit_loss_pln = realized_profit_pln + interest_profit_pln + unrealized_profit_pln
+
+        # 6) ROI bezwzględne
+        roi = (
+            profit_loss / historical_cost
+            if historical_cost > 0
+            else 0.0
+        )
+
+        roi_pln = (
+            profit_loss_pln / historical_cost_pln
             if historical_cost_pln > 0
             else 0.0
         )
 
-        # 6) Annualized ROI – na razie 0.0
-        annualized_roi = 0.0
+        # 7) Annualized ROI – na razie 0.0
+        roi_pa = 0.0
+        roi_pa_pln = 0.0
 
-        # 7) Średnie ceny
-        avg_price_currency = (
-            historical_cost / total_qty if total_qty > 0 else 0.0
+        # 8) Średnie historyczne
+        avg_price = (
+            historical_cost / quantity if quantity > 0 else 0.0
         )
         avg_price_pln = (
-            historical_cost_pln / total_qty if total_qty > 0 else 0.0
+            historical_cost_pln / quantity if quantity > 0 else 0.0
+        )
+        avg_fx_rate = (
+            historical_cost_pln / historical_cost if historical_cost > 0 else 0.0
         )
 
-        # 8) DTO transakcji
+        # 9) DTO transakcji
         enriched_transactions = self._build_transaction_dto(tt.transactions)
 
-        asset_data = AssetData(
-            asset=asset,
-            quantity=total_qty,
-            avg_price_currency=avg_price_currency,
-            avg_price_pln=avg_price_pln,
-            current_price=prices["asset_price"],
-            current_price_datetime=prices["asset_dt"],
-            current_value_pln=current_value_pln,
-            profit_loss_pln=realized_profit_pln + interest_profit_pln + unrealized_profit_pln,
-            fx_rate=prices["fx_rate"],
-            fx_effective_rate=prices["effective_fx"],
-            fx_datetime=prices["fx_dt"],
-            roi_percent=roi_percent,
-            annualized_roi=annualized_roi,
-            transactions=enriched_transactions,
-            open_positions=open_positions,
-            closed_positions=closed_positions,
-            realized_profit_pln=realized_profit_pln,
-            unrealized_profit_pln=unrealized_profit_pln,
-            interest_profit_pln=interest_profit_pln,
+        base_data = self._build_asset_base_data(
+            ticker=asset.ticker,
+            name=asset.name,
+            type=asset.asset_type.name,
+            category1=asset.category1.value,
+            category2=asset.category2.value,
+            currency=asset.currency
         )
 
+        summary = self._build_asset_summary(
+            quantity=quantity,
+            avg_price=avg_price,
+            avg_price_pln=avg_price_pln,
+            avg_fx_rate=avg_fx_rate,
+            realized_profit=realized_profit,
+            realized_profit_pln=realized_profit_pln,
+            unrealized_profit=unrealized_profit,
+            unrealized_profit_pln=unrealized_profit_pln,
+            interest_profit_pln=interest_profit_pln,
+            profit_loss=profit_loss,
+            profit_loss_pln=profit_loss_pln,
+            roi=roi,
+            roi_pln=roi_pln,
+            roi_pa=roi_pa,
+            roi_pa_pln=roi_pa_pln
+
+        )
+        current_data = self._build_asset_current_data(
+            price=prices["asset_price"],
+            value=current_value,
+            value_pln=current_value_pln,
+            currency=asset.currency,
+            fx_rate=prices["fx_rate"],
+            fx_effective_rate=prices["fx_effective_rate"],
+            fx_datetime=prices["fx_datetime"],
+            price_datetime=prices["price_datetime"]
+        )
+
+        asset_data = AssetData(
+            base_data=base_data,
+            summary=summary,
+            current_data=current_data
+        )
+
+        # asset_data = AssetData(
+        #     asset=asset,
+        #     quantity=total_qty,
+        #     avg_price_currency=avg_price_currency,
+        #     avg_price_pln=avg_price_pln,
+        #     current_price=prices["asset_price"],
+        #     current_price_datetime=prices["asset_dt"],
+        #     current_value_pln=current_value_pln,
+        #     profit_loss_pln=realized_profit_pln + interest_profit_pln + unrealized_profit_pln,
+        #     fx_rate=prices["fx_rate"],
+        #     fx_effective_rate=prices["effective_fx"],
+        #     fx_datetime=prices["fx_dt"],
+        #     roi_percent=roi_percent,
+        #     annualized_roi=annualized_roi,
+        #     transactions=enriched_transactions,
+        #     open_positions=open_positions,
+        #     closed_positions=closed_positions,
+        #     realized_profit_pln=realized_profit_pln,
+        #     unrealized_profit_pln=unrealized_profit_pln,
+        #     interest_profit_pln=interest_profit_pln,
+        # )
+
+        # TODO: tutaj trzeba zrobić refactor na pydantic
         metrics = {
             "historical_cost_pln": historical_cost_pln,
             "current_value_pln": current_value_pln,
@@ -227,16 +357,16 @@ class PortfolioEngine:
 
         totals.instrument_data.append(
             {
-                "label": asset_data.asset.ticker,
-                "category1": asset_data.asset.category1.value,
-                "category2": asset_data.asset.category2.value,
+                "label": asset_data.base_data.ticker,
+                "category1": asset_data.base_data.category1,
+                "category2": asset_data.base_data.category2,
                 "value": current_value_pln,
-                "type": asset_data.asset.asset_type.name,
+                "type": asset_data.base_data.type,
             }
         )
 
-        totals.allocation[asset_data.asset.asset_type.name] = (
-            totals.allocation.get(asset_data.asset.asset_type.name, 0.0)
+        totals.allocation[asset_data.base_data.type] = (
+            totals.allocation.get(asset_data.base_data.name, 0.0)
             + current_value_pln
         )
 
