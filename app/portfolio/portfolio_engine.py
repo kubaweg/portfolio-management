@@ -10,7 +10,8 @@ from app.portfolio.position_builder import PositionBuilder
 
 from app.schemas.dto.portfolio import (
     AssetBaseData, AssetSummary, AssetFXData, AssetCurrentData, AssetData, 
-    PortfolioTotals, TransactionData
+    PortfolioTotals, TransactionData,
+    CurrentInstrumentData
 )
 from app.core.market_data import MarketDataProvider
 
@@ -36,7 +37,7 @@ class PortfolioEngine:
             asset = self._find_asset(assets, tt.ticker)
             prices = self._get_market_prices(asset)
 
-            pb_result = pb.build(tt, current_price=prices["asset_price"])
+            pb_result = pb.build(tt, current_price=prices["price"])
 
             asset_data, metrics = self._build_asset_data(
                 asset=asset,
@@ -97,7 +98,7 @@ class PortfolioEngine:
         return AssetBaseData(
             ticker=kwargs.get("ticker", "-"),
             name=kwargs.get("name", "-"),
-            type=kwargs.get("asset_type", "-"),
+            type=kwargs.get("type", "-"),
             category1=kwargs.get("category1", "-"),
             category2=kwargs.get("category2", "-"),
             currency=kwargs.get("currency", "-")
@@ -266,7 +267,7 @@ class PortfolioEngine:
 
         )
         current_data = self._build_asset_current_data(
-            price=prices["asset_price"],
+            price=prices["price"],
             value=current_value,
             value_pln=current_value_pln,
             currency=asset.currency,
@@ -356,13 +357,13 @@ class PortfolioEngine:
         totals.interest += interest_profit_pln  # tu traktujemy realized jako „interest/zysk zrealizowany”
 
         totals.instrument_data.append(
-            {
-                "label": asset_data.base_data.ticker,
-                "category1": asset_data.base_data.category1,
-                "category2": asset_data.base_data.category2,
-                "value": current_value_pln,
-                "type": asset_data.base_data.type,
-            }
+            CurrentInstrumentData(
+                label=asset_data.base_data.ticker,
+                category1=asset_data.base_data.category1,
+                category2=asset_data.base_data.category2,
+                value=current_value_pln,
+                type=asset_data.base_data.type,
+            )
         )
 
         totals.allocation[asset_data.base_data.type] = (

@@ -2,13 +2,19 @@ from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional, List
 from ..database.asset import Asset
-from ..domain.assets import Category1, 
+from ..domain.assets import Category1, Category2
 from ..domain.positions import OpenPosition, ClosedPosition
 from ..domain.transactions import TransactionType
 
 
 class CurrentInstrumentData(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    label: str
+    category1: str
+    category2: str
+    value: float
+    type: str
 
 #########################################
 
@@ -21,7 +27,7 @@ class PortfolioTotals(BaseModel):
     annualized_roi: float
     allocation: dict[str, float]
     instrument_data: list[CurrentInstrumentData]
-    instrument_data_aggregated: list[CurrentInstrumentData]
+    instrument_data_aggregated: list[dict]
 
 class TransactionData(BaseModel):
     timestamp: datetime

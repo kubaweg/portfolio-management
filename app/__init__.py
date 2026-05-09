@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Podmień na swój adres bazy (np. PostgreSQL lub SQLite)
 # Skoro baza już istnieje, FastAPI po prostu się do niej podłączy.
-SQLALCHEMY_DATABASE_URL = 'sqlite:///portfolio_new.db'
+SQLALCHEMY_DATABASE_URL = 'sqlite:///instance/portfolio_new.db'
 
 # Tworzymy silnik bazy danych
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -33,7 +33,7 @@ from sqlalchemy.orm import Session
 
 # (Opcjonalnie) Importujemy modele i routery, które stworzysz później
 # import models
-# import routers.portfolio as portfolio_router
+from app.dashboard.routes import router as dashboard_router
 
 # Inicjalizacja aplikacji FastAPI
 app = FastAPI(
@@ -59,4 +59,4 @@ def health_check(db: Session = Depends(get_db)):
     return {"status": "ok", "message": "API i baza danych są gotowe!"}
 
 # Tutaj w przyszłości podepniesz swoje endpointy, np.:
-# app.include_router(portfolio_router.router, prefix="/api/portfolio")
+app.include_router(dashboard_router, prefix="/api")
