@@ -5,13 +5,7 @@ from app.schemas.groupers import group_by_ticker
 from app.core.fx_calculator import FXCalculator
 from app.portfolio.position_builder import PositionBuilder
 
-# from app.schemas.domain.types import (
-#     MoneyAmount,
-#     AssetQuantity,
-#     PercentTotal,
-#     PercentAnnual,
-#     FXRate
-# )
+
 from app.schemas.dto.portfolio import AssetData, PortfolioTotals, TransactionData
 from app.core.market_data import MarketDataProvider
 

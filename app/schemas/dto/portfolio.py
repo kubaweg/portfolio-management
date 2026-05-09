@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from ..database.asset import Asset
 # from ..domain.types import MoneyAmount, AssetQuantity, PercentTotal, PercentAnnual, FXRate
 from ..domain.positions import OpenPosition, ClosedPosition
@@ -29,26 +29,77 @@ class TransactionData(BaseModel):
     fx_rate: float
     roi: float
 
+class AssetBaseData(BaseModel):
+    ticker: str
+    name: str
+    type: str
+    category1: str
+    category2: str
+    currency: str
+
+class AssetSummary(BaseModel):
+
+    quantity: float = Field(ge=0)
+
+    avg_price: float = Field(ge=0)
+    avg_price_pln: float = Field(ge=0)
+    avg_fx_rate: float = Field(ge=0)
+
+    realized_profit_pln: float
+    unrealized_profit_pln: float
+    interest_profit_pln: float
+
+    profit_loss: float
+    profit_loss_pln: float
+
+    roi: float
+    roi_pa: float
+
+class AssetFXData(BaseModel):
+
+    currency: str
+
+    fx_rate: float = Field(ge=0)
+    fx_effective_rate: float = Field(ge=0)
+
+    fx_datetime: datetime
+
+class AssetCurrentData(BaseModel):
+
+    price: float = Field(ge=0)
+    price_pln: float = Field(ge=0)
+
+    value: float = Field(ge=0)
+    value_pln: float = Field(ge=0)
+
+    fx_data: AssetFXData
+
+    price_datetime: datetime
+
 class AssetData(BaseModel):
     
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    asset: Asset
-    quantity: float
-    avg_price_currency: float
-    avg_price_pln: float
-    current_price: float
-    current_price_datetime: datetime
-    current_value_pln: float
-    profit_loss_pln: float
-    fx_rate: float
-    fx_effective_rate: float
-    fx_datetime: datetime
-    roi_percent: float
-    annualized_roi: float
-    transactions: list[TransactionData]
-    open_positions: list[OpenPosition]
-    closed_positions: list[ClosedPosition]
-    realized_profit_pln: float
-    unrealized_profit_pln: float
-    interest_profit_pln: float
+    # base_data: AssetBaseData
+    # summary: AssetSummary
+    # current_data: AssetCurrentData
+
+    asset: Asset #
+    quantity: float #
+    avg_price_currency: float #
+    avg_price_pln: float #
+    current_price: float #
+    current_price_datetime: datetime #
+    current_value_pln: float #
+    profit_loss_pln: float #
+    fx_rate: float #
+    fx_effective_rate: float #
+    fx_datetime: datetime #
+    roi_percent: float #
+    annualized_roi: float #
+    transactions: List[TransactionData]
+    open_positions: List[OpenPosition]
+    closed_positions: List[ClosedPosition]
+    realized_profit_pln: float #
+    unrealized_profit_pln: float #
+    interest_profit_pln: float #
