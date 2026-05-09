@@ -117,3 +117,7 @@ class AssetData(BaseModel):
     # realized_profit_pln: float #
     # unrealized_profit_pln: float #
     # interest_profit_pln: float #
+
+class DashboardResponse(BaseModel):
+    totals: PortfolioTotals
+    asset_data: List[AssetData]
