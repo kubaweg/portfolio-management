@@ -1,4 +1,3 @@
-# database.py
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -33,7 +32,8 @@ from sqlalchemy.orm import Session
 
 # (Opcjonalnie) Importujemy modele i routery, które stworzysz później
 # import models
-from app.dashboard.routes import router as dashboard_router
+from app.portfolio.routes import dashboard_router
+from app.analysis.routes import ticker_history_router
 
 # Inicjalizacja aplikacji FastAPI
 app = FastAPI(
@@ -60,3 +60,4 @@ def health_check(db: Session = Depends(get_db)):
 
 # Tutaj w przyszłości podepniesz swoje endpointy, np.:
 app.include_router(dashboard_router, prefix="/api")
+app.include_router(ticker_history_router, prefix="/api")

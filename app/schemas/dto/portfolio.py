@@ -19,7 +19,7 @@ class CurrentInstrumentData(BaseModel):
 #########################################
 
 class PortfolioTotals(BaseModel):
-    invested: float = Field(ge=0)
+    invested_value: float = Field(ge=0)
     current_value: float = Field(ge=0)
     interest: float = Field(ge=0)
     profit: float
@@ -104,25 +104,7 @@ class AssetData(BaseModel):
     summary: AssetSummary
     current_data: AssetCurrentData
 
-    # asset: Asset #
-    # quantity: float #
-    # avg_price_currency: float #
-    # avg_price_pln: float #
-    # current_price: float #
-    # current_price_datetime: datetime #
-    # current_value_pln: float #
-    # profit_loss_pln: float #
-    # fx_rate: float #
-    # fx_effective_rate: float #
-    # fx_datetime: datetime #
-    # roi_percent: float #
-    # annualized_roi: float #
-    # transactions: List[TransactionData]
-    # open_positions: List[OpenPosition]
-    # closed_positions: List[ClosedPosition]
-    # realized_profit_pln: float #
-    # unrealized_profit_pln: float #
-    # interest_profit_pln: float #
+#############################################
 
 class DashboardResponse(BaseModel):
     totals: PortfolioTotals

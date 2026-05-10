@@ -283,28 +283,6 @@ class PortfolioEngine:
             current_data=current_data
         )
 
-        # asset_data = AssetData(
-        #     asset=asset,
-        #     quantity=total_qty,
-        #     avg_price_currency=avg_price_currency,
-        #     avg_price_pln=avg_price_pln,
-        #     current_price=prices["asset_price"],
-        #     current_price_datetime=prices["asset_dt"],
-        #     current_value_pln=current_value_pln,
-        #     profit_loss_pln=realized_profit_pln + interest_profit_pln + unrealized_profit_pln,
-        #     fx_rate=prices["fx_rate"],
-        #     fx_effective_rate=prices["effective_fx"],
-        #     fx_datetime=prices["fx_dt"],
-        #     roi_percent=roi_percent,
-        #     annualized_roi=annualized_roi,
-        #     transactions=enriched_transactions,
-        #     open_positions=open_positions,
-        #     closed_positions=closed_positions,
-        #     realized_profit_pln=realized_profit_pln,
-        #     unrealized_profit_pln=unrealized_profit_pln,
-        #     interest_profit_pln=interest_profit_pln,
-        # )
-
         # TODO: tutaj trzeba zrobić refactor na pydantic
         metrics = {
             "historical_cost_pln": historical_cost_pln,
@@ -336,7 +314,7 @@ class PortfolioEngine:
     # ---------------------------------------------------------
     def _init_totals(self):
         return PortfolioTotals(
-            invested=0.0,
+            invested_value=0.0,
             current_value=0.0,
             interest=0.0,
             profit=0.0,
@@ -348,11 +326,11 @@ class PortfolioEngine:
         )
 
     def _update_totals(self, totals, asset_data: AssetData, metrics: dict):
-        invested_pln = metrics["historical_cost_pln"]
+        invested_value_pln = metrics["historical_cost_pln"]
         current_value_pln = metrics["current_value_pln"]
         interest_profit_pln = metrics["interest_profit_pln"]
 
-        totals.invested += invested_pln
+        totals.invested_value += invested_value_pln
         totals.current_value += current_value_pln
         totals.interest += interest_profit_pln  # tu traktujemy realized jako „interest/zysk zrealizowany”
 
@@ -372,9 +350,9 @@ class PortfolioEngine:
         )
 
     def _finalize_totals(self, totals):
-        totals.profit = totals.current_value + totals.interest - totals.invested
+        totals.profit = totals.current_value + totals.interest - totals.invested_value
         totals.roi = (
-            totals.profit / totals.invested if totals.invested > 0 else 0.0
+            totals.profit / totals.invested_value if totals.invested_value > 0 else 0.0
         )
         totals.annualized_roi = 0.0  # na razie 0.0
 
