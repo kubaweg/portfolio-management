@@ -1,0 +1,82 @@
+/* frontend/src/app/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    /* Definiujemy zmienne dla łatwiejszego zarządzania kolorami */
+    --foreground-rgb: 15, 23, 42;
+    /* Bardzo ciemny granat (slate-900) */
+    --background-start-rgb: 248, 250, 252;
+    /* Jasny szary (slate-50) */
+    --background-end-rgb: 255, 255, 255;
+}
+
+/* Podstawowe style dla całego dokumentu */
+body {
+    color: rgb(var(--foreground-rgb));
+    background: linear-gradient(to bottom,
+            transparent,
+            rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+    @apply min-h-screen;
+    /* Wygładzanie czcionek dla lepszej czytelności */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Niestandardowe style dla pól formularzy, których nie chcemy powtarzać w Tailwindzie */
+@layer base {
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Stylizacja scrollbara, żeby pasował do nowoczesnego UI */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+    }
+}
+
+/* Przydatne klasy narzędziowe (Utility classes) */
+@layer utilities {
+    .glass-effect {
+        @apply bg-white/80 backdrop-blur-md border border-white/20;
+    }
+
+    .input-transition {
+        @apply transition-all duration-200 ease-in-out;
+    }
+}
+
+/* Animacje wejścia (używane w page.tsx przy zmianie typu aktywa) */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-in {
+    animation: slideDown 0.3s ease-out forwards;
+}
