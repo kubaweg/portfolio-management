@@ -16,7 +16,8 @@
         "react": "latest",
         "react-dom": "latest",
         "react-hook-form": "^7.75.0",
-        "tailwind-merge": "^2.3.0",
+        "sonner": "^2.0.7",
+        "tailwind-merge": "^2.6.1",
         "zod": "^4.4.3"
     },
     "devDependencies": {
