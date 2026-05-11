@@ -1,6 +1,10 @@
-from flask import render_template, request, redirect, url_for, jsonify
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app import get_db
+from app.schemas.database.asset import Asset
+from app.schemas.dto.portfolio import DashboardResponse
+from app.portfolio.portfolio_engine import PortfolioEngine
 
-from app import db
 from app.schemas.database.asset import (
     Asset, ETF, ETC, Bond, Equity
 )
@@ -10,144 +14,22 @@ from app.schemas.domain.assets import (AssetType, Category1, Category2,
     CouponFrequency, InterestHandling, RetailBondBenchmark
 )
 
-from . import add_asset_bp
+service = PortfolioEngine()
+enums_router = APIRouter()
 
-@add_asset_bp.route('/', methods=['GET'])
-def add_asset():
-    """Renderuje stronę formularza, przekazując słowniki Enum i listę aktywów."""
-    # Pobieramy obecne aktywa do tabeli "Zarządzaj / Usuń"
-    assets = Asset.query.order_by(Asset.id.desc()).all()
-
-    return render_template(
-        'add_asset/add_asset.html',
-        assets=assets,
-        # Przekazujemy wszystkie Enumy, żeby Jinja wygenerowała opcje (listy stringów)
-        AssetType=AssetType,
-        Category1=Category1,
-        Category2=Category2,
-        GeoRegion=GeoRegion,
-        GeoCountry=GeoCountry,
-        MarketType=MarketType,
-        DistributionPolicy=DistributionPolicy,
-        ReplicationMethod=ReplicationMethod,
-        CouponFrequency=CouponFrequency,
-        InterestHandling=InterestHandling,
-        RetailBondBenchmark=RetailBondBenchmark
-    )
-
-@add_asset_bp.route('/api/add', methods=['POST'])
-def api_add_asset():
-    """Przyjmuje payload JSON z JS i tworzy odpowiedni obiekt."""
-    data = request.get_json()
-        
-    # Funkcja pomocnicza: puste stringi zamienia na None, żeby baza nie płakała
-    def get_val(key):
-        val = data.get(key)
-        return val if val and str(val).strip() != "" else None
-
-    try:
-        asset_type_str = get_val('asset_type')
-        if not asset_type_str:
-            return jsonify({"status": "error", "message": "Typ aktywa jest wymagany"}), 400
-
-        # --- POLA WSPÓLNE (BASE) ---
-        base_kwargs = {
-            "ticker": get_val('ticker'),
-            "name": get_val('name'),
-
-            "category1": get_val('category1'),
-            "category2": get_val('category2'),
-
-            "geo_region": get_val('geo_region'),
-            "geo_country": get_val('geo_country'),
-            "market_type": get_val('market_type'),
-
-            "currency": get_val('currency'),
-
-            "active": get_val('active') or True,
-            "notes": get_val('notes')
-        }
-
-        # --- POLA GIEŁDOWE (Mixin) ---
-        mixin_kwargs = {
-            "isin": get_val('isin'),
-            "issuer": get_val('issuer'),
-            "ter": get_val('ter'),
-            "listing_venue": get_val('listing_venue'),
-            "domicile": get_val('domicile'),
-            "spread": get_val('spread')
-        }
-
-        # ROZGAŁĘZIENIE NA PODSTAWIE TYPU
-        if asset_type_str == AssetType.ETF.name:
-            new_asset = ETF(
-                **base_kwargs, **mixin_kwargs,
-                benchmark=get_val('benchmark'),
-                distribution_policy=get_val('distribution_policy'),
-                replication_method=get_val('replication_method')
-            )
-        
-        elif asset_type_str == AssetType.ETC.name:
-            new_asset = ETC(
-                **base_kwargs, **mixin_kwargs,
-                multiplier=get_val('multiplier') or 1.0,
-                physical_backing=get_val('physical_backing') or True
-            )
-
-        elif asset_type_str == AssetType.EQUITY.name:
-            new_asset = Equity(
-                **base_kwargs, **mixin_kwargs
-            )
-        
-        elif asset_type_str == AssetType.BOND.name:
-            new_asset = Bond(
-                **base_kwargs,
-                retail_series_type=get_val('retail_series_type'),
-
-                issue_date=get_val('issue_date'),
-                maturity_date=get_val('maturity_date'),
-            
-                nominal_value=get_val('nominal_value'),
-
-                interest_handling=get_val('interest_handling'),
-                coupon_frequency=get_val('coupon_frequency'),
-
-                initial_rate=get_val('initial_rate'),
-
-                is_indexed=get_val('is_indexed'),
-                margin=get_val('margin'),
-                benchmark=get_val('benchmark'),
-
-                early_redemption_penalty=get_val('early_redemption_penalty'),
-
-                rating=get_val('rating'),
-                secured=get_val('secured')
-            )
-        else:
-            return jsonify({"status": "error", "message": "Nieznany typ aktywa"}), 400
-
-        db.session.add(new_asset)
-        db.session.commit()
-        return jsonify({"status": "success", "message": f"Dodano {base_kwargs['ticker']}"}), 201
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"Błąd DB: {e}")
-        return jsonify({"status": "error", "message": f"Błąd bazy danych: {str(e)}"}), 500
-
-
-@add_asset_bp.route('/api/delete/<int:asset_id>', methods=['DELETE'])
-def api_delete_asset(asset_id):
-    """Usuwa aktywo po ID."""
-    try:
-        asset = Asset.query.get(asset_id)
-        if not asset:
-            return jsonify({"status": "error", "message": "Nie znaleziono aktywa"}), 404
-        
-        # SQLAlchemy załatwi usunięcie z tabel zależnych (etfs, etcs, bonds) dzięki polimorfizmowi
-        db.session.delete(asset)
-        db.session.commit()
-        return jsonify({"status": "success", "message": "Usunięto pomyślnie"}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500
+@enums_router.get('/assets/meta')
+def get_assets_metadata():
+    # Zwracamy słowniki z wartościami Enum, aby frontend mógł zbudować selecty
+    return {
+        "asset_type": [e.value for e in AssetType],
+        "category1": [e.value for e in Category1],
+        "category2": [e.value for e in Category2],
+        "geo_region": [e.value for e in GeoRegion],
+        "geo_country": [e.value for e in GeoCountry],
+        "market_type": [e.value for e in MarketType],
+        "distribution_policy": [e.value for e in DistributionPolicy],
+        "replication_method": [e.value for e in ReplicationMethod],
+        "coupon_frequency": [e.value for e in CouponFrequency],
+        "interest_handling": [e.value for e in InterestHandling],
+        "retail_bond_benchmark": [e.value for e in RetailBondBenchmark]
+    }
