@@ -43,6 +43,7 @@ export const assetSchema = z.object({
     early_redemption_penalty: z.coerce.number().optional(),
     rating: z.string().optional(),
     secured: z.boolean().optional(),
+
 }).refine((data) => {
     // Przykład zaawansowanej walidacji: Jeśli typ to BOND, daty muszą być podane
     if (data.asset_type === "Obligacja") {

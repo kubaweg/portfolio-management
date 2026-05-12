@@ -7,7 +7,7 @@ module.exports = mod;
 }),
 "[project]/src/app/add_asset/page.tsx [app-rsc] (ecmascript)", ((__turbopack_context__, module, exports) => {
 
-const e = new Error("Could not parse module '[project]/src/app/add_asset/page.tsx'\n\nExpected ';', '}' or <eof>");
+const e = new Error("Could not parse module '[project]/src/app/add_asset/page.tsx'\n\nExpected '}', got '<eof>'");
 e.code = 'MODULE_UNPARSABLE';
 throw e;
 }),
