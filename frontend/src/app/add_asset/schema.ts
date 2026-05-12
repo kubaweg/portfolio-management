@@ -13,7 +13,7 @@ export const assetSchema = z.object({
     active: z.boolean().default(true),
     notes: z.string().optional(),
 
-    // ExchangeTradedMixin (ETF, ETC, EQUITY, CRYPTO)
+    // ExchangeTradedMixin (only for ETF, ETC, EQUITY, CRYPTO; should be hidden for BOND)
     isin: z.string().optional(),
     issuer: z.string().optional(),
     ter: z.coerce.number().optional(),
