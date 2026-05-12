@@ -265,7 +265,7 @@ img, video {
   --foreground: #0a0a0a;
   --card: #fff;
   --card-foreground: #0a0a0a;
-  --popover: #fff;
+  --popover: #76828b;
   --popover-foreground: #0a0a0a;
   --primary: #171717;
   --primary-foreground: #fafafa;
@@ -291,7 +291,7 @@ img, video {
     --foreground: lab(2.75381% 0 0);
     --card: lab(100% 0 0);
     --card-foreground: lab(2.75381% 0 0);
-    --popover: lab(100% 0 0);
+    --popover: lab(53.6253% -3.14695 -6.53309);
     --popover-foreground: lab(2.75381% 0 0);
     --primary: lab(7.78201% -.0000149012 0);
     --primary-foreground: lab(98.26% 0 0);
@@ -810,6 +810,11 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .bg-transparent {
   background-color: #0000;
+}
+
+.bg-white {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
 }
 
 .bg-clip-padding {

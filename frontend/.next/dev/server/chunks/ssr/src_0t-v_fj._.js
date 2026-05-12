@@ -352,24 +352,28 @@ function SelectContent({ className, children, side = "bottom", sideOffset = 4, a
             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$base$2d$ui$2f$react$2f$esm$2f$select$2f$index$2e$parts$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__Select$3e$__["Select"].Popup, {
                 "data-slot": "select-content",
                 "data-align-trigger": alignItemWithTrigger,
+                style: {
+                    backgroundColor: 'white',
+                    opacity: 1
+                },
                 className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className),
                 ...props,
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SelectScrollUpButton, {}, void 0, false, {
                         fileName: "[project]/src/components/ui/select.tsx",
-                        lineNumber: 89,
+                        lineNumber: 90,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$base$2d$ui$2f$react$2f$esm$2f$select$2f$index$2e$parts$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__Select$3e$__["Select"].List, {
                         children: children
                     }, void 0, false, {
                         fileName: "[project]/src/components/ui/select.tsx",
-                        lineNumber: 90,
+                        lineNumber: 91,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SelectScrollDownButton, {}, void 0, false, {
                         fileName: "[project]/src/components/ui/select.tsx",
-                        lineNumber: 91,
+                        lineNumber: 92,
                         columnNumber: 11
                     }, this)
                 ]
@@ -396,7 +400,7 @@ function SelectLabel({ className, ...props }) {
         ...props
     }, void 0, false, {
         fileName: "[project]/src/components/ui/select.tsx",
-        lineNumber: 103,
+        lineNumber: 104,
         columnNumber: 5
     }, this);
 }
@@ -411,7 +415,7 @@ function SelectItem({ className, children, ...props }) {
                 children: children
             }, void 0, false, {
                 fileName: "[project]/src/components/ui/select.tsx",
-                lineNumber: 125,
+                lineNumber: 126,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$base$2d$ui$2f$react$2f$esm$2f$select$2f$index$2e$parts$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__Select$3e$__["Select"].ItemIndicator, {
@@ -419,25 +423,25 @@ function SelectItem({ className, children, ...props }) {
                     className: "pointer-events-none absolute right-2 flex size-4 items-center justify-center"
                 }, void 0, false, {
                     fileName: "[project]/src/components/ui/select.tsx",
-                    lineNumber: 130,
+                    lineNumber: 131,
                     columnNumber: 11
                 }, this),
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckIcon$3e$__["CheckIcon"], {
                     className: "pointer-events-none"
                 }, void 0, false, {
                     fileName: "[project]/src/components/ui/select.tsx",
-                    lineNumber: 133,
+                    lineNumber: 134,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/ui/select.tsx",
-                lineNumber: 128,
+                lineNumber: 129,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/ui/select.tsx",
-        lineNumber: 117,
+        lineNumber: 118,
         columnNumber: 5
     }, this);
 }
@@ -448,7 +452,7 @@ function SelectSeparator({ className, ...props }) {
         ...props
     }, void 0, false, {
         fileName: "[project]/src/components/ui/select.tsx",
-        lineNumber: 144,
+        lineNumber: 145,
         columnNumber: 5
     }, this);
 }
@@ -459,12 +463,12 @@ function SelectScrollUpButton({ className, ...props }) {
         ...props,
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUpIcon$3e$__["ChevronUpIcon"], {}, void 0, false, {
             fileName: "[project]/src/components/ui/select.tsx",
-            lineNumber: 165,
+            lineNumber: 166,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/ui/select.tsx",
-        lineNumber: 157,
+        lineNumber: 158,
         columnNumber: 5
     }, this);
 }
@@ -475,12 +479,12 @@ function SelectScrollDownButton({ className, ...props }) {
         ...props,
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDownIcon$3e$__["ChevronDownIcon"], {}, void 0, false, {
             fileName: "[project]/src/components/ui/select.tsx",
-            lineNumber: 184,
+            lineNumber: 185,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/ui/select.tsx",
-        lineNumber: 176,
+        lineNumber: 177,
         columnNumber: 5
     }, this);
 }
