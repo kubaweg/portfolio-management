@@ -39,8 +39,6 @@ class PortfolioEngine:
 
             pb_result = pb.build(tt, current_price=prices["price"])
 
-            print(tt)
-
             asset_data, metrics = self._build_asset_data(
                 asset=asset,
                 tt=tt,

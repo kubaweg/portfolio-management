@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { toast, Toaster } from "sonner"
 
 import {
-    PieChart, Pie, ResponsiveContainer, Tooltip, Legend
+    PieChart, Pie, ResponsiveContainer, Tooltip, Legend, Cell
 } from 'recharts';
 import {
     TrendingUp, Wallet, Landmark, Percent, ChevronDown, ChevronUp, Info
@@ -15,13 +15,14 @@ import {
 
 // --- Kolory dla wykresów ---
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 export default function PortfolioPage() {
     const [data, setData] = useState<PortfolioResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
     const [categoryType, setCategoryType] = useState<'category1' | 'category2'>('category1');
+
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
     useEffect(() => {
         const fetchPortfolio = async () => {
@@ -46,38 +47,37 @@ export default function PortfolioPage() {
                 setLoading(false);
             }
         };
-
-        fetchPortfolio();
+        fetchPortfolio()
     }, []);
-
-    console.log(data)
-
-    const totals = data.totals;
-    const asset_data = data.asset_data;
 
     // --- Przetwarzanie danych do wykresów ---
     const typeData = useMemo(() => {
+        if (!data) return []; // Zwraca puste dane, jeśli fetch jeszcze trwa
         const map = new Map<string, number>();
-        totals.instrument_data.forEach(item => {
+        data.totals.instrument_data.forEach(item => {
             map.set(item.type, (map.get(item.type) || 0) + item.value);
         });
         return Array.from(map).map(([name, value]) => ({ name, value }));
-    }, [totals.instrument_data]);
+    }, [data]);
 
     const categoryData = useMemo(() => {
+        if (!data) return []; // Zwraca puste dane, jeśli fetch jeszcze trwa
         const map = new Map<string, number>();
-        totals.instrument_data.forEach(item => {
+        data.totals.instrument_data.forEach(item => {
             const key = item[categoryType];
             map.set(key, (map.get(key) || 0) + item.value);
         });
         return Array.from(map).map(([name, value]) => ({ name, value }));
-    }, [totals.instrument_data, categoryType]);
+    }, [data, categoryType]);
 
     const formatPLN = (val: number) =>
         new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(val);
 
     if (loading) return <div className="p-10 text-center">Ładowanie portfela...</div>;
     if (!data) return <div className="p-10 text-center text-red-500">Nie udało się pobrać danych.</div>;
+
+    const totals = data.totals;
+    const asset_data = data.asset_data;
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8 bg-slate-50 min-h-screen">
