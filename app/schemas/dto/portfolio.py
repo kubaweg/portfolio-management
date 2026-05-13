@@ -104,6 +104,9 @@ class AssetData(BaseModel):
     summary: AssetSummary
     current_data: AssetCurrentData
 
+    open_positions: List[OpenPosition]
+    closed_positions: List[ClosedPosition]
+
 #############################################
 
 class DashboardResponse(BaseModel):

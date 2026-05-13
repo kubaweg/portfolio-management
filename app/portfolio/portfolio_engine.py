@@ -39,6 +39,8 @@ class PortfolioEngine:
 
             pb_result = pb.build(tt, current_price=prices["price"])
 
+            print(tt)
+
             asset_data, metrics = self._build_asset_data(
                 asset=asset,
                 tt=tt,
@@ -280,7 +282,9 @@ class PortfolioEngine:
         asset_data = AssetData(
             base_data=base_data,
             summary=summary,
-            current_data=current_data
+            current_data=current_data,
+            open_positions=open_positions,
+            closed_positions=closed_positions
         )
 
         # TODO: tutaj trzeba zrobić refactor na pydantic
