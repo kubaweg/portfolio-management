@@ -573,9 +573,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 ;
 ;
 ;
-function Checkbox({ className, ...props }) {
+function Checkbox({ className, checked, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$base$2d$ui$2f$react$2f$esm$2f$checkbox$2f$index$2e$parts$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__Checkbox$3e$__["Checkbox"].Root, {
         "data-slot": "checkbox",
+        checked: checked ?? false,
         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input transition-colors outline-none group-has-disabled/field:opacity-50 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary", className),
         ...props,
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$base$2d$ui$2f$react$2f$esm$2f$checkbox$2f$index$2e$parts$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__Checkbox$3e$__["Checkbox"].Indicator, {
@@ -583,12 +584,12 @@ function Checkbox({ className, ...props }) {
             className: "grid place-content-center text-current transition-none [&>svg]:size-3.5",
             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckIcon$3e$__["CheckIcon"], {}, void 0, false, {
                 fileName: "[project]/src/components/ui/checkbox.tsx",
-                lineNumber: 22,
+                lineNumber: 23,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/ui/checkbox.tsx",
-            lineNumber: 18,
+            lineNumber: 19,
             columnNumber: 7
         }, this)
     }, void 0, false, {
@@ -675,6 +676,10 @@ const assetSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules
     // ETC Specific
     multiplier: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v4$2f$classic$2f$coerce$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__coerce$3e$__["coerce"].number().default(1),
     physical_backing: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v4$2f$classic$2f$schemas$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["boolean"]().default(true),
+    // Equity Specific
+    // not needed for now
+    // Crypto Specific
+    // not needed for now
     // BOND Specific
     retail_series_type: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v4$2f$classic$2f$schemas$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["string"]().optional(),
     issue_date: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v4$2f$classic$2f$schemas$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["string"]().optional(),
@@ -757,6 +762,7 @@ function AddAssetPage() {
     const [meta, setMeta] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$hook$2d$form$2f$dist$2f$index$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useForm"])({
         resolver: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$hookform$2f$resolvers$2f$zod$2f$dist$2f$zod$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["zodResolver"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$add_asset$2f$schema$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["assetSchema"]),
+        shouldUnregister: true,
         defaultValues: {
             active: true,
             spread: 0,
@@ -788,7 +794,7 @@ function AddAssetPage() {
     }["AddAssetPage.useEffect"], []);
     const onSubmit = async (values)=>{
         try {
-            const res = await fetch(`${API_BASE_URL}/api/assets`, {
+            const res = await fetch(`${API_BASE_URL}/api/assets/add`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -811,12 +817,12 @@ function AddAssetPage() {
             children: "Inicjalizacja systemu..."
         }, void 0, false, {
             fileName: "[project]/src/app/add_asset/page.tsx",
-            lineNumber: 71,
+            lineNumber: 72,
             columnNumber: 13
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/add_asset/page.tsx",
-        lineNumber: 70,
+        lineNumber: 71,
         columnNumber: 9
     }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -826,7 +832,7 @@ function AddAssetPage() {
                 richColors: true
             }, void 0, false, {
                 fileName: "[project]/src/app/add_asset/page.tsx",
-                lineNumber: 77,
+                lineNumber: 78,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("header", {
@@ -840,12 +846,12 @@ function AddAssetPage() {
                                 className: "text-primary h-8 w-8"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 82,
+                                lineNumber: 83,
                                 columnNumber: 25
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/add_asset/page.tsx",
-                            lineNumber: 81,
+                            lineNumber: 82,
                             columnNumber: 21
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -855,7 +861,7 @@ function AddAssetPage() {
                                     children: "Nowe Aktywo"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/add_asset/page.tsx",
-                                    lineNumber: 85,
+                                    lineNumber: 86,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -863,24 +869,24 @@ function AddAssetPage() {
                                     children: "Dodaj nowy instrument finansowy do swojej bazy danych."
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/add_asset/page.tsx",
-                                    lineNumber: 86,
+                                    lineNumber: 87,
                                     columnNumber: 25
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/add_asset/page.tsx",
-                            lineNumber: 84,
+                            lineNumber: 85,
                             columnNumber: 21
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/add_asset/page.tsx",
-                    lineNumber: 80,
+                    lineNumber: 81,
                     columnNumber: 17
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/add_asset/page.tsx",
-                lineNumber: 79,
+                lineNumber: 80,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -899,19 +905,19 @@ function AddAssetPage() {
                                             className: "h-4 w-4 text-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                            lineNumber: 97,
+                                            lineNumber: 98,
                                             columnNumber: 29
                                         }, this),
                                         " Podstawowe Informacje"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/add_asset/page.tsx",
-                                    lineNumber: 96,
+                                    lineNumber: 97,
                                     columnNumber: 25
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 95,
+                                lineNumber: 96,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -924,7 +930,7 @@ function AddAssetPage() {
                                                 children: "Ticker"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 102,
+                                                lineNumber: 103,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -933,7 +939,7 @@ function AddAssetPage() {
                                                 className: "font-mono uppercase"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 103,
+                                                lineNumber: 104,
                                                 columnNumber: 29
                                             }, this),
                                             errors.ticker && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -941,13 +947,13 @@ function AddAssetPage() {
                                                 children: errors.ticker.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 104,
+                                                lineNumber: 105,
                                                 columnNumber: 47
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 101,
+                                        lineNumber: 102,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -957,7 +963,7 @@ function AddAssetPage() {
                                                 children: "Nazwa Pełna"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 107,
+                                                lineNumber: 108,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -965,7 +971,7 @@ function AddAssetPage() {
                                                 placeholder: "np. Vanguard FTSE All-World UCITS ETF"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 108,
+                                                lineNumber: 109,
                                                 columnNumber: 29
                                             }, this),
                                             errors.name && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -973,13 +979,13 @@ function AddAssetPage() {
                                                 children: errors.name.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 109,
+                                                lineNumber: 110,
                                                 columnNumber: 45
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 106,
+                                        lineNumber: 107,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -989,7 +995,7 @@ function AddAssetPage() {
                                                 children: "Typ Aktywa"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 112,
+                                                lineNumber: 113,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1000,12 +1006,12 @@ function AddAssetPage() {
                                                             placeholder: "Wybierz..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                                            lineNumber: 114,
+                                                            lineNumber: 115,
                                                             columnNumber: 48
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 114,
+                                                        lineNumber: 115,
                                                         columnNumber: 33
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1015,18 +1021,18 @@ function AddAssetPage() {
                                                                 children: t
                                                             }, t, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 116,
+                                                                lineNumber: 117,
                                                                 columnNumber: 73
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 115,
+                                                        lineNumber: 116,
                                                         columnNumber: 33
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 113,
+                                                lineNumber: 114,
                                                 columnNumber: 29
                                             }, this),
                                             errors.asset_type && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1034,13 +1040,13 @@ function AddAssetPage() {
                                                 children: errors.asset_type.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 119,
+                                                lineNumber: 120,
                                                 columnNumber: 51
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 111,
+                                        lineNumber: 112,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1050,7 +1056,7 @@ function AddAssetPage() {
                                                 children: "Waluta"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 122,
+                                                lineNumber: 123,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1059,13 +1065,13 @@ function AddAssetPage() {
                                                 className: "uppercase"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 123,
+                                                lineNumber: 124,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 121,
+                                        lineNumber: 122,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1075,7 +1081,7 @@ function AddAssetPage() {
                                                 children: "Typ Rynku"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 126,
+                                                lineNumber: 127,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1086,12 +1092,12 @@ function AddAssetPage() {
                                                             placeholder: "Rynek..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                                            lineNumber: 128,
+                                                            lineNumber: 129,
                                                             columnNumber: 48
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 128,
+                                                        lineNumber: 129,
                                                         columnNumber: 33
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1101,36 +1107,36 @@ function AddAssetPage() {
                                                                 children: m
                                                             }, m, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 130,
+                                                                lineNumber: 131,
                                                                 columnNumber: 74
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 129,
+                                                        lineNumber: 130,
                                                         columnNumber: 33
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 127,
+                                                lineNumber: 128,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 125,
+                                        lineNumber: 126,
                                         columnNumber: 25
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 100,
+                                lineNumber: 101,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/add_asset/page.tsx",
-                        lineNumber: 94,
+                        lineNumber: 95,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1145,19 +1151,19 @@ function AddAssetPage() {
                                             className: "h-4 w-4 text-emerald-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                            lineNumber: 141,
+                                            lineNumber: 142,
                                             columnNumber: 29
                                         }, this),
                                         " Klasyfikacja i Geografia"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/add_asset/page.tsx",
-                                    lineNumber: 140,
+                                    lineNumber: 141,
                                     columnNumber: 25
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 139,
+                                lineNumber: 140,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1170,7 +1176,7 @@ function AddAssetPage() {
                                                 children: "Kategoria (Główna)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 146,
+                                                lineNumber: 147,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1181,12 +1187,12 @@ function AddAssetPage() {
                                                             placeholder: "Wybierz..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                                            lineNumber: 148,
+                                                            lineNumber: 149,
                                                             columnNumber: 48
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 148,
+                                                        lineNumber: 149,
                                                         columnNumber: 33
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1196,24 +1202,24 @@ function AddAssetPage() {
                                                                 children: c
                                                             }, c, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 150,
+                                                                lineNumber: 151,
                                                                 columnNumber: 72
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 149,
+                                                        lineNumber: 150,
                                                         columnNumber: 33
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 147,
+                                                lineNumber: 148,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 145,
+                                        lineNumber: 146,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1223,7 +1229,7 @@ function AddAssetPage() {
                                                 children: "Kategoria (Dodatkowa)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 155,
+                                                lineNumber: 156,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1234,12 +1240,12 @@ function AddAssetPage() {
                                                             placeholder: "Opcjonalna..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                                            lineNumber: 157,
+                                                            lineNumber: 158,
                                                             columnNumber: 48
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 157,
+                                                        lineNumber: 158,
                                                         columnNumber: 33
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1249,24 +1255,24 @@ function AddAssetPage() {
                                                                 children: c
                                                             }, c, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 159,
+                                                                lineNumber: 160,
                                                                 columnNumber: 72
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 158,
+                                                        lineNumber: 159,
                                                         columnNumber: 33
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 156,
+                                                lineNumber: 157,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 154,
+                                        lineNumber: 155,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1276,7 +1282,7 @@ function AddAssetPage() {
                                                 children: "Region"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 164,
+                                                lineNumber: 165,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1287,12 +1293,12 @@ function AddAssetPage() {
                                                             placeholder: "Region..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                                            lineNumber: 166,
+                                                            lineNumber: 167,
                                                             columnNumber: 48
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 166,
+                                                        lineNumber: 167,
                                                         columnNumber: 33
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1302,24 +1308,24 @@ function AddAssetPage() {
                                                                 children: g
                                                             }, g, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 168,
+                                                                lineNumber: 169,
                                                                 columnNumber: 73
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 167,
+                                                        lineNumber: 168,
                                                         columnNumber: 33
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 165,
+                                                lineNumber: 166,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 163,
+                                        lineNumber: 164,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1329,7 +1335,7 @@ function AddAssetPage() {
                                                 children: "Kraj"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 173,
+                                                lineNumber: 174,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1340,12 +1346,12 @@ function AddAssetPage() {
                                                             placeholder: "Kraj..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                                            lineNumber: 175,
+                                                            lineNumber: 176,
                                                             columnNumber: 48
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 175,
+                                                        lineNumber: 176,
                                                         columnNumber: 33
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1355,36 +1361,36 @@ function AddAssetPage() {
                                                                 children: c
                                                             }, c, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 177,
+                                                                lineNumber: 178,
                                                                 columnNumber: 74
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 176,
+                                                        lineNumber: 177,
                                                         columnNumber: 33
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 174,
+                                                lineNumber: 175,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 172,
+                                        lineNumber: 173,
                                         columnNumber: 25
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 144,
+                                lineNumber: 145,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/add_asset/page.tsx",
-                        lineNumber: 138,
+                        lineNumber: 139,
                         columnNumber: 17
                     }, this),
                     showExchangeFields && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1399,19 +1405,19 @@ function AddAssetPage() {
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                            lineNumber: 189,
+                                            lineNumber: 190,
                                             columnNumber: 33
                                         }, this),
                                         " Dane Giełdowe"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/add_asset/page.tsx",
-                                    lineNumber: 188,
+                                    lineNumber: 189,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 187,
+                                lineNumber: 188,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1424,7 +1430,7 @@ function AddAssetPage() {
                                                 children: "ISIN"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 194,
+                                                lineNumber: 195,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1433,13 +1439,13 @@ function AddAssetPage() {
                                                 className: "font-mono"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 195,
+                                                lineNumber: 196,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 193,
+                                        lineNumber: 194,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1449,7 +1455,7 @@ function AddAssetPage() {
                                                 children: "Emitent"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 198,
+                                                lineNumber: 199,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1457,13 +1463,13 @@ function AddAssetPage() {
                                                 placeholder: "np. BlackRock Asset Management"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 199,
+                                                lineNumber: 200,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 197,
+                                        lineNumber: 198,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1473,7 +1479,7 @@ function AddAssetPage() {
                                                 children: "TER (%)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 202,
+                                                lineNumber: 203,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1482,13 +1488,13 @@ function AddAssetPage() {
                                                 ...register("ter")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 203,
+                                                lineNumber: 204,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 201,
+                                        lineNumber: 202,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1498,7 +1504,7 @@ function AddAssetPage() {
                                                 children: "Miejsce Notowania"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 206,
+                                                lineNumber: 207,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1506,13 +1512,13 @@ function AddAssetPage() {
                                                 placeholder: "XETRA"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 207,
+                                                lineNumber: 208,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 205,
+                                        lineNumber: 206,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1522,7 +1528,7 @@ function AddAssetPage() {
                                                 children: "Domicile"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 210,
+                                                lineNumber: 211,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1530,25 +1536,25 @@ function AddAssetPage() {
                                                 placeholder: "Ireland"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 211,
+                                                lineNumber: 212,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 209,
+                                        lineNumber: 210,
                                         columnNumber: 29
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 192,
+                                lineNumber: 193,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/add_asset/page.tsx",
-                        lineNumber: 186,
+                        lineNumber: 187,
                         columnNumber: 21
                     }, this),
                     assetType === "ETF" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1561,12 +1567,12 @@ function AddAssetPage() {
                                     children: "Szczegóły Funduszu ETF"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/add_asset/page.tsx",
-                                    lineNumber: 221,
+                                    lineNumber: 222,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 220,
+                                lineNumber: 221,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1579,7 +1585,7 @@ function AddAssetPage() {
                                                 children: "Benchmark"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 225,
+                                                lineNumber: 226,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1587,13 +1593,13 @@ function AddAssetPage() {
                                                 placeholder: "MSCI World Index"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 226,
+                                                lineNumber: 227,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 224,
+                                        lineNumber: 225,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1603,7 +1609,7 @@ function AddAssetPage() {
                                                 children: "Polityka Dystrybucji"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 229,
+                                                lineNumber: 230,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1614,12 +1620,12 @@ function AddAssetPage() {
                                                             placeholder: "Wybierz..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                                            lineNumber: 231,
+                                                            lineNumber: 232,
                                                             columnNumber: 52
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 231,
+                                                        lineNumber: 232,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1629,24 +1635,24 @@ function AddAssetPage() {
                                                                 children: d
                                                             }, d, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 233,
+                                                                lineNumber: 234,
                                                                 columnNumber: 86
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 232,
+                                                        lineNumber: 233,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 230,
+                                                lineNumber: 231,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 228,
+                                        lineNumber: 229,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1656,7 +1662,7 @@ function AddAssetPage() {
                                                 children: "Metoda Replikacji"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 238,
+                                                lineNumber: 239,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1667,12 +1673,12 @@ function AddAssetPage() {
                                                             placeholder: "Wybierz..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                                            lineNumber: 240,
+                                                            lineNumber: 241,
                                                             columnNumber: 52
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 240,
+                                                        lineNumber: 241,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1682,36 +1688,36 @@ function AddAssetPage() {
                                                                 children: r
                                                             }, r, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 242,
+                                                                lineNumber: 243,
                                                                 columnNumber: 85
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 241,
+                                                        lineNumber: 242,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 239,
+                                                lineNumber: 240,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 237,
+                                        lineNumber: 238,
                                         columnNumber: 29
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 223,
+                                lineNumber: 224,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/add_asset/page.tsx",
-                        lineNumber: 219,
+                        lineNumber: 220,
                         columnNumber: 21
                     }, this),
                     assetType === "Obligacja" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1726,19 +1732,19 @@ function AddAssetPage() {
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                            lineNumber: 255,
+                                            lineNumber: 257,
                                             columnNumber: 33
                                         }, this),
-                                        " Dane Obligacji"
+                                        " Szczegółowe Dane Obligacji"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/add_asset/page.tsx",
-                                    lineNumber: 254,
+                                    lineNumber: 256,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 253,
+                                lineNumber: 255,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1748,39 +1754,15 @@ function AddAssetPage() {
                                         className: "space-y-2",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
-                                                children: "Seria Detaliczna"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 260,
-                                                columnNumber: 33
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
-                                                ...register("retail_series_type"),
-                                                placeholder: "np. EDO0534"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 261,
-                                                columnNumber: 33
-                                            }, this)
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 259,
-                                        columnNumber: 29
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "space-y-2",
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
-                                                children: "Data Emisji"
+                                                children: "Typ Obligacji Detalicznej"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
                                                 lineNumber: 264,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
-                                                type: "date",
-                                                ...register("issue_date")
+                                                ...register("retail_series_type"),
+                                                placeholder: "np. EDO. OTS..."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
                                                 lineNumber: 265,
@@ -1796,7 +1778,7 @@ function AddAssetPage() {
                                         className: "space-y-2",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
-                                                children: "Data Wykupu"
+                                                children: "Data Emisji"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
                                                 lineNumber: 268,
@@ -1804,7 +1786,7 @@ function AddAssetPage() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
                                                 type: "date",
-                                                ...register("maturity_date")
+                                                ...register("issue_date")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
                                                 lineNumber: 269,
@@ -1820,16 +1802,15 @@ function AddAssetPage() {
                                         className: "space-y-2",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
-                                                children: "Wartość Nominalna"
+                                                children: "Data Wykupu"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
                                                 lineNumber: 272,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
-                                                type: "number",
-                                                step: "0.001",
-                                                ...register("nominal_value")
+                                                type: "date",
+                                                ...register("maturity_date")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
                                                 lineNumber: 273,
@@ -1845,25 +1826,180 @@ function AddAssetPage() {
                                         className: "space-y-2",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
-                                                children: "Oprocentowanie Początkowe (%)"
+                                                children: "Obsługa Odsetek"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 276,
+                                                lineNumber: 278,
                                                 columnNumber: 33
                                             }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
-                                                type: "number",
-                                                step: "0.001",
-                                                ...register("initial_rate")
-                                            }, void 0, false, {
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
+                                                onValueChange: (val)=>setValue("interest_handling", val),
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectTrigger"], {
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {
+                                                            placeholder: "Wybierz..."
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/add_asset/page.tsx",
+                                                            lineNumber: 280,
+                                                            columnNumber: 52
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                                        lineNumber: 280,
+                                                        columnNumber: 37
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
+                                                        className: "bg-white",
+                                                        children: meta.interest_handling.map((h)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                value: h,
+                                                                children: h
+                                                            }, h, false, {
+                                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                                lineNumber: 283,
+                                                                columnNumber: 45
+                                                            }, this))
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                                        lineNumber: 281,
+                                                        columnNumber: 37
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 277,
+                                                lineNumber: 279,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 275,
+                                        lineNumber: 277,
+                                        columnNumber: 29
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "space-y-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                children: "Częstotliwość Kuponu"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 289,
+                                                columnNumber: 33
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
+                                                onValueChange: (val)=>setValue("coupon_frequency", val),
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectTrigger"], {
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {
+                                                            placeholder: "Wybierz..."
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/add_asset/page.tsx",
+                                                            lineNumber: 291,
+                                                            columnNumber: 52
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                                        lineNumber: 291,
+                                                        columnNumber: 37
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
+                                                        className: "bg-white",
+                                                        children: meta.coupon_frequency.map((f)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                value: f,
+                                                                children: f
+                                                            }, f, false, {
+                                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                                lineNumber: 294,
+                                                                columnNumber: 45
+                                                            }, this))
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                                        lineNumber: 292,
+                                                        columnNumber: 37
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 290,
+                                                columnNumber: 33
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                        lineNumber: 288,
+                                        columnNumber: 29
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "space-y-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                children: "Rating"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 300,
+                                                columnNumber: 33
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                ...register("rating"),
+                                                placeholder: "np. A, BBB, NR"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 301,
+                                                columnNumber: 33
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                        lineNumber: 299,
+                                        columnNumber: 29
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "space-y-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                children: "Wartość Nominalna"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 306,
+                                                columnNumber: 33
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                type: "number",
+                                                step: "0.01",
+                                                ...register("nominal_value")
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 307,
+                                                columnNumber: 33
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                        lineNumber: 305,
+                                        columnNumber: 29
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "space-y-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                children: "Oprocentowanie Początkowe (%)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 310,
+                                                columnNumber: 33
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                type: "number",
+                                                step: "0.01",
+                                                ...register("initial_rate")
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 311,
+                                                columnNumber: 33
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                        lineNumber: 309,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1873,58 +2009,108 @@ function AddAssetPage() {
                                                 children: "Marża (%)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 280,
+                                                lineNumber: 314,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
                                                 type: "number",
-                                                step: "0.001",
+                                                step: "0.01",
                                                 ...register("margin")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 281,
+                                                lineNumber: 315,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 279,
+                                        lineNumber: 313,
+                                        columnNumber: 29
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "space-y-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                children: "Opłata za wcześniejszy wykup"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 320,
+                                                columnNumber: 33
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                type: "number",
+                                                step: "0.01",
+                                                ...register("early_redemption_penalty"),
+                                                placeholder: "np. 0.70"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 321,
+                                                columnNumber: 33
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                        lineNumber: 319,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "flex items-center space-x-2 pt-8",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$checkbox$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Checkbox"], {
-                                                checked: watch("is_indexed"),
+                                                checked: !!watch("is_indexed"),
                                                 onCheckedChange: (val)=>setValue("is_indexed", !!val)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 284,
+                                                lineNumber: 324,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
                                                 children: "Indeksowana Inflacją"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 285,
+                                                lineNumber: 328,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 283,
+                                        lineNumber: 323,
+                                        columnNumber: 29
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "flex items-center space-x-2 pt-8",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$checkbox$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Checkbox"], {
+                                                checked: !!watch("secured"),
+                                                onCheckedChange: (val)=>setValue("secured", !!val)
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 331,
+                                                columnNumber: 33
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                children: "Zabezpieczona (Secured)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/add_asset/page.tsx",
+                                                lineNumber: 335,
+                                                columnNumber: 33
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/add_asset/page.tsx",
+                                        lineNumber: 330,
                                         columnNumber: 29
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 258,
+                                lineNumber: 260,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/add_asset/page.tsx",
-                        lineNumber: 252,
+                        lineNumber: 254,
                         columnNumber: 21
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1939,19 +2125,19 @@ function AddAssetPage() {
                                             className: "h-4 w-4 text-slate-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                            lineNumber: 295,
+                                            lineNumber: 345,
                                             columnNumber: 29
                                         }, this),
                                         " Ustawienia Dodatkowe"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/add_asset/page.tsx",
-                                    lineNumber: 294,
+                                    lineNumber: 344,
                                     columnNumber: 25
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 293,
+                                lineNumber: 343,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1971,20 +2157,20 @@ function AddAssetPage() {
                                                                 onCheckedChange: (val)=>setValue("active", !!val)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 302,
+                                                                lineNumber: 352,
                                                                 columnNumber: 37
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
                                                                 children: "Instrument Aktywny"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 303,
+                                                                lineNumber: 353,
                                                                 columnNumber: 37
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 301,
+                                                        lineNumber: 351,
                                                         columnNumber: 33
                                                     }, this),
                                                     assetType === "ETC" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1995,26 +2181,26 @@ function AddAssetPage() {
                                                                 onCheckedChange: (val)=>setValue("physical_backing", !!val)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 307,
+                                                                lineNumber: 357,
                                                                 columnNumber: 41
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
                                                                 children: "Fizyczne Pokrycie"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                                lineNumber: 308,
+                                                                lineNumber: 358,
                                                                 columnNumber: 41
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 306,
+                                                        lineNumber: 356,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 300,
+                                                lineNumber: 350,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2024,7 +2210,7 @@ function AddAssetPage() {
                                                         children: "Spread / Inne koszty (%)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 313,
+                                                        lineNumber: 363,
                                                         columnNumber: 33
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2033,24 +2219,24 @@ function AddAssetPage() {
                                                         ...register("spread")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 314,
+                                                        lineNumber: 364,
                                                         columnNumber: 33
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 312,
+                                                lineNumber: 362,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 299,
+                                        lineNumber: 349,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$separator$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Separator"], {}, void 0, false, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 317,
+                                        lineNumber: 367,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2063,14 +2249,14 @@ function AddAssetPage() {
                                                         className: "h-3 w-3"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                                        lineNumber: 319,
+                                                        lineNumber: 369,
                                                         columnNumber: 72
                                                     }, this),
                                                     " Notatki i Strategia"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 319,
+                                                lineNumber: 369,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$textarea$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Textarea"], {
@@ -2079,25 +2265,25 @@ function AddAssetPage() {
                                                 className: "min-h-[100px]"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                                lineNumber: 320,
+                                                lineNumber: 370,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/add_asset/page.tsx",
-                                        lineNumber: 318,
+                                        lineNumber: 368,
                                         columnNumber: 25
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 298,
+                                lineNumber: 348,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/add_asset/page.tsx",
-                        lineNumber: 292,
+                        lineNumber: 342,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2110,7 +2296,7 @@ function AddAssetPage() {
                                 children: "Anuluj"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 327,
+                                lineNumber: 377,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2124,7 +2310,7 @@ function AddAssetPage() {
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/add_asset/page.tsx",
-                                            lineNumber: 331,
+                                            lineNumber: 381,
                                             columnNumber: 62
                                         }, this),
                                         " Zapisz Aktywo"
@@ -2132,25 +2318,25 @@ function AddAssetPage() {
                                 }, void 0, true)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/add_asset/page.tsx",
-                                lineNumber: 330,
+                                lineNumber: 380,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/add_asset/page.tsx",
-                        lineNumber: 326,
+                        lineNumber: 376,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/add_asset/page.tsx",
-                lineNumber: 91,
+                lineNumber: 92,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/add_asset/page.tsx",
-        lineNumber: 76,
+        lineNumber: 77,
         columnNumber: 9
     }, this);
 }

@@ -23,6 +23,7 @@ export default function AddAssetPage() {
     const [meta, setMeta] = useState<any>(null);
     const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<AssetFormValues>({
         resolver: zodResolver(assetSchema),
+        shouldUnregister: true, // <--- TO JEST KLUCZ
         defaultValues: {
             active: true,
             spread: 0,
@@ -51,7 +52,7 @@ export default function AddAssetPage() {
 
     const onSubmit = async (values: AssetFormValues) => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/assets`, {
+            const res = await fetch(`${API_BASE_URL}/api/assets/add`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(values),
@@ -248,17 +249,20 @@ export default function AddAssetPage() {
                 )}
 
                 {/* --- SEKCJA 5: OBLIGACJE (Zmienione na "Obligacja" zgodnie z Twoim warunkiem) --- */}
+                {/* --- SEKCJA: OBLIGACJE --- */}
                 {assetType === "Obligacja" && (
                     <Card className="shadow-sm border-orange-200 bg-orange-50/5 animate-in slide-in-from-top-2 duration-300">
                         <CardHeader className="bg-orange-100/30 pb-4 border-b border-orange-100">
                             <CardTitle className="flex items-center gap-2 text-base font-semibold text-orange-700">
-                                <Landmark className="h-4 w-4" /> Dane Obligacji
+                                <Landmark className="h-4 w-4" /> Szczegółowe Dane Obligacji
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-6">
+
+                            {/* Wiersz 1: Podstawowe parametry serii */}
                             <div className="space-y-2">
-                                <Label>Seria Detaliczna</Label>
-                                <Input {...register("retail_series_type")} placeholder="np. EDO0534" />
+                                <Label>Typ Obligacji Detalicznej</Label>
+                                <Input {...register("retail_series_type")} placeholder="np. EDO. OTS..." />
                             </div>
                             <div className="space-y-2">
                                 <Label>Data Emisji</Label>
@@ -268,21 +272,67 @@ export default function AddAssetPage() {
                                 <Label>Data Wykupu</Label>
                                 <Input type="date" {...register("maturity_date")} />
                             </div>
+
+                            {/* Wiersz 2: Obsługa odsetek (Z TWOICH METADANYCH) */}
+                            <div className="space-y-2">
+                                <Label>Obsługa Odsetek</Label>
+                                <Select onValueChange={(val) => setValue("interest_handling", val)}>
+                                    <SelectTrigger><SelectValue placeholder="Wybierz..." /></SelectTrigger>
+                                    <SelectContent className="bg-white">
+                                        {meta.interest_handling.map((h: string) => (
+                                            <SelectItem key={h} value={h}>{h}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Częstotliwość Kuponu</Label>
+                                <Select onValueChange={(val) => setValue("coupon_frequency", val)}>
+                                    <SelectTrigger><SelectValue placeholder="Wybierz..." /></SelectTrigger>
+                                    <SelectContent className="bg-white">
+                                        {meta.coupon_frequency.map((f: string) => (
+                                            <SelectItem key={f} value={f}>{f}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Rating</Label>
+                                <Input {...register("rating")} placeholder="np. A, BBB, NR" />
+                            </div>
+
+                            {/* Wiersz 3: Finanse */}
                             <div className="space-y-2">
                                 <Label>Wartość Nominalna</Label>
-                                <Input type="number" step="0.001" {...register("nominal_value")} />
+                                <Input type="number" step="0.01" {...register("nominal_value")} />
                             </div>
                             <div className="space-y-2">
                                 <Label>Oprocentowanie Początkowe (%)</Label>
-                                <Input type="number" step="0.001" {...register("initial_rate")} />
+                                <Input type="number" step="0.01" {...register("initial_rate")} />
                             </div>
                             <div className="space-y-2">
                                 <Label>Marża (%)</Label>
-                                <Input type="number" step="0.001" {...register("margin")} />
+                                <Input type="number" step="0.01" {...register("margin")} />
+                            </div>
+
+                            {/* Wiersz 4: Kary i Opcje */}
+                            <div className="space-y-2">
+                                <Label>Opłata za wcześniejszy wykup</Label>
+                                <Input type="number" step="0.01" {...register("early_redemption_penalty")} placeholder="np. 0.70" />
                             </div>
                             <div className="flex items-center space-x-2 pt-8">
-                                <Checkbox checked={watch("is_indexed")} onCheckedChange={(val) => setValue("is_indexed", !!val)} />
+                                <Checkbox
+                                    checked={!!watch("is_indexed")}
+                                    onCheckedChange={(val) => setValue("is_indexed", !!val)}
+                                />
                                 <Label>Indeksowana Inflacją</Label>
+                            </div>
+                            <div className="flex items-center space-x-2 pt-8">
+                                <Checkbox
+                                    checked={!!watch("secured")}
+                                    onCheckedChange={(val) => setValue("secured", !!val)}
+                                />
+                                <Label>Zabezpieczona (Secured)</Label>
                             </div>
                         </CardContent>
                     </Card>

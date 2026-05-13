@@ -30,6 +30,12 @@ export const assetSchema = z.object({
     multiplier: z.coerce.number().default(1),
     physical_backing: z.boolean().default(true),
 
+    // Equity Specific
+    // not needed for now
+
+    // Crypto Specific
+    // not needed for now
+
     // BOND Specific
     retail_series_type: z.string().optional(),
     issue_date: z.string().optional(),

@@ -34,7 +34,7 @@ from sqlalchemy.orm import Session
 # import models
 from app.portfolio.routes import dashboard_router
 from app.analysis.routes import ticker_history_router
-from app.assets.routes import enums_router
+from app.assets.routes import enums_router, add_asset_router
 
 # Inicjalizacja aplikacji FastAPI
 app = FastAPI(
@@ -62,4 +62,5 @@ def health_check(db: Session = Depends(get_db)):
 # Tutaj w przyszłości podepniesz swoje endpointy, np.:
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(ticker_history_router, prefix="/api")
+app.include_router(add_asset_router, prefix="/api")
 app.include_router(enums_router, prefix="/api")

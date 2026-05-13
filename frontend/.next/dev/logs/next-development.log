@@ -1,7 +1,19 @@
-{"timestamp":"00:00:01.147","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:00:12.521","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
-{"timestamp":"00:00:16.007","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
-{"timestamp":"00:02:04.081","source":"Server","level":"LOG","message":"✓ Compiled in 38ms"}
-{"timestamp":"00:03:00.921","source":"Server","level":"LOG","message":"✓ Compiled in 30ms"}
-{"timestamp":"00:03:02.409","source":"Server","level":"LOG","message":"✓ Compiled in 41ms"}
-{"timestamp":"00:03:04.800","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:00:01.608","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:02:27.395","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:02:31.517","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:07:44.085","source":"Browser","level":"ERROR","message":"Base UI: A component is changing the uncontrolled checked state of Checkbox to be controlled.\nElements should not switch from uncontrolled to controlled (or vice versa).\nDecide between using a controlled or uncontrolled Checkbox element for the lifetime of the component.\nThe nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.\nMore info: https://fb.me/react-controlled-components"}
+{"timestamp":"00:07:44.146","source":"Server","level":"ERROR","message":"[browser] \"Base UI: A component is changing the uncontrolled checked state of Checkbox to be controlled.\\nElements should not switch from uncontrolled to controlled (or vice versa).\\nDecide between using a controlled or uncontrolled Checkbox element for the lifetime of the component.\\nThe nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.\\nMore info: https://fb.me/react-controlled-components\" \"\""}
+{"timestamp":"00:07:44.147","source":"Browser","level":"ERROR","message":"Base UI: A component is changing the uncontrolled checked state of Checkbox to be controlled.\nElements should not switch from uncontrolled to controlled (or vice versa).\nDecide between using a controlled or uncontrolled Checkbox element for the lifetime of the component.\nThe nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.\nMore info: https://fb.me/react-controlled-components \"\""}
+{"timestamp":"00:11:45.960","source":"Server","level":"LOG","message":"✓ Compiled in 34ms"}
+{"timestamp":"00:11:46.409","source":"Browser","level":"ERROR","message":"uncaughtError: ReferenceError: checked is not defined"}
+{"timestamp":"00:12:31.527","source":"Server","level":"WARN","message":"⚠ Fast Refresh had to perform a full reload due to a runtime error."}
+{"timestamp":"00:12:31.633","source":"Server","level":"LOG","message":"✓ Compiled in 25ms"}
+{"timestamp":"00:12:31.750","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:12:41.999","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:20:50.221","source":"Server","level":"LOG","message":"✓ Compiled in 40ms"}
+{"timestamp":"00:20:55.004","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:23:49.243","source":"Server","level":"LOG","message":"✓ Compiled in 26ms"}
+{"timestamp":"00:29:14.807","source":"Server","level":"LOG","message":"✓ Compiled in 26ms"}
+{"timestamp":"00:34:15.616","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:34:19.810","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"01:03:49.317","source":"Server","level":"LOG","message":"✓ Compiled in 55ms"}
