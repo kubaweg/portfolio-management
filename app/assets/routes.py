@@ -1,21 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import get_db
-from app.schemas.database.asset import Asset
-from app.schemas.dto.portfolio import DashboardResponse
 from app.schemas.dto.add_asset import AddAsset
 from app.portfolio.portfolio_engine import PortfolioEngine
 
 from app.schemas.database.asset import (
-    Asset, ETF, ETC, Bond, Equity, Crypto
+    ETF, ETC, Bond, Equity, Crypto
 )
 
 from app.schemas.domain.assets import (AssetType, Category1, Category2, 
     GeoRegion, GeoCountry, MarketType, DistributionPolicy, ReplicationMethod, 
     CouponFrequency, InterestHandling, RetailBondBenchmark
 )
-
-service = PortfolioEngine()
 
 add_asset_router = APIRouter()
 @add_asset_router.post("/assets/add")
