@@ -11,14 +11,30 @@ export interface PortfolioResponse {
  */
 export interface PortfolioTotals {
     invested_value: number;
+    invested_value_detailed: Record<string, number>;
+
     current_value: number;
+    current_value_detailed: Record<string, number>;
+
+    realized_profit: number;
+    realized_profit_detailed: Record<string, number>;
+
+    unrealized_profit: number;
+    unrealized_profit_detailed: Record<string, number>;
+
     interest: number;
+    interest_detailed: Record<string, number>;
+
     profit: number;
+    profit_detailed: Record<string, number>;
+
     roi: number;
+    roi_detailed: Record<string, number>;
+
     annualized_roi: number;
-    allocation: Record<string, number>; // Dynamiczne mapowanie klas aktywów (np. ETC, ETF)
+    annualized_roi_detailed: Record<string, number>;
+
     instrument_data: InstrumentChartData[];
-    instrument_data_aggregated: any[]; // Na przyszłe agregacje
 }
 
 export interface InstrumentChartData {

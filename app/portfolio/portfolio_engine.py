@@ -242,7 +242,7 @@ class PortfolioEngine:
         base_data = self._build_asset_base_data(
             ticker=asset.ticker,
             name=asset.name,
-            type=asset.asset_type.name,
+            type=asset.asset_type.value,
             category1=asset.category1.value,
             category2=asset.category2.value,
             currency=asset.currency
@@ -290,8 +290,8 @@ class PortfolioEngine:
             "historical_cost_pln": historical_cost_pln,
             "current_value_pln": current_value_pln,
             "realized_profit_pln": realized_profit_pln,
-            "interest_profit_pln": interest_profit_pln,
             "unrealized_profit_pln": unrealized_profit_pln,
+            "interest_profit_pln": interest_profit_pln,
         }
 
         return asset_data, metrics
@@ -317,24 +317,45 @@ class PortfolioEngine:
     def _init_totals(self):
         return PortfolioTotals(
             invested_value=0.0,
+            invested_value_detailed={},
+
             current_value=0.0,
+            current_value_detailed={},
+
             interest=0.0,
+            interest_detailed={},
+
+            realized_profit=0.0,
+            realized_profit_detailed={},
+
+            unrealized_profit=0.0,
+            unrealized_profit_detailed={},
+
             profit=0.0,
+            profit_detailed={},
+
             roi=0.0,
+            roi_detailed={},
+
             annualized_roi=0.0,
-            allocation={},
-            instrument_data=[],
-            instrument_data_aggregated=[]
+            annualized_roi_detailed={},
+
+            instrument_data=[]
         )
 
     def _update_totals(self, totals, asset_data: AssetData, metrics: dict):
         invested_value_pln = metrics["historical_cost_pln"]
         current_value_pln = metrics["current_value_pln"]
+
+        realized_profit_pln = metrics["realized_profit_pln"]
+        unrealized_profit_pln = metrics["unrealized_profit_pln"]
         interest_profit_pln = metrics["interest_profit_pln"]
 
         totals.invested_value += invested_value_pln
         totals.current_value += current_value_pln
-        totals.interest += interest_profit_pln  # tu traktujemy realized jako „interest/zysk zrealizowany”
+        totals.realized_profit += realized_profit_pln
+        totals.unrealized_profit += unrealized_profit_pln
+        totals.interest += interest_profit_pln
 
         totals.instrument_data.append(
             CurrentInstrumentData(
@@ -346,10 +367,31 @@ class PortfolioEngine:
             )
         )
 
-        totals.allocation[asset_data.base_data.type] = (
-            totals.allocation.get(asset_data.base_data.name, 0.0)
+        totals.invested_value_detailed[asset_data.base_data.type] = (
+            totals.invested_value_detailed.get(asset_data.base_data.type, 0.0)
+            + invested_value_pln
+        )
+
+        totals.current_value_detailed[asset_data.base_data.type] = (
+            totals.current_value_detailed.get(asset_data.base_data.type, 0.0)
             + current_value_pln
         )
+
+        totals.realized_profit_detailed[asset_data.base_data.type] = (
+            totals.realized_profit_detailed.get(asset_data.base_data.type, 0.0)
+            + realized_profit_pln
+        )
+
+        totals.unrealized_profit_detailed[asset_data.base_data.type] = (
+            totals.unrealized_profit_detailed.get(asset_data.base_data.type, 0.0)
+            + unrealized_profit_pln
+        )
+
+        totals.interest_detailed[asset_data.base_data.type] = (
+            totals.interest_detailed.get(asset_data.base_data.type, 0.0)
+            + interest_profit_pln
+        )
+
 
     def _finalize_totals(self, totals):
         totals.profit = totals.current_value + totals.interest - totals.invested_value
@@ -357,6 +399,18 @@ class PortfolioEngine:
             totals.profit / totals.invested_value if totals.invested_value > 0 else 0.0
         )
         totals.annualized_roi = 0.0  # na razie 0.0
+
+        for grouper, value in totals.current_value_detailed.items():
+            totals.profit_detailed[grouper] = \
+                totals.current_value_detailed[grouper] + \
+                    totals.interest_detailed[grouper] - \
+                        totals.invested_value_detailed[grouper]
+            
+            totals.roi_detailed[grouper] = \
+                totals.profit_detailed[grouper] / totals.invested_value_detailed[grouper] \
+                if totals.invested_value_detailed[grouper] > 0 else 0.0
+            
+            totals.annualized_roi_detailed = {}  # na razie pusty słownik
 
     def _aggregate_totals(self, totals, grouper: str):
 
@@ -369,13 +423,13 @@ class PortfolioEngine:
             df = df.rename(columns={grouper: 'category'})
             df = df.to_dict('records')
 
-            totals.instrument_data_aggregated = df
+            # totals.instrument_data_aggregated = df
         
         except KeyError as e:
 
             print(str(e).strip())
 
-            totals.instrument_data_aggregated = []
+            # totals.instrument_data_aggregated = []
 
     # ---------------------------------------------------------
     # HELPERS

@@ -20,14 +20,30 @@ class CurrentInstrumentData(BaseModel):
 
 class PortfolioTotals(BaseModel):
     invested_value: float = Field(ge=0)
+    invested_value_detailed: dict[str, float]
+
     current_value: float = Field(ge=0)
+    current_value_detailed: dict[str, float]
+
+    realized_profit: float
+    realized_profit_detailed: dict[str, float]
+
+    unrealized_profit: float
+    unrealized_profit_detailed: dict[str, float]
+    
     interest: float = Field(ge=0)
+    interest_detailed: dict[str, float]
+
     profit: float
+    profit_detailed: dict[str, float]
+
     roi: float
+    roi_detailed: dict[str, float]
+
     annualized_roi: float
-    allocation: dict[str, float]
+    annualized_roi_detailed: dict[str, float]
+    
     instrument_data: list[CurrentInstrumentData]
-    instrument_data_aggregated: list[dict]
 
 class TransactionData(BaseModel):
     timestamp: datetime
