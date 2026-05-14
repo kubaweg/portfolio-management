@@ -7,9 +7,9 @@ import os
 sys.path.append(os.getcwd())
 
 
-from app import create_app, db
-app = create_app()
-
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app import SessionLocal
 
 from app.schemas.database.asset import Asset
 from app.schemas.database.transaction import Transaction
@@ -29,7 +29,7 @@ def finalize_bond_import(input_file):
         print(f"Błąd odczytu Excela: {e}")
         return
 
-    with app.app_context():
+    with SessionLocal() as db:
         added_count = 0
         already_exists_count = 0
         skipped_no_asset_count = 0
@@ -41,7 +41,7 @@ def finalize_bond_import(input_file):
             if not ticker or ticker == 'nan':
                 continue
 
-            asset = Asset.query.filter_by(ticker=ticker).first()
+            asset = db.query(Asset).filter_by(ticker=ticker).first()
             if not asset:
                 skipped_no_asset_count += 1
                 print(row)
@@ -77,7 +77,7 @@ def finalize_bond_import(input_file):
 
             # --- KLUCZOWY MOMENT: Sprawdzenie duplikatu ---
             # Szukamy czy identyczna transakcja już jest w bazie
-            existing = Transaction.query.filter_by(
+            existing = db.query(Transaction).filter_by(
                 asset_id=asset.id,
                 type=typ,
                 timestamp=transaction_date,
@@ -102,10 +102,10 @@ def finalize_bond_import(input_file):
                 price=cena,
                 fx_rate=1.0
             )
-            db.session.add(new_trans)
+            db.add(new_trans)
             added_count += 1
 
-        db.session.commit()
+        db.commit()
         
         print("-" * 30)
         print(f"PODSUMOWANIE IMPORTU:")
