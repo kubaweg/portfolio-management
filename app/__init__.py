@@ -36,6 +36,15 @@ from app.assets.routes import enums_router, add_asset_router
 
 from app.transactions.routes import list_assets_router, transaction_enums_router, add_transaction_router
 
+from app.core.macroeconomics.fetch import get_cpi, get_ref
+from app.core.macroeconomics.sync import sync_inflation_data, sync_interest_rates
+
+# Uruchamiamy synchronizację danych makroekonomicznych
+rates_added = sync_interest_rates(get_ref())
+cpi_added = sync_inflation_data(get_cpi())
+
+print(f'Dodano {rates_added} rekordów dot. stopy referencyjnej NBP oraz {cpi_added} rekordów dot. inflacji GUS.')
+
 # Inicjalizacja aplikacji FastAPI
 app = FastAPI(
     title="Portfolio Monitor API",

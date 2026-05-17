@@ -6,9 +6,6 @@ import os
 # 1. Konfiguracja ścieżek
 sys.path.append(os.getcwd())
 
-
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from app import SessionLocal
 
 from app.schemas.database.asset import Asset
