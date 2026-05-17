@@ -14,7 +14,7 @@ import {
 } from './schema';
 
 const formatPLN = (val: number) =>
-    new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN', useGrouping: true }).format(val);
+    new Intl.NumberFormat('pl-PL', { useGrouping: true, maximumFractionDigits: 2 }).format(val);
 
 const formatPercent = (val: number) => new Intl.NumberFormat('pl-PL', { style: 'percent', minimumFractionDigits: 2 }).format(val);
 
@@ -325,11 +325,12 @@ export default function PortfolioPage() {
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm font-semibold">
                         <tr>
                             <th className="p-4">Instrument</th>
-                            <th className="p-4">Ilość</th>
-                            <th className="p-4">Śr. Cena (PLN)</th>
-                            <th className="p-4">Wycena (PLN)</th>
-                            <th className="p-4">Zysk (PLN)</th>
+                            <th className="p-4">Wolumen</th>
+                            <th className="p-4">Średni kurs</th>
+                            <th className="p-4">Obecny kurs</th>
                             <th className="p-4">ROI</th>
+                            <th className="p-4">ROI (PLN)</th>
+                            <th className="p-4">Zysk (PLN)</th>
                             <th className="p-4"></th>
                         </tr>
                     </thead>
@@ -345,12 +346,13 @@ export default function PortfolioPage() {
                                         <div className="text-xs text-slate-500">{asset.base_data.name}</div>
                                     </td>
                                     <td className="p-4">{asset.summary.quantity.toFixed(4)}</td>
-                                    <td className="p-4">{formatPLN(asset.summary.avg_price_pln)}</td>
-                                    <td className="p-4 font-semibold">{formatPLN(asset.current_data.value_pln)}</td>
+                                    <td className="p-4">{formatPLN(asset.summary.avg_price)}</td>
+                                    <td className="p-4 font-semibold">{formatPLN(asset.current_data.price)}</td>
+                                    <td className="p-4">{formatPercent(asset.summary.roi)}</td>
+                                    <td className="p-4">{formatPercent(asset.summary.roi_pln)}</td>
                                     <td className={`p-4 font-medium ${asset.summary.profit_loss_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                         {formatPLN(asset.summary.profit_loss_pln)}
                                     </td>
-                                    <td className="p-4">{(asset.summary.roi_pln * 100).toFixed(2)}%</td>
                                     <td className="p-4 text-slate-400">
                                         {expandedRow === asset.base_data.ticker ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                     </td>
