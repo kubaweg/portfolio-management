@@ -38,6 +38,7 @@ from app.transactions.routes import list_assets_router, transaction_enums_router
 
 from app.core.macroeconomics.fetch import get_cpi, get_ref
 from app.core.macroeconomics.sync import sync_inflation_data, sync_interest_rates
+from app.core.macroeconomics.routes import get_macroeconomic_data_router
 
 # Uruchamiamy synchronizację danych makroekonomicznych
 rates_added = sync_interest_rates(get_ref())
@@ -76,3 +77,4 @@ app.include_router(enums_router, prefix="/api")
 app.include_router(list_assets_router, prefix="/api")
 app.include_router(transaction_enums_router, prefix="/api")
 app.include_router(add_transaction_router, prefix="/api")
+app.include_router(get_macroeconomic_data_router, prefix="/api")

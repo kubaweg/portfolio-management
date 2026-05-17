@@ -29,7 +29,7 @@ def sync_inflation_data(df_infl: pd.DataFrame) -> int:
                 new_db_records.append(
                     Inflation(
                         month=str(row['Miesiąc']),
-                        value=float(row['CPI']) # Wymuszenie rzutowania na typy natywne Pythona
+                        value=float(row['CPI'])/100 - 1 # Wymuszenie rzutowania na typy natywne Pythona
                     )
                 )
 
@@ -69,7 +69,7 @@ def sync_interest_rates(df_rates: pd.DataFrame) -> int:
                 new_db_records.append(
                     InterestRate(
                         effective_date=row['ObowiązujeOd'],
-                        value=float(row['StopaReferencyjna'])
+                        value=float(row['StopaReferencyjna'])/100
                     )
                 )
 
