@@ -201,7 +201,7 @@ class PortfolioEngine:
         )
 
         # 5) Zysk z odsetek (uproszczenie: na razie tylko w PLN)
-        interest_profit = 0.0
+        interest_profit = pb_result.interest_profit
         interest_profit_pln = pb_result.interest_profit
 
         # Zysk nominalny

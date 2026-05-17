@@ -346,8 +346,8 @@ export default function PortfolioPage() {
                                         <div className="text-xs text-slate-500">{asset.base_data.name}</div>
                                     </td>
                                     <td className="p-4">{asset.summary.quantity.toFixed(4)}</td>
-                                    <td className="p-4">{formatPLN(asset.summary.avg_price)}</td>
-                                    <td className="p-4 font-semibold">{formatPLN(asset.current_data.price)}</td>
+                                    <td className="p-4">{formatPLN(asset.summary.avg_price)} {asset.base_data.currency}</td>
+                                    <td className="p-4 font-semibold">{formatPLN(asset.current_data.price)} {asset.base_data.currency}</td>
                                     <td className="p-4">{formatPercent(asset.summary.roi)}</td>
                                     <td className="p-4">{formatPercent(asset.summary.roi_pln)}</td>
                                     <td className={`p-4 font-medium ${asset.summary.profit_loss_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
@@ -492,8 +492,8 @@ function PositionTable({ title, data, type }: { title: string, data: any[], type
                     <thead className="bg-slate-100 text-slate-600 font-bold uppercase">
                         <tr>
                             <th className="p-2">Ilość</th>
-                            <th className="p-2">Cena Zak.</th>
-                            <th className="p-2">{type === 'open' ? 'Wycena' : 'Cena Sprzed.'}</th>
+                            <th className="p-2">Wartość zakupu (kurs walutowy)</th>
+                            <th className="p-2">{type === 'open' ? 'Wartość obecna' : 'Wartość sprzedaży'}</th>
                             <th className="p-2">Zysk (PLN)</th>
                         </tr>
                     </thead>
