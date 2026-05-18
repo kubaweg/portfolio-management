@@ -14,6 +14,9 @@ import {
 } from './schema';
 
 const formatPLN = (val: number) =>
+    new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN', useGrouping: true, maximumFractionDigits: 2 }).format(val);
+
+const formatValue = (val: number) =>
     new Intl.NumberFormat('pl-PL', { useGrouping: true, maximumFractionDigits: 2 }).format(val);
 
 const formatPercent = (val: number) => new Intl.NumberFormat('pl-PL', { style: 'percent', minimumFractionDigits: 2 }).format(val);
@@ -327,7 +330,9 @@ export default function PortfolioPage() {
                             <th className="p-4">Instrument</th>
                             <th className="p-4">Wolumen</th>
                             <th className="p-4">Średni kurs</th>
+                            <th className="p-4">Średni kurs walutowy</th>
                             <th className="p-4">Obecny kurs</th>
+                            <th className="p-4">Obecny kurs walutowy</th>
                             <th className="p-4">ROI</th>
                             <th className="p-4">ROI (PLN)</th>
                             <th className="p-4">Zysk (PLN)</th>
@@ -346,8 +351,9 @@ export default function PortfolioPage() {
                                         <div className="text-xs text-slate-500">{asset.base_data.name}</div>
                                     </td>
                                     <td className="p-4">{asset.summary.quantity.toFixed(4)}</td>
-                                    <td className="p-4">{formatPLN(asset.summary.avg_price)} {asset.base_data.currency}</td>
-                                    <td className="p-4 font-semibold">{formatPLN(asset.current_data.price)} {asset.base_data.currency}</td>
+                                    <td className="p-4">{formatValue(asset.summary.avg_price)} {asset.base_data.currency}</td>
+                                    <td className="p-4">{formatValue(asset.summary.avg_fx_rate)} PLN/ 1 {asset.base_data.currency}</td>
+                                    <td className="p-4 font-semibold">{formatValue(asset.current_data.price)} {asset.base_data.currency}</td>
                                     <td className="p-4">{formatPercent(asset.summary.roi)}</td>
                                     <td className="p-4">{formatPercent(asset.summary.roi_pln)}</td>
                                     <td className={`p-4 font-medium ${asset.summary.profit_loss_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
