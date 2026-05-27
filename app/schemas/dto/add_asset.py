@@ -93,6 +93,7 @@ class BondAsset(AssetBase):
     initial_rate: Optional[float] = None
     is_indexed: bool = False
     margin: Optional[float] = None
+    benchmark: Optional[str] = None
     early_redemption_penalty: float
     rating: str
     secured: bool = False

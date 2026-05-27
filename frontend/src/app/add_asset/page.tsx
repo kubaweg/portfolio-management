@@ -320,12 +320,23 @@ export default function AddAssetPage() {
                                 <Label>Opłata za wcześniejszy wykup</Label>
                                 <Input type="number" step="0.01" {...register("early_redemption_penalty")} placeholder="np. 0.70" />
                             </div>
+                            <div className="space-y-2">
+                                <Label>Benchmark</Label>
+                                <Select onValueChange={(val) => setValue("benchmark", val)}>
+                                    <SelectTrigger><SelectValue placeholder="Wybierz..." /></SelectTrigger>
+                                    <SelectContent className="bg-white">
+                                        {meta.retail_bond_benchmark.map((f: string) => (
+                                            <SelectItem key={f} value={f}>{f}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="flex items-center space-x-2 pt-8">
                                 <Checkbox
                                     checked={!!watch("is_indexed")}
                                     onCheckedChange={(val) => setValue("is_indexed", !!val)}
                                 />
-                                <Label>Indeksowana Inflacją</Label>
+                                <Label>Indeksowana do benchmarku</Label>
                             </div>
                             <div className="flex items-center space-x-2 pt-8">
                                 <Checkbox

@@ -22,7 +22,7 @@ export const assetSchema = z.object({
     spread: z.coerce.number().default(0),
 
     // ETF Specific
-    benchmark: z.string().optional(),
+    benchmark: z.string().optional(), // tutaj mała gwiazdka: benchmark jest też w obligacjach (BOND)
     distribution_policy: z.string().optional(),
     replication_method: z.string().optional(),
 
