@@ -27,6 +27,7 @@ def finalize_bond_import(input_file):
         return
 
     with SessionLocal() as db:
+
         added_count = 0
         already_exists_count = 0
         skipped_no_asset_count = 0
@@ -61,7 +62,7 @@ def finalize_bond_import(input_file):
             kwota = float(row.get('KWOTA OPERACJI', 0))
 
             # --- Mapowanie typów ---
-            if "zakup papierów" in dyspozycja:
+            if "zakup papierów" in dyspozycja and "zamiana" not in dyspozycja:
                 typ, ilosc, cena = TransactionType.BUY, kwota / float(asset.nominal_value), float(asset.nominal_value)
             elif "naliczenie wykupu" in dyspozycja:
                 # Wykup kapitału: kwota operacji to ilosc sztuk * asset.nominal_value
@@ -112,4 +113,5 @@ def finalize_bond_import(input_file):
         print("-" * 30)
 
 if __name__ == "__main__":
-    finalize_bond_import('obligacjeskarbowe/HistoriaDyspozycji.xls')
+    finalize_bond_import('obligacjeskarbowe/Kuba/HistoriaDyspozycji.xls')
+    finalize_bond_import('obligacjeskarbowe/Natalka/HistoriaDyspozycji.xls')

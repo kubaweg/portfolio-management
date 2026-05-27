@@ -332,7 +332,6 @@ export default function PortfolioPage() {
                             <th className="p-4">Średni kurs</th>
                             <th className="p-4">Średni kurs walutowy</th>
                             <th className="p-4">Obecny kurs</th>
-                            <th className="p-4">Obecny kurs walutowy</th>
                             <th className="p-4">ROI</th>
                             <th className="p-4">ROI (PLN)</th>
                             <th className="p-4">Zysk (PLN)</th>
@@ -352,9 +351,17 @@ export default function PortfolioPage() {
                                     </td>
                                     <td className="p-4">{asset.summary.quantity.toFixed(4)}</td>
                                     <td className="p-4">{formatValue(asset.summary.avg_price)} {asset.base_data.currency}</td>
-                                    <td className="p-4">{formatValue(asset.summary.avg_fx_rate)} PLN/ 1 {asset.base_data.currency}</td>
+                                    <td className="p-4">{asset.base_data.currency !== 'PLN' ? (
+                                        `${formatValue(asset.summary.avg_fx_rate)} PLN/${asset.base_data.currency}`
+                                    ) : (
+                                        '---'
+                                    )}</td>
                                     <td className="p-4 font-semibold">{formatValue(asset.current_data.price)} {asset.base_data.currency}</td>
-                                    <td className="p-4">{formatPercent(asset.summary.roi)}</td>
+                                    <td className="p-4">{asset.base_data.currency !== 'PLN' ? (
+                                        `${formatPercent(asset.summary.roi)}`
+                                    ) : (
+                                        '---'
+                                    )}</td>
                                     <td className="p-4">{formatPercent(asset.summary.roi_pln)}</td>
                                     <td className={`p-4 font-medium ${asset.summary.profit_loss_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                         {formatPLN(asset.summary.profit_loss_pln)}
@@ -417,7 +424,8 @@ function StatCardDetailed({ title, detailedData = {}, isPercentage = false }: St
         }
         return new Intl.NumberFormat('pl-PL', {
             style: 'currency',
-            currency: 'PLN'
+            currency: 'PLN',
+            useGrouping: true
         }).format(val);
     };
 
@@ -510,7 +518,7 @@ function PositionTable({ title, data, type }: { title: string, data: any[], type
                                 <td className="p-2">{pos.value_buy.toFixed(2)} ({pos.fx_buy.toFixed(4)})</td>
                                 <td className="p-2">{type === 'open' ? pos.current_value.toFixed(2) : pos.value_sell.toFixed(2)}</td>
                                 <td className={`p-2 font-bold ${pos[type === 'open' ? 'unrealized_profit_pln' : 'realized_profit_pln'] >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                    {pos[type === 'open' ? 'unrealized_profit_pln' : 'realized_profit_pln'].toFixed(2)} zł
+                                    {formatPLN(pos[type === 'open' ? 'unrealized_profit_pln' : 'realized_profit_pln'])}
                                 </td>
                             </tr>
                         ))}

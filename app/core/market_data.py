@@ -7,28 +7,33 @@ from app.schemas.database.asset import AssetType
 import os
 import pandas as pd
 
-BOND_PRICES_INPUT_FILE = 'obligacjeskarbowe/StanRachunkuRejestrowego.xls'
+BOND_PRICES_INPUT_FILES = [
+    'obligacjeskarbowe/Kuba/StanRachunkuRejestrowego.xls',
+    'obligacjeskarbowe/Natalka/StanRachunkuRejestrowego.xls'
+]
 
-def _get_current_bond_price(ticker_symbol: str, input_file: str) -> float:
-        
-    if not os.path.exists(input_file):
-        print(f"BŁĄD: Nie znaleziono pliku {input_file}")
-        return -999.0
+def _get_current_bond_price(ticker_symbol: str, input_files: list[str]) -> float:
     
-    try:
-        # Silnik xlrd obsługuje stare pliki .xls
-        df = pd.read_excel(input_file, engine='xlrd')
-    except Exception as e:
-        print(f"Błąd odczytu Excela: {e}")
-        return -999.0
-    
-    for index, row in df.iterrows():
-        total_current_value = float(row.get('WARTOŚĆ AKTUALNA', 0.0))
-        ticker = str(row.get('EMISJA', '')).strip().upper()
-        total_quantity = int(row.get('DOSTĘPNA LICZBA OBLIGACJI', 0))
+    for input_file in input_files:
         
-        if ticker == ticker_symbol: 
-            return total_current_value / total_quantity
+        if not os.path.exists(input_file):
+            print(f"BŁĄD: Nie znaleziono pliku {input_file}")
+            return -999.0
+        
+        try:
+            # Silnik xlrd obsługuje stare pliki .xls
+            df = pd.read_excel(input_file, engine='xlrd')
+        except Exception as e:
+            print(f"Błąd odczytu Excela: {e}")
+            return -999.0
+        
+        for index, row in df.iterrows():
+            total_current_value = float(row.get('WARTOŚĆ AKTUALNA', 0.0))
+            ticker = str(row.get('EMISJA', '')).strip().upper()
+            total_quantity = int(row.get('DOSTĘPNA LICZBA OBLIGACJI', 0))
+            
+            if ticker == ticker_symbol: 
+                return total_current_value / total_quantity
     
     return 0.0
 
@@ -40,7 +45,8 @@ class MarketDataProvider:
     def get_asset_price(ticker_symbol: str, asset_type: AssetType, fallback_price: float = 0.0) -> float:
         """Pobiera aktualną cenę instrumentu z Yahoo Finance."""
         if asset_type == AssetType.BOND:
-            return _get_current_bond_price(ticker_symbol=ticker_symbol, input_file=BOND_PRICES_INPUT_FILE)
+
+            return _get_current_bond_price(ticker_symbol=ticker_symbol, input_files=BOND_PRICES_INPUT_FILES)
 
         try:
             ticker_yf = yf.Ticker(ticker_symbol)
