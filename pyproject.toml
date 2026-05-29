@@ -21,4 +21,5 @@ dependencies = [
     "sqlalchemy>=2.0.48",
     "psycopg2-binary>=2.9.12",
     "npm>=0.1.1",
+    "holidays>=0.97",
 ]

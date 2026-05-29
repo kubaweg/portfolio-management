@@ -18,7 +18,7 @@ def test_bond_timeline(db, bond_ticker: str):
 
     # 2. Mapujemy model bazy danych na nasz DTO (BondInputParams)
     params = BondInputParams(
-        quantity=10,
+        quantity=15,
         retail_series_type=bond_db.retail_series_type,
         issue_date=bond_db.issue_date,
         maturity_date=bond_db.maturity_date,
@@ -37,21 +37,39 @@ def test_bond_timeline(db, bond_ticker: str):
     calc_date = date.today()
     engine = BondEngine(db=db, params=params, calculation_date=calc_date)
     
-    print(f"--- SYMULACJA OBLIGACJI SERII {params.retail_series_type} ---")
+    print(f"--- SYMULACJA OBLIGACJI SERII {params.retail_series_type} ({bond_ticker}) ---")
+    print(f"Data zakupu: {params.issue_date}")
     print(f"Data wykupu: {params.maturity_date}")
     print(f"Data obliczeń (dzisiaj): {calc_date}")
-    print("-" * 50)
+    print("-" * 85)
     
-    # 4. Generujemy oś czasu i testujemy statusy
-    timeline = engine._generate_timeline()
+    # 4. Budujemy okresy (nasza nowa metoda z logiką M-2 i NBP)
+    engine.build_periods()
+    periods = engine.get_all_periods()
     
-    for i, (start_dt, end_dt) in enumerate(timeline, start=1):
-        status = engine._determine_period_status(start_dt, end_dt)
-        print(f"Okres {i:02d}: {start_dt} do {end_dt} | Status: {status.value}")
+    # 5. Wyświetlamy szczegóły wyliczonych okresów
+    # 5. Wyświetlamy szczegóły wyliczonych okresów
+    for p in periods:
+        # Formatowanie procentów
+        bench_str = f"{p.benchmark_value * 100:.2f}%" if p.benchmark_value is not None else "Brak"
+        rate_str = f"{p.interest_rate * 100:.2f}%"
+        est_str = "(EST)" if p.is_rate_estimated else "     "
+        
+        # Formatowanie statusu kapitalizacji
+        cap_action = "KAPITALIZACJA" if p.is_capitalized else "WYPŁATA"
+        
+        print(
+            f"Okres {p.period_number:02d}: {p.start_date} do {p.end_date} | "
+            f"Status: {p.status.value:<7} | "
+            f"Oprocentowanie: {rate_str:>6} {est_str} | "
+            f"Start: {p.base_capital:>8.2f} zł | "
+            f"Odsetki (brutto): {p.gross_interest:>6.2f} zł | "
+            f"Koniec: {p.ending_capital:>8.2f} zł "
+            f"[{cap_action}]"
+        )
 
 if __name__ == "__main__":
     
     # Odpalamy skrypt testowy
     with SessionLocal() as db:
-        test_bond_timeline(db, 'COI1228')
-    
+        test_bond_timeline(db, 'DOR1126')
