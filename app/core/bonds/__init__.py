@@ -1,6 +1,6 @@
 from enum import Enum
-from dataclasses import dataclass
 from datetime import date
+from pydantic import BaseModel
 from typing import Optional
 
 class PeriodStatus(Enum):
@@ -12,8 +12,7 @@ class EarlyRedemptionType(Enum):
     FORFEIT_INTEREST = "FORFEIT_INTEREST"
     FEE = "FEE"
 
-@dataclass
-class BondInputParams:
+class BondInputParams(BaseModel):
 
     quantity: int
 
@@ -25,21 +24,32 @@ class BondInputParams:
     coupon_frequency: int
     initial_rate: float
     is_indexed: bool
-    margin: float
-    benchmark: str
+    margin: Optional[float]
+    benchmark: Optional[str]
     early_redemption_type: EarlyRedemptionType
     early_redemption_penalty: float
 
-@dataclass
-class EarlyRedemptionSimulation:
-    calculation_date: date
+class PerBondRedemptionMetrics(BaseModel):
+    nominal: float
+    accrued_interest: float
+    penalty_applied: float
     gross_payout: float
-    fee_applied: float
     tax_applied: float
     net_payout: float
 
-@dataclass
-class BondInterestPeriod:
+class TotalRedemptionMetrics(BaseModel):
+    quantity: int
+    gross_payout: float
+    total_penalty: float
+    total_tax: float
+    net_payout: float
+
+class EarlyRedemptionSimulation(BaseModel):
+    redemption_date: date
+    per_bond: PerBondRedemptionMetrics
+    total: TotalRedemptionMetrics
+
+class BondInterestPeriod(BaseModel):
     period_number: int
     start_date: date
     end_date: date
@@ -60,8 +70,7 @@ class BondInterestPeriod:
     accrued_interest_to_date: Optional[float]
     early_redemption: Optional[EarlyRedemptionSimulation]
 
-@dataclass
-class BondAssetSummary:
+class BondAssetSummary(BaseModel):
     bond_symbol: str
     total_invested: float
     current_working_capital: float

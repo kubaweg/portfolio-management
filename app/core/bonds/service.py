@@ -7,23 +7,27 @@ from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 
 # Zakładam takie ścieżki na podstawie Twoich informacji
-from app.core.bonds import BondInputParams, BondInterestPeriod, PeriodStatus
+from app.core.bonds import (
+    BondInputParams, BondInterestPeriod, PeriodStatus, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics
+)
 from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling
 from app.schemas.database.macroeconomics import Inflation, InterestRate
 
 class BondEngine:
     def __init__(self, db: Session, params: BondInputParams, calculation_date: date | None = None):
         self.db = db
+        self.TAX_RATE = 0.19
         self.params = params
         self.calculation_date = calculation_date or date.today()
         self.periods: List[BondInterestPeriod] = []
 
         # Mapowanie stringów na liczbę okresów w roku (frequency)
         self.FREQUENCY_MAPPING = {
-            1: 12,       # np. DOR (co miesiąc = 12 razy w roku)
+            0: 0,      # np. OTS
+            1: 12,     # np. DOR (co miesiąc = 12 razy w roku)
             3: 4,      # np. TOZ (co kwartał = 4 razy w roku)
-            6: 2,    # np. COI w specyficznych przypadkach, choć u nas COI to YEARLY
-            12: 1,         # np. EDO, COI (co rok = 1 raz w roku)
+            6: 2,      # np. COI w specyficznych przypadkach, choć u nas COI to YEARLY
+            12: 1,     # np. EDO, COI (co rok = 1 raz w roku)
         }
 
     def _generate_timeline(self) -> List[tuple[date, date]]:
@@ -130,37 +134,29 @@ class BondEngine:
         if target_date > date.today():
             is_estimated = True
 
-        return benchmark_val, is_estimated
+        return float(benchmark_val), is_estimated
     
-    def _calculate_act_act_interest(self, capital: float, rate: float, start_date: date, end_date: date) -> float:
+
+    def _calculate_act_act_interest_per_bond(self, base_capital_per_bond: float, rate: float, start_date: date, end_date: date) -> float:
         """
-        Wylicza odsetki brutto zgodnie z konwencją ACT/ACT (ISDA).
-        Dzieli okresy na lata kalendarzowe, aby precyzyjnie obsłużyć lata przestępne.
+        Wylicza odsetki dla 1 sztuki obligacji (ACT/ACT) do konkretnego dnia.
+        Uwzględnia lata przestępne.
         """
         total_interest = 0.0
         current_date = start_date
 
         while current_date < end_date:
             current_year = current_date.year
-            
-            # Szukamy końca bieżącego roku (żeby sprawdzić, czy nie przecinamy sylwestra)
-            # data(current_year + 1, 1, 1) to 1 stycznia kolejnego roku
             next_year_start = date(current_year + 1, 1, 1)
-            
-            # Granicą obliczeń jest albo koniec całego okresu, albo koniec danego roku
             chunk_end_date = min(end_date, next_year_start)
             
             days_in_chunk = (chunk_end_date - current_date).days
             days_in_year = 366 if calendar.isleap(current_year) else 365
             
-            # Cząstkowe odsetki za dany rok kalendarzowy
-            chunk_interest = float(capital) * float(rate) * (days_in_chunk / days_in_year)
+            chunk_interest = base_capital_per_bond * rate * (days_in_chunk / days_in_year)
             total_interest += chunk_interest
-            
-            # Przesuwamy wskaźnik na początek kolejnego roku (lub koniec okresu)
             current_date = chunk_end_date
             
-        # Zgodnie z zasadami bankowymi, końcowy wynik zaopatrujemy w zaokrąglenie do 2 miejsc (grosze)
         return round(total_interest, 2)
     
     def _calculate_interest_per_bond(self, base_capital_per_bond: float, rate: float, frequency: int) -> float:
@@ -175,7 +171,6 @@ class BondEngine:
         Sekwencyjnie oblicza kapitał i odsetki brutto dla każdego okresu.
         Utrzymuje ścisły podział na logikę per-bond oraz agregację total.
         """
-
         frequency = self.FREQUENCY_MAPPING.get(self.params.coupon_frequency, 1)
 
         # Inicjalizacja kapitału jednostkowego
@@ -185,11 +180,23 @@ class BondEngine:
             # --- FAZA 1: MATEMATYKA JEDNOSTKOWA (PER BOND) ---
             period.base_capital_per_bond = current_capital_per_bond
             
-            period.gross_interest_per_bond = self._calculate_interest_per_bond(
-                base_capital_per_bond=current_capital_per_bond,
-                rate=period.interest_rate,
-                frequency=frequency
-            )
+            if frequency == 0:
+
+                
+                # Zyski liczymy co do dnia (ACT/ACT) z uwzględnieniem przedłużonego czasu
+                period.gross_interest_per_bond = self._calculate_act_act_interest_per_bond(
+                    base_capital_per_bond=current_capital_per_bond,
+                    rate=period.interest_rate,
+                    start_date=period.start_date,
+                    end_date=period.end_date
+                )
+            else:
+                # Standardowy podział na równe okresy w roku dla innych typów
+                period.gross_interest_per_bond = self._calculate_interest_per_bond(
+                    base_capital_per_bond=current_capital_per_bond,
+                    rate=period.interest_rate,
+                    frequency=frequency
+                )
 
             # Obsługa kapitalizacji jednostki
             if period.is_capitalized:
@@ -202,6 +209,77 @@ class BondEngine:
             period.base_capital = period.base_capital_per_bond * self.params.quantity
             period.gross_interest = period.gross_interest_per_bond * self.params.quantity
             period.ending_capital = period.ending_capital_per_bond * self.params.quantity
+
+    def simulate_early_redemption(self, redemption_date: date, penalty_fee: float = 2.00) -> EarlyRedemptionSimulation:
+        """
+        Symuluje wcześniejszy wykup na zadany dzień z uwzględnieniem podatku Belki.
+        Zwraca ustrukturyzowany model EarlyRedemptionSimulation.
+        """
+        if not self.periods or redemption_date <= self.periods[0].start_date:
+            raise ValueError("Data wykupu musi być późniejsza niż data zakupu obligacji.")
+
+        active_period = None
+        accumulated_capital_per_bond = self.params.nominal_value
+        
+        for period in self.periods:
+            if period.start_date <= redemption_date < period.end_date:
+                active_period = period
+                accumulated_capital_per_bond = period.base_capital_per_bond
+                break
+                
+        if not active_period:
+            raise ValueError("Data wykupu przekracza datę zapadalności obligacji.")
+
+        # 1. Bieżące odsetki ułamkowe (ACT/ACT) do dnia wykupu
+        current_period_interest_per_bond = self._calculate_act_act_interest_per_bond(
+            base_capital_per_bond=accumulated_capital_per_bond,
+            rate=active_period.interest_rate,
+            start_date=active_period.start_date,
+            end_date=redemption_date
+        )
+
+        # 2. Skumulowane odsetki brutto
+        total_interest_accrued_per_bond = (accumulated_capital_per_bond - self.params.nominal_value) + current_period_interest_per_bond
+        
+        # 3. Ochrona kapitału i opłata karna
+        actual_penalty_per_bond = min(total_interest_accrued_per_bond, penalty_fee)
+        
+        # 4. Wyliczenie kwoty brutto
+        gross_payout_per_bond = self.params.nominal_value + total_interest_accrued_per_bond - actual_penalty_per_bond
+
+        # 5. PODATEK BELKI (19%) - podstawa to zysk brutto minus zastosowana kara
+        tax_base_per_bond = max(0.0, total_interest_accrued_per_bond - actual_penalty_per_bond)
+        tax_per_bond = round(tax_base_per_bond * self.TAX_RATE, 2)
+        
+        # 6. Wypłata netto
+        net_payout_per_bond = gross_payout_per_bond - tax_per_bond
+
+        # --- Tworzenie modeli Pydantic ---
+        
+        per_bond_metrics = PerBondRedemptionMetrics(
+            nominal=100.00,
+            accrued_interest=round(total_interest_accrued_per_bond, 2),
+            penalty_applied=actual_penalty_per_bond,
+            gross_payout=round(gross_payout_per_bond, 2),
+            tax_applied=tax_per_bond,
+            net_payout=round(net_payout_per_bond, 2)
+        )
+        
+        quantity = self.params.quantity
+        
+        total_metrics = TotalRedemptionMetrics(
+            quantity=quantity,
+            gross_payout=round(gross_payout_per_bond * quantity, 2),
+            total_penalty=round(actual_penalty_per_bond * quantity, 2),
+            total_tax=round(tax_per_bond * quantity, 2),
+            net_payout=round(net_payout_per_bond * quantity, 2)
+        )
+        
+        return EarlyRedemptionSimulation(
+            redemption_date=redemption_date,
+            per_bond=per_bond_metrics,
+            total=total_metrics
+        )
 
     def build_periods(self):
         """

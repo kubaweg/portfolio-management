@@ -18,7 +18,7 @@ def test_bond_timeline(db, bond_ticker: str):
 
     # 2. Mapujemy model bazy danych na nasz DTO (BondInputParams)
     params = BondInputParams(
-        quantity=15,
+        quantity=22,
         retail_series_type=bond_db.retail_series_type,
         issue_date=bond_db.issue_date,
         maturity_date=bond_db.maturity_date,
@@ -48,7 +48,6 @@ def test_bond_timeline(db, bond_ticker: str):
     periods = engine.get_all_periods()
     
     # 5. Wyświetlamy szczegóły wyliczonych okresów
-    # 5. Wyświetlamy szczegóły wyliczonych okresów
     for p in periods:
         # Formatowanie procentów
         bench_str = f"{p.benchmark_value * 100:.2f}%" if p.benchmark_value is not None else "Brak"
@@ -68,8 +67,40 @@ def test_bond_timeline(db, bond_ticker: str):
             f"[{cap_action}]"
         )
 
+    # 6. NOWOŚĆ: Symulacja wcześniejszego wykupu na dzień dzisiejszy
+    print("\n" + "=" * 85)
+    print(f"--- SYMULACJA WCZEŚNIEJSZEGO WYKUPU NA DZIEŃ: {calc_date} ---")
+    print("=" * 85)
+    
+    try:
+        redemption_sim = engine.simulate_early_redemption(
+            redemption_date=calc_date,
+            penalty_fee=params.early_redemption_penalty
+        )
+        
+        print(f"Statystyki dla JEDNEJ sztuki obligacji (Nominał: {redemption_sim.per_bond.nominal:.2f} zł):")
+        print(f"  - Narosłe odsetki brutto:    {redemption_sim.per_bond.accrued_interest:>6.2f} zł")
+        print(f"  - Zastosowana opłata karna:  {redemption_sim.per_bond.penalty_applied:>6.2f} zł")
+        print(f"  - Kwota wypłaty BRUTTO:      {redemption_sim.per_bond.gross_payout:>6.2f} zł")
+        print(f"  - Potrącony podatek Belki:   {redemption_sim.per_bond.tax_applied:>6.2f} zł")
+        print(f"  - Kwota wypłaty NETTO:       {redemption_sim.per_bond.net_payout:>6.2f} zł")
+        print("-" * 50)
+        print(f"Podsumowanie łączne dla CAŁEGO PORTFELA ({redemption_sim.total.quantity if hasattr(redemption_sim.total, 'quantity') else params.quantity} szt.):")
+        print(f"  - Łączna opłata karna:       {redemption_sim.total.total_penalty:>6.2f} zł")
+        print(f"  - Łączny podatek Belki:      {redemption_sim.total.total_tax:>6.2f} zł")
+        print(f"  - ŁĄCZNA WYPŁATA BRUTTO:     {redemption_sim.total.gross_payout:>6.2f} zł")
+        print(f"  - ŁĄCZNA WYPŁATA NETTO (na rękę): {redemption_sim.total.net_payout:>6.2f} zł")
+        
+    except ValueError as e:
+        print(f"Informacja: Nie można przeprowadzić wcześniejszego wykupu dla tej daty.")
+        print(f"Powód: {e}")
+    except Exception as e:
+        print(f"Błąd podczas generowania symulacji wykupu: {e}")
+        
+    print("=" * 85)
+
 if __name__ == "__main__":
     
     # Odpalamy skrypt testowy
     with SessionLocal() as db:
-        test_bond_timeline(db, 'DOR1126')
+        test_bond_timeline(db, 'OTS0826')
