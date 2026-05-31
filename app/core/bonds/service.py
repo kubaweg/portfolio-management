@@ -18,6 +18,14 @@ class BondEngine:
         self.calculation_date = calculation_date or date.today()
         self.periods: List[BondInterestPeriod] = []
 
+        # Mapowanie stringów na liczbę okresów w roku (frequency)
+        self.FREQUENCY_MAPPING = {
+            1: 12,       # np. DOR (co miesiąc = 12 razy w roku)
+            3: 4,      # np. TOZ (co kwartał = 4 razy w roku)
+            6: 2,    # np. COI w specyficznych przypadkach, choć u nas COI to YEARLY
+            12: 1,         # np. EDO, COI (co rok = 1 raz w roku)
+        }
+
     def _generate_timeline(self) -> List[tuple[date, date]]:
         """Generuje listę krotek (start_date, end_date) dla okresów odsetkowych."""
         dates = []
@@ -155,48 +163,45 @@ class BondEngine:
         # Zgodnie z zasadami bankowymi, końcowy wynik zaopatrujemy w zaokrąglenie do 2 miejsc (grosze)
         return round(total_interest, 2)
     
-    def _calculate_standard_period_interest(self, base_capital: float, rate: float, frequency: int, quantity: int) -> float:
+    def _calculate_interest_per_bond(self, base_capital_per_bond: float, rate: float, frequency: int) -> float:
         """
-        Wylicza odsetki brutto dla pełnego okresu odsetkowego wg. zasad MF:
-        1. Oblicza zysk dla 1 sztuki (dzieląc roczną stopę przez częstotliwość, np. 12 miesięcy).
-        2. Zaokrągla wynik do pełnych groszy.
-        3. Dopiero wtedy mnoży przez liczbę posiadanych sztuk.
+        Oblicza odsetki dla pojedynczej obligacji wg. zasad MF (zaokrąglenie do 2 miejsc).
         """
-        # Obliczamy ułamek odsetek dla jednej obligacji
-        interest_per_bond = float(base_capital) * float(rate) / (frequency * quantity)
-        
-        # Bankowe zaokrąglenie do 2 miejsc po przecinku (grosze)
-        rounded_interest_per_bond = round(interest_per_bond, 2)
-        
-        # Ostateczny wynik to zysk z jednej sztuki pomnożony przez wolumen
-        return rounded_interest_per_bond * quantity
+        interest = (float(base_capital_per_bond) * float(rate)) / frequency
+        return round(interest, 2)
     
     def _calculate_financials(self):
         """
         Sekwencyjnie oblicza kapitał i odsetki brutto dla każdego okresu.
-        Kapitał bazowy kolejnego okresu zależy od kapitalizacji odsetek w poprzednim.
+        Utrzymuje ścisły podział na logikę per-bond oraz agregację total.
         """
-        for i, period in enumerate(self.periods):
-            # 1. Ustalenie kapitału bazowego
-            if i == 0:
-                period.base_capital = float(self.params.nominal_value * self.params.quantity)
-            else:
-                prev_period = self.periods[i - 1]
-                period.base_capital = prev_period.ending_capital
 
-            # 2. Wyliczenie odsetek brutto dla tego okresu (ACT/ACT)
-            period.gross_interest = self._calculate_standard_period_interest(
-                base_capital=period.base_capital, # Zmień na zmienną śledzącą kapitał 1 sztuki, jeśli obsługujesz EDO/COI
-                rate=period.interest_rate,
-                frequency=12, # hardcoded!
-                quantity=self.params.quantity
-            )
+        frequency = self.FREQUENCY_MAPPING.get(self.params.coupon_frequency, 1)
+
+        # Inicjalizacja kapitału jednostkowego
+        current_capital_per_bond = float(self.params.nominal_value)
+
+        for period in self.periods:
+            # --- FAZA 1: MATEMATYKA JEDNOSTKOWA (PER BOND) ---
+            period.base_capital_per_bond = current_capital_per_bond
             
-            # 3. Ustalenie kapitału końcowego
+            period.gross_interest_per_bond = self._calculate_interest_per_bond(
+                base_capital_per_bond=current_capital_per_bond,
+                rate=period.interest_rate,
+                frequency=frequency
+            )
+
+            # Obsługa kapitalizacji jednostki
             if period.is_capitalized:
-                period.ending_capital = period.base_capital + period.gross_interest
-            else:
-                period.ending_capital = period.base_capital
+                current_capital_per_bond += period.gross_interest_per_bond
+                current_capital_per_bond = round(current_capital_per_bond, 2)
+            
+            period.ending_capital_per_bond = current_capital_per_bond
+
+            # --- FAZA 2: AGREGACJA PORTFELA (TOTAL) ---
+            period.base_capital = period.base_capital_per_bond * self.params.quantity
+            period.gross_interest = period.gross_interest_per_bond * self.params.quantity
+            period.ending_capital = period.ending_capital_per_bond * self.params.quantity
 
     def build_periods(self):
         """
@@ -259,8 +264,11 @@ class BondEngine:
                 
                 # Pola stricte kapitałowe (zależą od poprzednich okresów, więc na razie wyzerowane)
                 base_capital=0.0,
+                base_capital_per_bond=0.0,
                 gross_interest=0.0,
+                gross_interest_per_bond=0.0,
                 ending_capital=0.0,
+                ending_capital_per_bond=0.0,
                 days_elapsed=None,
                 accrued_interest_to_date=None,
                 early_redemption=None

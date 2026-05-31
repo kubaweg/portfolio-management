@@ -45,13 +45,16 @@ class BondInterestPeriod:
     end_date: date
     status: PeriodStatus
     base_capital: float
+    base_capital_per_bond: float
     interest_rate: float
     is_rate_estimated: bool
     benchmark_value: Optional[float]
     margin: float
     gross_interest: float
+    gross_interest_per_bond: float
     is_capitalized: bool
     ending_capital: float
+    ending_capital_per_bond: float
     days_elapsed: Optional[int]
     days_total: int
     accrued_interest_to_date: Optional[float]
