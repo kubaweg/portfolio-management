@@ -8,7 +8,8 @@ from dateutil.relativedelta import relativedelta
 
 # Zakładam takie ścieżki na podstawie Twoich informacji
 from app.core.bonds import (
-    BondInputParams, BondInterestPeriod, PeriodStatus, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics
+    BondInputParams, BondInterestPeriod, PeriodStatus, 
+    EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics
 )
 from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling
 from app.schemas.database.macroeconomics import Inflation, InterestRate
@@ -210,7 +211,7 @@ class BondEngine:
             period.gross_interest = period.gross_interest_per_bond * self.params.quantity
             period.ending_capital = period.ending_capital_per_bond * self.params.quantity
 
-    def simulate_early_redemption(self, redemption_date: date, penalty_fee: float = 2.00) -> EarlyRedemptionSimulation:
+    def simulate_early_redemption(self, redemption_date: date, penalty_fee: float) -> EarlyRedemptionSimulation:
         """
         Symuluje wcześniejszy wykup na zadany dzień z uwzględnieniem podatku Belki.
         Zwraca ustrukturyzowany model EarlyRedemptionSimulation.
@@ -241,13 +242,18 @@ class BondEngine:
         # 2. Skumulowane odsetki brutto
         total_interest_accrued_per_bond = (accumulated_capital_per_bond - self.params.nominal_value) + current_period_interest_per_bond
         
-        # 3. Ochrona kapitału i opłata karna
-        actual_penalty_per_bond = min(total_interest_accrued_per_bond, penalty_fee)
+        # 3. Ochrona kapitału i opłata karna (Logika biznesowa)
+        if hasattr(self.params, 'early_redemption_type') and self.params.early_redemption_type == EarlyRedemptionType.FORFEIT_INTEREST:
+            # W przypadku utraty odsetek, kara pochłania dokładnie cały wypracowany zysk.
+            actual_penalty_per_bond = total_interest_accrued_per_bond
+        else:
+            # Standardowa opłata pobierana z zysku (FEE) - kapitał podstawowy jest chroniony.
+            actual_penalty_per_bond = min(total_interest_accrued_per_bond, penalty_fee)
         
         # 4. Wyliczenie kwoty brutto
         gross_payout_per_bond = self.params.nominal_value + total_interest_accrued_per_bond - actual_penalty_per_bond
 
-        # 5. PODATEK BELKI (19%) - podstawa to zysk brutto minus zastosowana kara
+        # 5. PODATEK BELKI - podstawa to zysk brutto minus zastosowana kara
         tax_base_per_bond = max(0.0, total_interest_accrued_per_bond - actual_penalty_per_bond)
         tax_per_bond = round(tax_base_per_bond * self.TAX_RATE, 2)
         
@@ -257,9 +263,9 @@ class BondEngine:
         # --- Tworzenie modeli Pydantic ---
         
         per_bond_metrics = PerBondRedemptionMetrics(
-            nominal=100.00,
+            nominal=self.params.nominal_value,
             accrued_interest=round(total_interest_accrued_per_bond, 2),
-            penalty_applied=actual_penalty_per_bond,
+            penalty_applied=round(actual_penalty_per_bond, 2),
             gross_payout=round(gross_payout_per_bond, 2),
             tax_applied=tax_per_bond,
             net_payout=round(net_payout_per_bond, 2)
