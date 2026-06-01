@@ -24,7 +24,7 @@ class BondEngine:
 
         # Mapowanie stringów na liczbę okresów w roku (frequency)
         self.FREQUENCY_MAPPING = {
-            0: 0,      # np. OTS
+            0: 0,      # np. OTS (odsetki przy wykupie)
             1: 12,     # np. DOR (co miesiąc = 12 razy w roku)
             3: 4,      # np. TOZ (co kwartał = 4 razy w roku)
             6: 2,      # np. COI w specyficznych przypadkach, choć u nas COI to YEARLY
