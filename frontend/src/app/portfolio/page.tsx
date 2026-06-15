@@ -329,17 +329,17 @@ export default function PortfolioPage() {
                         <tr>
                             <th className="p-4">Instrument</th>
                             <th className="p-4">Wolumen</th>
-                            <th className="p-4">Średni kurs</th>
-                            <th className="p-4">Średni kurs walutowy</th>
-                            <th className="p-4">Obecny kurs</th>
-                            <th className="p-4">ROI</th>
+                            {/* <th className="p-4">Średni kurs</th> */}
+                            {/* <th className="p-4">Średni kurs walutowy</th> */}
+                            <th className="p-4">Obecna wartość</th>
+                            {/* <th className="p-4">ROI</th> */}
                             <th className="p-4">ROI (PLN)</th>
-                            <th className="p-4">Zysk (PLN)</th>
+                            <th className="p-4">Zysk</th>
                             <th className="p-4"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {asset_data.map((asset) => (
+                        {asset_data.map((asset) => (asset.summary.quantity > 0 && (
                             <React.Fragment key={asset.base_data.ticker}>
                                 <tr
                                     className="hover:bg-slate-50 cursor-pointer transition-colors"
@@ -349,19 +349,19 @@ export default function PortfolioPage() {
                                         <div className="font-bold">{asset.base_data.ticker}</div>
                                         <div className="text-xs text-slate-500">{asset.base_data.name}</div>
                                     </td>
-                                    <td className="p-4">{asset.summary.quantity.toFixed(4)}</td>
-                                    <td className="p-4">{formatValue(asset.summary.avg_price)} {asset.base_data.currency}</td>
-                                    <td className="p-4">{asset.base_data.currency !== 'PLN' ? (
+                                    <td className="p-4">{asset.summary.quantity.toLocaleString('pl-PL', { maximumFractionDigits: 4 })}</td>
+                                    {/* <td className="p-4">{formatValue(asset.summary.avg_price)} {asset.base_data.currency}</td> */}
+                                    {/* <td className="p-4">{asset.base_data.currency !== 'PLN' ? (
                                         `${formatValue(asset.summary.avg_fx_rate)} PLN/${asset.base_data.currency}`
                                     ) : (
                                         '---'
-                                    )}</td>
-                                    <td className="p-4 font-semibold">{formatValue(asset.current_data.price)} {asset.base_data.currency}</td>
-                                    <td className="p-4">{asset.base_data.currency !== 'PLN' ? (
+                                    )}</td> */}
+                                    <td className="p-4 font-semibold">{formatPLN(asset.current_data.value_pln)}</td>
+                                    {/* <td className="p-4">{asset.base_data.currency !== 'PLN' ? (
                                         `${formatPercent(asset.summary.roi)}`
                                     ) : (
                                         '---'
-                                    )}</td>
+                                    )}</td> */}
                                     <td className="p-4">{formatPercent(asset.summary.roi_pln)}</td>
                                     <td className={`p-4 font-medium ${asset.summary.profit_loss_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                         {formatPLN(asset.summary.profit_loss_pln)}
@@ -383,7 +383,7 @@ export default function PortfolioPage() {
                                     </tr>
                                 )}
                             </React.Fragment>
-                        ))}
+                        )))}
                     </tbody>
                 </table>
             </div>

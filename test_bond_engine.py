@@ -6,19 +6,20 @@ from app.core.bonds import (
 )
 from app.schemas.database.asset import Bond
 
-from datetime import date
+from datetime import date, timedelta
 
-def test_bond_timeline(db, bond_ticker: str):
+
+def test_bond_timeline(db, quantity: int, ticker: str):
     # 1. Wyciągamy obligację z bazy
-    bond_db = db.query(Bond).filter(Bond.ticker == bond_ticker).first()
+    bond_db = db.query(Bond).filter(Bond.ticker == ticker).first()
     
     if not bond_db:
-        print(f"Błąd: Nie znaleziono obligacji {bond_ticker}")
+        print(f"Błąd: Nie znaleziono obligacji {ticker}")
         return
 
     # 2. Mapujemy model bazy danych na nasz DTO (BondInputParams)
     params = BondInputParams(
-        quantity=22,
+        quantity=quantity,
         retail_series_type=bond_db.retail_series_type,
         issue_date=bond_db.issue_date,
         maturity_date=bond_db.maturity_date,
@@ -37,7 +38,7 @@ def test_bond_timeline(db, bond_ticker: str):
     calc_date = date.today()
     engine = BondEngine(db=db, params=params, calculation_date=calc_date)
     
-    print(f"--- SYMULACJA OBLIGACJI SERII {params.retail_series_type} ({bond_ticker}) ---")
+    print(f"--- SYMULACJA OBLIGACJI SERII {params.retail_series_type} ({ticker}) ---")
     print(f"Data zakupu: {params.issue_date}")
     print(f"Data wykupu: {params.maturity_date}")
     print(f"Data obliczeń (dzisiaj): {calc_date}")
@@ -98,9 +99,24 @@ def test_bond_timeline(db, bond_ticker: str):
         print(f"Błąd podczas generowania symulacji wykupu: {e}")
         
     print("=" * 85)
+    
+    try:
+        summary = engine.get_current_value(
+            current_date=calc_date
+        )
+        
+        print(f"Wartość bieżąca bez wypłaconych dotąd odsetek (na dzień {calc_date}): {summary:.2f} PLN")
+        
+    except ValueError as e:
+        print(f"Informacja: Nie można przeprowadzić wcześniejszego wykupu dla tej daty.")
+        print(f"Powód: {e}")
+    except Exception as e:
+        print(f"Błąd podczas generowania symulacji wykupu: {e}")
+        
+    print("=" * 85)
 
 if __name__ == "__main__":
     
     # Odpalamy skrypt testowy
     with SessionLocal() as db:
-        test_bond_timeline(db, 'OTS0826')
+        test_bond_timeline(db, quantity=50, ticker='EDO0735')

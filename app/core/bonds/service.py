@@ -211,6 +211,49 @@ class BondEngine:
             period.gross_interest = period.gross_interest_per_bond * self.params.quantity
             period.ending_capital = period.ending_capital_per_bond * self.params.quantity
 
+    def get_current_value(self, current_date: date = date.today()) -> float:
+        """
+        Zwraca aktualną wartość całego portfela obligacji dla bieżącego dnia
+        (kapitał początkowy okresu + narosłe odsetki odsetki bieżące),
+        całkowicie pomijając odsetki, które zostały już wcześniej wypłacone.
+        """
+
+        if not self.periods:
+            return 0.0
+
+        # Przypadek 1: Jesteśmy przed oficjalną datą rozpoczęcia pierwszego okresu
+        if current_date < self.periods[0].start_date:
+            return round(self.params.nominal_value * self.params.quantity, 2)
+
+        # Szukamy aktywnego okresu dla podanej daty
+        active_period = None
+        for period in self.periods:
+            if period.start_date <= current_date < period.end_date:
+                active_period = period
+                break
+
+        # Przypadek 2: Obligacja już zapadła (data przekracza ostatni okres)
+        if not active_period:
+            # Zwracamy sam kapitał końcowy z ostatniego okresu (uwzględnia kapitalizację, bez nowych odsetek)
+            last_period = self.periods[-1]
+            return round(last_period.ending_capital_per_bond * self.params.quantity, 2)
+
+        # Przypadek 3: Jesteśmy w trakcie trwania obligacji
+        # Liczymy odsetki narosłe dokładnie od startu obecnego okresu do "dzisiaj"
+        accrued_interest_per_bond = self._calculate_act_act_interest_per_bond(
+            base_capital_per_bond=active_period.base_capital_per_bond,
+            rate=active_period.interest_rate,
+            start_date=active_period.start_date,
+            end_date=current_date
+        )
+
+        # Wartość jednostki = kapitał na początku okresu (baza) + to co narosło chwilowo
+        current_value_per_bond = active_period.base_capital_per_bond + accrued_interest_per_bond
+        
+        # Zwracamy wartość dla całej posiadanej ilości (portfela)
+        return round(current_value_per_bond * self.params.quantity, 2)
+    
+    
     def simulate_early_redemption(self, redemption_date: date, penalty_fee: float) -> EarlyRedemptionSimulation:
         """
         Symuluje wcześniejszy wykup na zadany dzień z uwzględnieniem podatku Belki.

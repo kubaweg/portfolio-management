@@ -7,13 +7,16 @@ from app.schemas.groupers import group_by_ticker
 from app.core.fx_calculator import FXCalculator
 from app.portfolio.position_builder import PositionBuilder
 
-
 from app.schemas.dto.portfolio import (
     AssetBaseData, AssetSummary, AssetFXData, AssetCurrentData, AssetData, 
     PortfolioTotals, TransactionData,
     CurrentInstrumentData
 )
+from app.schemas.domain.transactions import TransactionType
 from app.core.market_data import MarketDataProvider
+from app.core.bonds import (
+    BondInputParams, map_frequency_to_months, resolve_early_redemption_type
+)
 
 import pandas as pd
 
@@ -35,7 +38,31 @@ class PortfolioEngine:
 
         for tt in grouped:
             asset = self._find_asset(assets, tt.ticker)
-            prices = self._get_market_prices(asset)
+
+            params = None if asset.asset_type != AssetType.BOND else BondInputParams(
+                quantity=int(sum(
+                    t.quantity if t.type == TransactionType.BUY
+                    # else -t.quantity if t.type == TransactionType.SELL
+                    else 0
+                    for t in tt.transactions
+                )),
+                retail_series_type=asset.retail_series_type,
+                issue_date=asset.issue_date,
+                maturity_date=asset.maturity_date,
+                nominal_value=asset.nominal_value,
+                interest_handling=asset.interest_handling,
+                coupon_frequency=map_frequency_to_months(asset.coupon_frequency),
+                initial_rate=asset.initial_rate,
+                is_indexed=asset.is_indexed,
+                margin=asset.margin if asset.margin is not None else 0.0,
+                benchmark=asset.benchmark,
+                early_redemption_type=resolve_early_redemption_type(asset.retail_series_type),
+                early_redemption_penalty=asset.early_redemption_penalty
+            )
+
+            prices = self._get_market_prices(asset, params=params)
+            # if asset.asset_type == AssetType.BOND:
+            #     print(params, '\n', prices, '\n')
 
             pb_result = pb.build(tt, current_price=prices["price"])
 
@@ -72,8 +99,8 @@ class PortfolioEngine:
     # ---------------------------------------------------------
     # STEP 2 — Ceny rynkowe i FX
     # ---------------------------------------------------------
-    def _get_market_prices(self, asset: Asset):
-        raw_price = MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type)
+    def _get_market_prices(self, asset: Asset, params: BondInputParams | None = None):
+        raw_price = MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type, params=params)
         asset_price = raw_price * (1.0 if asset.asset_type == AssetType.BOND else (1.0 - float(asset.spread)))
 
         fx_rate = MarketDataProvider.get_fx_rate(asset.currency)
