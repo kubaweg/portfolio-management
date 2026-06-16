@@ -30,7 +30,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from app.portfolio.routes import dashboard_router, bond_router
+from app.portfolio.routes import dashboard_router, exchange_router, bond_router
 from app.analysis.routes import ticker_history_router
 from app.assets.routes import enums_router, add_asset_router
 
@@ -71,6 +71,7 @@ def health_check(db: Session = Depends(get_db)):
 
 # Tutaj w przyszłości podepniesz swoje endpointy, np.:
 app.include_router(dashboard_router, prefix="/api")
+app.include_router(exchange_router, prefix="/api")
 app.include_router(bond_router, prefix="/api")
 app.include_router(ticker_history_router, prefix="/api")
 app.include_router(add_asset_router, prefix="/api")

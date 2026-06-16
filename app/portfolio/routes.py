@@ -1,30 +1,42 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from datetime import date
+
 from app import get_db
-from app.schemas.database.asset import Asset, Bond
+from app.schemas.database.asset import Asset, Bond, AssetType
 from app.schemas.database.transaction import Transaction, TransactionType
-from app.schemas.dto.portfolio import DashboardResponse, DashboardBondResponse
-from app.portfolio.portfolio_engine import PortfolioEngine
+from app.schemas.dto.portfolio import (
+    DashboardResponse,
+    DashboardBondResponse, DashboardExchangeResponse
+)
 
 from app.core.bonds import (
     BondInputParams, EarlyRedemptionType, map_frequency_to_months, resolve_early_redemption_type
 )
+
+from app.core.exchange.service import ExchangeEngine
 from app.core.bonds.service import BondEngine
 
-from datetime import date
+service = ExchangeEngine()
 
-
-service = PortfolioEngine()
+# Stary router - do wygaszenia
 dashboard_router = APIRouter()
-
 @dashboard_router.get('/dashboard', response_model=DashboardResponse)
 def dashboard(db: Session = Depends(get_db)):
     assets = db.query(Asset).all()
     portfolio, totals = service.build_portfolio(assets)
     return DashboardResponse(totals=totals, asset_data=portfolio)
 
-bond_router = APIRouter()
+# Nowe routery - do produkcyjnego uruchomienia
+exchange_router = APIRouter()
+@exchange_router.get('/exchange_summary', response_model=DashboardExchangeResponse)
+def get_exchange_summary(db: Session = Depends(get_db)):
+    assets = db.query(Asset).filter(Asset.asset_type != AssetType.BOND).all()
+    portfolio = service.build_portfolio(assets)
+    return DashboardExchangeResponse(data=portfolio)
 
+
+bond_router = APIRouter()
 @bond_router.get('/bond_summary', response_model=DashboardBondResponse)
 def get_bonds_summary(db: Session = Depends(get_db)):
 
@@ -37,12 +49,12 @@ def get_bonds_summary(db: Session = Depends(get_db)):
         # print(bond_db.ticker, bond_transactions, '\n')
 
         params = BondInputParams(
-            quantity=int(sum(
+            quantity=sum(
                 t.quantity if t.type == TransactionType.BUY
                 # else -t.quantity if t.type == TransactionType.SELL
                 else 0
                 for t in bond_transactions
-            )),
+            ),
             retail_series_type=bond_db.retail_series_type,
             issue_date=bond_db.issue_date,
             maturity_date=bond_db.maturity_date,

@@ -131,5 +131,8 @@ class DashboardResponse(BaseModel):
     totals: PortfolioTotals
     asset_data: List[AssetData]
 
+class DashboardExchangeResponse(BaseModel):
+    data: List[AssetData]
+
 class DashboardBondResponse(BaseModel):
     data: dict[str, dict]

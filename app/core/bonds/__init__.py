@@ -14,7 +14,7 @@ class EarlyRedemptionType(Enum):
 
 class BondInputParams(BaseModel):
 
-    quantity: int
+    quantity: float
 
     retail_series_type: str
     issue_date: date
@@ -38,7 +38,7 @@ class PerBondRedemptionMetrics(BaseModel):
     net_payout: float
 
 class TotalRedemptionMetrics(BaseModel):
-    quantity: int
+    quantity: float
     gross_payout: float
     total_penalty: float
     total_tax: float
