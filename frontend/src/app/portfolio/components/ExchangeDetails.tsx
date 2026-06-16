@@ -1,12 +1,11 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { formatPLN } from '../utils';
-import { AssetDetail } from '../schema/bond.ts';
+import { ExchangeData } from '../schema/exchange_schema';
 
-// Typujemy propsy dla PositionTable
 interface PositionTableProps {
     title: string;
-    data: any[]; // Możesz to docelowo zamienić na OpenPosition[] | ClosedPosition[] z schema.ts
+    data: any[];
     type: 'open' | 'closed';
 }
 
@@ -51,11 +50,9 @@ function PositionTable({ title, data, type }: PositionTableProps) {
     );
 }
 
-// Główny komponent sekcji rozwijanej dla ETF
-export function EtfAssetDetails({ asset }: { asset: AssetDetail }) {
+export function EtfAssetDetails({ asset }: { asset: ExchangeData }) {
     return (
         <div className="space-y-6">
-            {/* Opcjonalny mini-wyszczególniony baner ze średnią ceną */}
             <div className="grid grid-cols-3 gap-4 bg-white p-4 rounded-lg border border-slate-200 text-xs shadow-sm">
                 <div>
                     <span className="text-slate-400 block mb-1">Średnia cena wejścia:</span>

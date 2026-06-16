@@ -19,6 +19,7 @@ class DashboardAllocationChartsData(BaseModel):
     by_type: Any
     by_category2: Any
     by_name: Any
+    by_ticker: Any
 
 class DashboardMainTableRowData(BaseModel):
     ticker: str

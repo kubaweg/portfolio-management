@@ -1,23 +1,35 @@
-/* Informacje dot. obligacji */
 export type PeriodStatus = 'PAST' | 'CURRENT' | 'FUTURE';
+export type EarlyRedemptionType = 'FORFEIT_INTEREST' | 'FEE';
 
-export interface EarlyRedemptionSimulation {
-    accrued_interest: number;
-    penalty_applied: number;
-    tax_applied: number;
-    net_payout: number;
+export interface BondBaseData {
+    ticker: string;
+    name: string;
+    category1: string;
+    category2: string;
+    type: string;
+    issue_date: string;
+    maturity_date: string;
+    nominal_value: number;
+    interest_handling: string;
+    coupon_frequency: string;
+    initial_rate: number;
+    is_indexed: boolean;
+    margin: number;
+    benchmark: string | null;
+    early_redemption_type: EarlyRedemptionType;
+    early_redemption_penalty: number;
 }
 
 export interface BondInterestPeriod {
     period_number: number;
-    start_date: string; // Daty przychodzą z JSON jako stringi "YYYY-MM-DD"
+    start_date: string;
     end_date: string;
     status: PeriodStatus;
     base_capital: number;
     base_capital_per_bond: number;
     interest_rate: number;
     is_rate_estimated: boolean;
-    benchmark_value: number | null;
+    benchmark_value: number;
     margin: number;
     gross_interest: number;
     gross_interest_per_bond: number;
@@ -26,13 +38,11 @@ export interface BondInterestPeriod {
     ending_capital_per_bond: number;
     days_elapsed: number | null;
     days_total: number;
-    accrued_interest_to_date: number | null;
-    early_redemption: EarlyRedemptionSimulation | null;
+    accrued_interest_to_date: number;
 }
 
-// --- DODAJ TE DWA NOWE INTERFEJSY ---
 export interface BondAssetSummary {
-    bond_symbol: string;
+    quantity: number;
     total_invested: number;
     current_working_capital: number;
     realized_profit_gross: number;
@@ -52,14 +62,12 @@ export interface BondAssetSummary {
     projected_maturity_payout: number;
 }
 
-export interface BondDataPayload {
-    periods: BondInterestPeriod[];
+export interface BondData {
+    base_data: BondBaseData;
     summary: BondAssetSummary;
+    periods: BondInterestPeriod[];
 }
 
-// --- PODMIEŃ TEN INTERFEJS ---
-export interface BondPortfolioResponse {
-    data: {
-        [ticker: string]: BondDataPayload;
-    };
+export interface DashboardBondResponse {
+    data: BondData[];
 }

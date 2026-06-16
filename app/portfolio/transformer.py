@@ -96,28 +96,29 @@ class DashboardTransformer:
         )
 
     def _calculate_charts(self, input_data) -> DashboardAllocationChartsData:
-        """Agregacja portfela w różnych przekrojach."""
+        """Agregacja portfela z wymuszonym grupowaniem po parze (type, label)."""
         
-        # Przygotowanie surowych danych w formie ujednoliconej listy
-        # Każdy element musi mieć: value_invested, current_value, type, category2, name
         combined_assets = []
         
+        # ... (kod zbierający combined_assets pozostaje bez zmian) ...
         for e in input_data.exchange_response.data:
             combined_assets.append({
                 "invested": e.summary.avg_price_pln * e.summary.quantity,
                 "current": e.current_data.value_pln,
                 "type": e.base_data.type,
                 "category2": e.base_data.category2,
-                "name": e.base_data.name
+                "name": e.base_data.name,
+                "ticker": e.base_data.ticker
             })
             
         for b in input_data.bond_response.data:
             combined_assets.append({
                 "invested": b.summary.total_invested,
                 "current": b.summary.current_value,
-                "type": b.base_data.type, # Wymuszenie spójności
-                "category2": b.base_data.category2, # Stała kategoria dla obligacji
-                "name": b.base_data.name
+                "type": b.base_data.type,
+                "category2": b.base_data.category2,
+                "name": b.base_data.name,
+                "ticker": b.base_data.ticker
             })
 
         total_invested = sum(a["invested"] for a in combined_assets)
@@ -126,27 +127,31 @@ class DashboardTransformer:
         def aggregate_by(key_field: str):
             groups = {}
             for asset in combined_assets:
-                key = asset.get(key_field, "Nieznane")
-                if key not in groups:
-                    groups[key] = {"invested": 0.0, "current": 0.0}
-                groups[key]["invested"] += asset["invested"]
-                groups[key]["current"] += asset["current"]
+                # Kluczem jest teraz krotka (type, wartość_pola)
+                group_key = (asset.get("type", "Nieznane"), asset.get(key_field, "Nieznane"))
+                
+                if group_key not in groups:
+                    groups[group_key] = {"invested": 0.0, "current": 0.0}
+                
+                groups[group_key]["invested"] += asset["invested"]
+                groups[group_key]["current"] += asset["current"]
             
             # Formowanie wyniku
-            return [
-                {
-                    "label": key,
+            result = []
+            for (asset_type, label), val in groups.items():
+                result.append({
+                    "type": asset_type,
+                    "label": label,
                     "invested_pln": val["invested"],
-                    "invested_pln_pct": (val["invested"] / total_invested) if total_invested > 0 else 0,
+                    "invested_pct": (val["invested"] / total_invested) if total_invested > 0 else 0,
                     "current_pln": val["current"],
-                    "current_pln_pct": (val["current"] / total_current) if total_current > 0 else 0
-                }
-                for key, val in groups.items()
-            ]
+                    "current_pct": (val["current"] / total_current) if total_current > 0 else 0
+                })
+            return result
 
-        # Budowanie wynikowego obiektu (zakładając strukturę modelu DashboardAllocationChartsData)
         return DashboardAllocationChartsData(
             by_type=aggregate_by("type"),
             by_category2=aggregate_by("category2"),
-            by_name=aggregate_by("name")
+            by_name=aggregate_by("name"),
+            by_ticker=aggregate_by("ticker")
         )

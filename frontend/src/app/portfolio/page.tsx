@@ -1,272 +1,154 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { toast, Toaster } from "sonner";
+import React, { useState, useEffect } from 'react';
 import { Wallet, Percent, ChevronDown, ChevronUp, BarChart2 } from 'lucide-react';
 
-// --- IMPORTY TYPÓW (z schema.ts) ---
-import {
-    PortfolioResponse,
-} from './schema/exchange';
+// Importy schematów
+import { DashboardMainPageOutput } from './schema/main_table_schema';
 
-import {
-    BondPortfolioResponse,
-    BondAssetSummary
-} from './schema/bond';
+// Importy narzędzi
+import { formatPLN, formatPercent } from './utils';
 
-// --- IMPORTY NARZĘDZI (z utils.ts) ---
-import { formatPLN, formatPercent, TYPE_HUES, hexToHsl } from './utils';
-// --- IMPORTY KOMPONENTÓW ---
-import { StatCard, StatCardDetailed } from './components/StatCard';
-import { ChartContainer, PieChartComponent } from './components/PieCharts';
-import { EtfAssetDetails } from './components/EtfAssetDetails';
-import { BondAssetDetails } from './components/BondAssetDetails';
+// Importy z refaktoryzowanych plików
+import { StatCard } from './components/StatCard';
+import { ChartContainer, InteractiveChartContainer, PieChartComponent } from './components/PieCharts';
+import { EtfAssetDetails } from './components/ExchangeDetails';
+import { BondAssetDetails } from './components/BondDetails';
 
 export default function PortfolioPage() {
-    const [data, setData] = useState<PortfolioResponse | null>(null);
+    const [data, setData] = useState<DashboardMainPageOutput | null>(null);
     const [loading, setLoading] = useState(true);
-
-    const [bondData, setBondData] = useState<BondPortfolioResponse | null>(null);
-    const [loadingBonds, setLoadingBonds] = useState(true);
-
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
-    const [categoryType, setCategoryType] = useState<'category2' | 'label'>('category2');
 
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
     useEffect(() => {
-        const fetchPortfolio = async () => {
+        const fetchDashboardData = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/dashboard`, {
+                const response = await fetch(`${API_BASE_URL}/api/dashboard/main`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                 });
 
-                if (!response.ok) throw new Error('Błąd serwera');
+                if (!response.ok) throw new Error('Błąd pobierania danych');
 
-                const portfolioData: PortfolioResponse = await response.json();
-                setData(portfolioData);
+                const payload = await response.json();
+                setData(payload);
             } catch (error) {
-                console.error("Fetch error:", error);
-                toast.error("Błąd ładowania portfela", {
-                    description: "Nie udało się pobrać aktualnych danych inwestycyjnych.",
-                });
+                console.error("Dashboard Fetch Error:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        const fetchBonds = async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/bond_summary`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                });
-                if (!response.ok) throw new Error('Błąd pobierania obligacji');
-
-                const bondSummaryData: BondPortfolioResponse = await response.json();
-                setBondData(bondSummaryData);
-            } catch (error) {
-                console.error("Błąd ładowania szczegółów obligacji:", error);
-            } finally {
-                setLoadingBonds(false);
-            }
-        };
-
-        fetchPortfolio();
-        fetchBonds();
+        fetchDashboardData();
     }, []);
 
-    // --- Przetwarzanie danych do wykresów ---
-    const typeData = useMemo(() => {
-        if (!data) return [];
-        const map = new Map<string, number>();
-        data.totals.instrument_data.forEach(item => {
-            map.set(item.type, (map.get(item.type) || 0) + item.value);
-        });
+    if (loading) return <div className="p-8 text-center animate-pulse text-slate-500">Ładowanie portfela...</div>;
+    if (!data) return <div className="p-8 text-center text-red-500 font-bold">Błąd pobierania danych z serwera.</div>;
 
-        return Array.from(map).map(([name, value]) => {
-            const hexColor = TYPE_HUES[name] || '#94a3b8';
-            return {
-                name,
-                value,
-                fill: hexColor
-            };
-        });
-    }, [data]);
-
-    const categoryData = useMemo(() => {
-        if (!data) return [];
-
-        const aggregation = new Map<string, { value: number, type: string }>();
-        data.totals.instrument_data.forEach(item => {
-            const key = item[categoryType];
-            const current = aggregation.get(key) || { value: 0, type: item.type };
-            aggregation.set(key, { value: current.value + item.value, type: item.type });
-        });
-
-        const aggregatedArray = Array.from(aggregation).map(([name, info]) => ({ name, ...info }));
-
-        const typeCounts: Record<string, number> = {};
-        aggregatedArray.forEach(item => {
-            typeCounts[item.type] = (typeCounts[item.type] || 0) + 1;
-        });
-
-        const currentTypeCounters: Record<string, number> = {};
-
-        return aggregatedArray
-            .sort((a, b) => a.type.localeCompare(b.type))
-            .map((item) => {
-                const totalOfThisType = typeCounts[item.type];
-                const currentIndex = currentTypeCounters[item.type] || 0;
-                currentTypeCounters[item.type] = currentIndex + 1;
-
-                const hexColor = TYPE_HUES[item.type] || '#94a3b8';
-
-                if (totalOfThisType === 1) {
-                    return {
-                        name: item.name,
-                        value: item.value,
-                        fill: hexColor
-                    };
-                }
-
-                const { h, s } = hexToHsl(hexColor);
-                const step = (30 - 20) / (totalOfThisType - 1);
-                const lightness = 40 + (currentIndex * step);
-
-                return {
-                    name: item.name,
-                    value: item.value,
-                    fill: `hsl(${h}, ${s}%, ${lightness}%)`
-                };
-            });
-    }, [data, categoryType]);
-
-
-    // --- Stany przed renderem głównym ---
-    if (loading) return <div className="p-10 text-center">Ładowanie portfela...</div>;
-    if (!data) return <div className="p-10 text-center text-red-500">Nie udało się pobrać danych.</div>;
-
-    const totals = data.totals;
-    const asset_data = data.asset_data;
+    const { summary, charts, main_table, details } = data;
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8 bg-slate-50 min-h-screen">
-            {/* Opcjonalny toster do notyfikacji błędów z Sonner */}
-            <Toaster position="top-right" richColors />
-
-            {/* 1. Kafelki PortfolioTotals */}
-            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-5 gap-4">
-
-                <div className="flex flex-col">
-                    <StatCard title="Wartość początkowa" value={formatPLN(totals.invested_value)} icon={<Wallet className="h-5 w-5 text-slate-500" />} />
-                    <StatCardDetailed title="Wartość" detailedData={totals.invested_value_detailed} />
-                </div>
-
-                <div className="flex flex-col">
-                    <StatCard title="Wartość obecna" value={formatPLN(totals.current_value)} icon={<Wallet className="h-5 w-5 text-slate-500" />} />
-                    <StatCardDetailed title="Wartość" detailedData={totals.current_value_detailed} />
-                </div>
-
-                <div className="flex flex-col">
-                    <StatCard title="Zysk łączny" value={formatPLN(totals.profit)} icon={<BarChart2 className="h-5 w-5 text-slate-500" />} />
-                    <StatCardDetailed title="Zysk łączny" detailedData={totals.profit_detailed} />
-                </div>
-
-                <div className="flex flex-col">
-                    <StatCard title="Zysk niezrealizowany" value={formatPLN(totals.unrealized_profit)} icon={<BarChart2 className="h-5 w-5 text-slate-500" />} />
-                    <StatCardDetailed title="Zysk niezrealizowany" detailedData={totals.unrealized_profit_detailed} />
-                </div>
-
-                <div className="flex flex-col">
-                    <StatCard title="Stopa Zwrotu (ROI)" value={formatPercent(totals.roi)} icon={<Percent className="h-5 w-5 text-slate-500" />} />
-                    <StatCardDetailed title="ROI" detailedData={totals.roi_detailed} isPercentage={true} />
-                </div>
-
+            {/* 1. Kafelki Podsumowania */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                    title="Zainwestowane Środki"
+                    value={formatPLN(summary.invested_pln)}
+                    icon={<Wallet className="h-5 w-5 text-slate-500" />}
+                />
+                <StatCard
+                    title="Bieżąca Wartość"
+                    value={formatPLN(summary.current_value_pln)}
+                    icon={<Wallet className="h-5 w-5 text-slate-500" />}
+                />
+                <StatCard
+                    title="Zysk / Strata"
+                    value={formatPLN(summary.profit_loss_pln)}
+                    subValue={summary.profit_loss_pln >= 0 ? `+${formatPLN(summary.profit_loss_pln)}` : formatPLN(summary.profit_loss_pln)}
+                    icon={<BarChart2 className="h-5 w-5 text-slate-500" />}
+                />
+                <StatCard
+                    title="Wskaźnik ROI"
+                    value={formatPercent(summary.roi_pln)}
+                    subValue={summary.roi_pln >= 0 ? `+${formatPercent(summary.roi_pln)}` : formatPercent(summary.roi_pln)}
+                    icon={<Percent className="h-5 w-5 text-slate-500" />}
+                />
             </div>
 
             {/* 2. Wykresy Kołowe */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ChartContainer title="Alokacja wg Typu">
-                    <PieChartComponent data={typeData} />
+                <ChartContainer title="Alokacja według typu aktywa">
+                    <PieChartComponent data={charts.by_type || []} />
                 </ChartContainer>
 
-                <ChartContainer
-                    title="Alokacja wg Szczegółów"
-                    headerExtra={
-                        <select
-                            className="text-sm border rounded p-1 bg-white outline-none focus:ring-2 focus:ring-blue-500"
-                            value={categoryType}
-                            onChange={(e) => setCategoryType(e.target.value as any)}
-                        >
-                            <option value="category2">Kategoria</option>
-                            <option value="label">Instrument</option>
-                        </select>
-                    }
-                >
-                    <PieChartComponent data={categoryData} />
-                </ChartContainer>
+                <InteractiveChartContainer allData={charts} />
             </div>
 
             {/* 3. Tabela Główna */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                 <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm font-semibold">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs font-semibold uppercase tracking-wider">
                         <tr>
                             <th className="p-4">Instrument</th>
                             <th className="p-4">Wolumen</th>
-                            <th className="p-4">Obecna wartość</th>
-                            <th className="p-4">ROI (PLN)</th>
-                            <th className="p-4">Zysk</th>
+                            <th className="p-4">Wycena PLN</th>
+                            <th className="p-4">ROI</th>
+                            <th className="p-4">Zysk całkowity</th>
                             <th className="p-4"></th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {asset_data.map((asset) => (asset.summary.quantity > 0 && (
-                            <React.Fragment key={asset.base_data.ticker}>
-                                <tr
-                                    className="hover:bg-slate-50 cursor-pointer transition-colors"
-                                    onClick={() => setExpandedRow(expandedRow === asset.base_data.ticker ? null : asset.base_data.ticker)}
-                                >
-                                    <td className="p-4">
-                                        <div className="font-bold">{asset.base_data.ticker}</div>
-                                        <div className="text-xs text-slate-500">{asset.base_data.name}</div>
-                                    </td>
-                                    <td className="p-4">{asset.summary.quantity.toLocaleString('pl-PL', { maximumFractionDigits: 4 })}</td>
-                                    <td className="p-4 font-semibold">{formatPLN(asset.current_data.value_pln)}</td>
-                                    <td className="p-4">{formatPercent(asset.summary.roi_pln)}</td>
-                                    <td className={`p-4 font-medium ${asset.summary.profit_loss_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                        {formatPLN(asset.summary.profit_loss_pln)}
-                                    </td>
-                                    <td className="p-4 text-slate-400">
-                                        {expandedRow === asset.base_data.ticker ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                                    </td>
-                                </tr>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                        {main_table.data.map((row) => {
+                            const isExpanded = expandedRow === row.ticker;
 
-                                {/* 4. Rozwijana sekcja pozycji */}
-                                {expandedRow === asset.base_data.ticker && (
-                                    <tr>
-                                        <td colSpan={7} className="bg-slate-50 p-6 shadow-inner">
-                                            {asset.base_data.type === 'Obligacja' ? (
-                                                loadingBonds ? (
-                                                    <div className="text-center p-4 text-slate-500 animate-pulse">Ładowanie harmonogramu...</div>
-                                                ) : (
-                                                    <BondAssetDetails
-                                                        ticker={asset.base_data.ticker}
-                                                        bondPayload={
-                                                            bondData?.data?.[asset.base_data.ticker] || { periods: [], summary: {} as BondAssetSummary }
-                                                        }
-                                                    />
-                                                )
-                                            ) : (
-                                                <EtfAssetDetails asset={asset} />
-                                            )}
+                            // Wyszukanie w details po tickerze (zakładamy, że serwer zwraca spójne tickery w base_data)
+                            const detailData = details.data.find(
+                                d => (d.details.data.base_data as any).ticker === row.ticker ||
+                                    (d.details.data.base_data as any).retail_series_type === row.ticker
+                            );
+
+                            return (
+                                <React.Fragment key={row.ticker}>
+                                    <tr
+                                        className="hover:bg-slate-50/70 cursor-pointer transition-colors duration-150"
+                                        onClick={() => setExpandedRow(isExpanded ? null : row.ticker)}
+                                    >
+                                        <td className="p-4">
+                                            <div className="font-bold text-slate-900">{row.ticker}</div>
+                                            <div className="text-xs text-slate-400">{row.name}</div>
+                                        </td>
+                                        <td className="p-4 font-medium text-slate-600">
+                                            {parseFloat(row.quantity).toLocaleString('pl-PL', { maximumFractionDigits: 4 })}
+                                        </td>
+                                        <td className="p-4 font-semibold text-slate-800">{formatPLN(row.current_value_pln)}</td>
+                                        <td className={`p-4 font-medium ${row.roi_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                            {formatPercent(row.roi_pln)}
+                                        </td>
+                                        <td className={`p-4 font-bold ${row.total_profit_gross_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                            {row.total_profit_gross_pln >= 0 ? '+' : ''}{formatPLN(row.total_profit_gross_pln)}
+                                        </td>
+                                        <td className="p-4 text-slate-400">
+                                            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                                         </td>
                                     </tr>
-                                )}
-                            </React.Fragment>
-                        )))}
+
+                                    {/* 4. Renderowanie odpowiednich szczegółów */}
+                                    {isExpanded && detailData && (
+                                        <tr>
+                                            <td colSpan={6} className="bg-slate-50/50 p-6 shadow-inner">
+                                                {detailData.type === 'BOND' ? (
+                                                    <BondAssetDetails ticker={row.ticker} bondPayload={detailData.details.data as any} />
+                                                ) : (
+                                                    <EtfAssetDetails asset={detailData.details.data as any} />
+                                                )}
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatPLN, formatPercent, formatDate } from '../utils';
-import { BondDataPayload, BondInterestPeriod, PeriodStatus } from '../schema/bond.ts';
+import { BondData, BondInterestPeriod, PeriodStatus } from '../schema/bond_schema';
 
 // Konfiguracja styli dla statusów okresów odsetkowych
 const statusConfig: Record<PeriodStatus, { label: string; badgeClass: string; rowClass: string }> = {
@@ -9,7 +9,6 @@ const statusConfig: Record<PeriodStatus, { label: string; badgeClass: string; ro
     FUTURE: { label: 'Przyszły', badgeClass: 'bg-blue-50 text-blue-600', rowClass: '' }
 };
 
-// Komponent Tabeli Okresów
 function BondPeriodTable({ periods }: { periods: BondInterestPeriod[] }) {
     if (!periods || periods.length === 0) {
         return <div className="text-center p-4 text-slate-500 italic">Brak okresów odsetkowych.</div>;
@@ -73,13 +72,11 @@ function BondPeriodTable({ periods }: { periods: BondInterestPeriod[] }) {
     );
 }
 
-// Główny komponent sekcji rozwijanej dla Obligacji
-export function BondAssetDetails({ ticker, bondPayload }: { ticker: string, bondPayload: BondDataPayload }) {
+export function BondAssetDetails({ ticker, bondPayload }: { ticker: string, bondPayload: BondData }) {
     const { periods, summary } = bondPayload;
 
     return (
         <div className="space-y-4 text-xs text-slate-700">
-            {/* Piękne podsumowanie bazujące wyłącznie na danych z silnika */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                     <span className="text-slate-400 block mb-1">Bieżące oprocentowanie:</span>

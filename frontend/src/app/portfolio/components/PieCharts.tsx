@@ -1,69 +1,135 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, ResponsiveContainer, Tooltip, Legend, Cell } from 'recharts';
-import { formatPLN } from '../utils';
+import { PieChart, Pie, ResponsiveContainer, Tooltip, Legend, Cell, LabelList } from 'recharts';
+import { formatPLN, TYPE_HUES } from '../utils'; // Importujemy słownik kolorów
+import { ChartItem, DashboardAllocationChartsData } from '../schema/main_table_schema'; // Dopasuj ścieżkę do swojego pliku ze schematami
+import { hexToHsl } from '../utils';
 
 export function ChartContainer({
     title,
     children,
-    headerExtra
 }: {
     title: string,
     children: React.ReactNode,
-    headerExtra?: React.ReactNode
 }) {
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 min-h-[500px] h-auto flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-800">{title}</h3>
-                {headerExtra}
-            </div>
-            <div className="flex-1 w-full min-h-[350px] relative">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[450px]"> {/* Stała wysokość kontenera */}
+            <h3 className="font-bold text-slate-800 mb-4">{title}</h3>
+            <div className="w-full flex-grow relative">
                 {children}
             </div>
         </div>
     );
 }
 
-export function PieChartComponent({ data }: { data: any[] }) {
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-        // Wymuszamy renderowanie po stronie klienta, unikamy błędu hydratacji
-        setIsMounted(true);
-    }, []);
-
-    if (!isMounted) {
-        return <div className="w-full h-full" />;
-    }
+export function InteractiveChartContainer({
+    allData
+}: {
+    allData: DashboardAllocationChartsData
+}) {
+    const [view, setView] = useState<'by_category2' | 'by_name' | 'by_ticker'>('by_category2');
 
     return (
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-            <PieChart>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[450px]">
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-slate-800">Alokacja (do wyboru)</h3>
+                <select
+                    className="text-xs border border-slate-200 rounded-md p-1 bg-slate-50 outline-none"
+                    value={view}
+                    onChange={(e) => setView(e.target.value as any)}
+                >
+                    <option value="by_category2">Kategoria</option>
+                    <option value="by_name">Nazwa instrumentu</option>
+                    <option value="by_ticker">Ticker instrumentu</option>
+                </select>
+            </div>
+            <div className="w-full flex-grow relative">
+                {/* Klucz 'key' wymusza restart animacji przy zmianie wykresu */}
+                <PieChartComponent key={view} data={allData[view]} />
+            </div>
+        </div>
+    );
+}
+
+export function PieChartComponent({ data }: { data: ChartItem[] }) {
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => { setIsMounted(true); }, []);
+
+    if (!isMounted || !data || data.length === 0) return null;
+
+    const itemsByType = data.reduce((acc, item) => {
+        acc[item.type] = (acc[item.type] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    const processedTypes: Record<string, number> = {};
+
+
+    const chartData = data.map((item) => {
+        const baseHex = TYPE_HUES[item.type] || '#94a3b8';
+        const hsl = hexToHsl(baseHex);
+        const count = itemsByType[item.type];
+        const currentIdx = processedTypes[item.type] || 0;
+        processedTypes[item.type] = currentIdx + 1;
+        const range = 20;
+        const step = count > 1 ? (range * 2) / (count - 1) : 0;
+        const newL = count > 1 ? (40 - range) + (currentIdx * step) : 40;
+        return {
+            ...item,
+            name: item.label,
+            value: item.current_pln,
+            fill: `hsl(${hsl.h}, ${hsl.s}%, ${newL}%)`,
+            percentLabel: (item.current_pct * 100).toFixed(1) + '%'
+        };
+    });
+
+
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <PieChart margin={{ top: 0, bottom: 0, left: 0, right: 0 }}>
                 <Pie
-                    data={data}
+                    data={chartData}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    innerRadius="55%"
-                    outerRadius="100%"
+                    innerRadius="45%"
+                    outerRadius="75%" // Nieznacznie mniejszy, żeby zrobić miejsce na etykiety
                     paddingAngle={1}
                     startAngle={90}
                     endAngle={-270}
-                    animationBegin={0}
-                    animationDuration={800}
                 >
-                    {/* Odczytujemy kolor 'fill' wyliczony wcześniej w Memo z odcieniami HSL */}
-                    {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill || '#94a3b8'} />
+                    {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
+                    <LabelList
+                        dataKey="percentLabel"
+                        position="outside"
+                        fill="#334155"
+                        style={{ fontSize: '11px', fontWeight: '600' }}
+                        offset={10}
+                    />
                 </Pie>
-                <Tooltip formatter={(value: number) => formatPLN(value)} />
+                <Tooltip
+                    content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                            const d = payload[0].payload;
+                            return (
+                                <div className="bg-white p-2 border border-slate-100 shadow-lg rounded text-xs">
+                                    <p className="font-bold">{d.name}</p>
+                                    <p className="text-slate-500">Wartość obecna: {formatPLN(d.value)}</p>
+                                    <p className="text-slate-500">Udział: {d.percentLabel}</p>
+                                </div>
+                            );
+                        }
+                        return null;
+                    }}
+                />
+                {/* 1. Zmniejszona czcionka legendy */}
                 <Legend
                     verticalAlign="bottom"
-                    align="center"
                     iconType="circle"
-                    wrapperStyle={{ paddingTop: '15px' }}
+                    wrapperStyle={{ fontSize: '14px', paddingTop: '0px' }}
                 />
             </PieChart>
         </ResponsiveContainer>

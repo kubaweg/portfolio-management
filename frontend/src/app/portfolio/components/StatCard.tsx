@@ -34,7 +34,6 @@ export interface StatCardDetailedProps {
 }
 
 export function StatCardDetailed({ title, detailedData = {}, isPercentage = false }: StatCardDetailedProps) {
-    // Helper do formatowania waluty lub procentów (lokalny, bo dotyczy tylko tej specyficznej logiki wyświetlania)
     const formatValue = (val: number) => {
         if (isPercentage) {
             return new Intl.NumberFormat('pl-PL', {
