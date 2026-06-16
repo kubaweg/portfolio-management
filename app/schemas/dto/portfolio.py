@@ -6,7 +6,7 @@ from ..domain.assets import Category1, Category2
 from ..domain.positions import OpenPosition, ClosedPosition
 from ..domain.transactions import TransactionType
 
-from app.core.bonds import BondInterestPeriod
+from app.core.bonds.schemas.dto import BondInterestPeriod
 
 
 class CurrentInstrumentData(BaseModel):

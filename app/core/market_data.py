@@ -6,7 +6,7 @@ from app import SessionLocal
 from app.schemas.dto.charts import ChartDataPoint, VolumeDataPoint
 from app.schemas.database.asset import AssetType
 from app.core.bonds.service import BondEngine
-from app.core.bonds import BondInputParams
+from app.core.bonds.schemas.dto import BondInputParams
 from app.schemas.database.asset import Bond
 
 

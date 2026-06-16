@@ -1,22 +1,16 @@
-from typing import List, Tuple
+from typing import List
 from datetime import datetime
 
 from app.schemas.database.asset import Asset, AssetType
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
 from app.core.fx_calculator import FXCalculator
-from app.portfolio.position_builder import PositionBuilder
+from app.core.exchange.position_builder import PositionBuilder
 
-from app.schemas.dto.portfolio import (
-    AssetBaseData, AssetSummary, AssetFXData, AssetCurrentData, AssetData, 
-    PortfolioTotals, TransactionData,
-    CurrentInstrumentData
+from app.core.exchange.schemas.dto import (
+    ExchangeBaseData, ExchangeSummary, ExchangeFXData, ExchangeCurrentData, ExchangeData
 )
-from app.schemas.domain.transactions import TransactionType
 from app.core.market_data import MarketDataProvider
-from app.core.bonds import (
-    BondInputParams, map_frequency_to_months, resolve_early_redemption_type
-)
 
 import pandas as pd
 
@@ -28,11 +22,11 @@ class ExchangeEngine:
     # ---------------------------------------------------------
     # PUBLIC API
     # ---------------------------------------------------------
-    def build_portfolio(self, assets: List[Asset]) -> List[AssetData]:
+    def build_portfolio(self, assets: List[Asset]) -> List[ExchangeData]:
         domain_map = self._map_sqlalchemy_to_domain(assets)
         grouped = group_by_ticker(self._flatten(domain_map))
 
-        portfolio: List[AssetData] = []
+        portfolio: List[ExchangeData] = []
         pb = PositionBuilder()
 
         for tt in grouped:
@@ -71,29 +65,29 @@ class ExchangeEngine:
     # STEP 2 — Ceny rynkowe i FX
     # ---------------------------------------------------------
     def _get_market_prices(self, asset: Asset):
-        raw_price = MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type)
+        raw_price = MarketDataProvider.get_asset_price(str(asset.ticker), AssetType(asset.asset_type))
         asset_price = raw_price * (1.0 - float(asset.spread))
 
-        fx_rate = MarketDataProvider.get_fx_rate(asset.currency)
+        fx_rate = MarketDataProvider.get_fx_rate(str(asset.currency))
         fx_effective_rate = (
-            fx_rate * (1.0 - self.CONVERSION_FEE) if asset.currency != "PLN" else 1.0
+            fx_rate * (1.0 - self.CONVERSION_FEE) if str(asset.currency) != "PLN" else 1.0
         )
 
         # TODO: tutaj trzeba refactor na pydantic zrobić
         return {
             "price": asset_price,
-            "price_datetime": MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type),
+            "price_datetime": MarketDataProvider.get_asset_time(str(asset.ticker), AssetType(asset.asset_type)),
             "fx_rate": fx_rate,
             "fx_effective_rate": fx_effective_rate,
-            "fx_datetime": MarketDataProvider.get_fx_time(asset.currency),
+            "fx_datetime": MarketDataProvider.get_fx_time(str(asset.currency)),
 
         }
 
     # ---------------------------------------------------------
     # STEP 3 — AssetData + metryki do totals
     # ---------------------------------------------------------
-    def _build_asset_base_data(self, **kwargs) -> AssetBaseData:
-        return AssetBaseData(
+    def _build_asset_base_data(self, **kwargs) -> ExchangeBaseData:
+        return ExchangeBaseData(
             ticker=kwargs.get("ticker", "-"),
             name=kwargs.get("name", "-"),
             type=kwargs.get("type", "-"),
@@ -102,8 +96,8 @@ class ExchangeEngine:
             currency=kwargs.get("currency", "-")
         )
     
-    def _build_asset_summary(self, **kwargs) -> AssetSummary:
-        return AssetSummary(
+    def _build_asset_summary(self, **kwargs) -> ExchangeSummary:
+        return ExchangeSummary(
             quantity=kwargs.get("quantity", 0.0),
             avg_price=kwargs.get("avg_price", 0.0),
             avg_price_pln=kwargs.get("avg_price_pln", 0.0),
@@ -122,19 +116,19 @@ class ExchangeEngine:
             roi_pa_pln=kwargs.get("roi_pa_pln", 0.0),
         )
     
-    def _build_asset_fx_data(self, **kwargs) -> AssetFXData:
-        return AssetFXData(
+    def _build_asset_fx_data(self, **kwargs) -> ExchangeFXData:
+        return ExchangeFXData(
             currency=kwargs.get("currency", "-"),
             fx_rate=kwargs.get("fx_rate", 0.0),
             fx_effective_rate=kwargs.get("fx_effective_rate", 0.0),
             fx_datetime=kwargs.get("fx_datetime", datetime(year=1900, month=1, day=1))
         )
     
-    def _build_asset_current_data(self, **kwargs) -> AssetCurrentData:
+    def _build_asset_current_data(self, **kwargs) -> ExchangeCurrentData:
 
         fx_data = self._build_asset_fx_data(**kwargs)
 
-        return AssetCurrentData(
+        return ExchangeCurrentData(
             price=kwargs.get("price", 0.0),
             value=kwargs.get("value", 0.0),
             value_pln=kwargs.get("value_pln", 0.0),
@@ -272,7 +266,7 @@ class ExchangeEngine:
             price_datetime=prices["price_datetime"]
         )
 
-        asset_data = AssetData(
+        asset_data = ExchangeData(
             base_data=base_data,
             summary=summary,
             current_data=current_data,
