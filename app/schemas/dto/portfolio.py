@@ -6,6 +6,8 @@ from ..domain.assets import Category1, Category2
 from ..domain.positions import OpenPosition, ClosedPosition
 from ..domain.transactions import TransactionType
 
+from app.core.bonds import BondInterestPeriod
+
 
 class CurrentInstrumentData(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -128,3 +130,6 @@ class AssetData(BaseModel):
 class DashboardResponse(BaseModel):
     totals: PortfolioTotals
     asset_data: List[AssetData]
+
+class DashboardBondResponse(BaseModel):
+    data: dict[str, dict]

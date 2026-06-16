@@ -8,7 +8,7 @@ from dateutil.relativedelta import relativedelta
 
 # Zakładam takie ścieżki na podstawie Twoich informacji
 from app.core.bonds import (
-    BondInputParams, BondInterestPeriod, PeriodStatus, 
+    BondInputParams, BondInterestPeriod, BondAssetSummary, PeriodStatus, 
     EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics
 )
 from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling
@@ -21,6 +21,7 @@ class BondEngine:
         self.params = params
         self.calculation_date = calculation_date or date.today()
         self.periods: List[BondInterestPeriod] = []
+        self.summary: BondAssetSummary | None = None
 
         # Mapowanie stringów na liczbę okresów w roku (frequency)
         self.FREQUENCY_MAPPING = {
@@ -183,7 +184,6 @@ class BondEngine:
             
             if frequency == 0:
 
-                
                 # Zyski liczymy co do dnia (ACT/ACT) z uwzględnieniem przedłużonego czasu
                 period.gross_interest_per_bond = self._calculate_act_act_interest_per_bond(
                     base_capital_per_bond=current_capital_per_bond,
@@ -384,7 +384,7 @@ class BondEngine:
                 status=status,
                 days_total=days_total,
                 is_capitalized=is_capitalized,
-                margin=margin_for_period,
+                margin=margin_for_period if margin_for_period is not None else 0.0,
                 benchmark_value=benchmark_value,
                 is_rate_estimated=is_rate_estimated,
                 interest_rate=calculated_interest_rate, # <--- Wpisujemy wyliczone oprocentowanie!
@@ -404,6 +404,113 @@ class BondEngine:
             self.periods.append(period)
 
         self._calculate_financials()
+        self._build_summary()
+
+    def _build_summary(self):
+        """
+        Agreguje dane z okresów odsetkowych i buduje główny model podsumowujący.
+        """
+        if not self.periods:
+            return
+
+        total_invested = self.params.nominal_value * self.params.quantity
+        
+        # 1. Znalezienie aktywnego okresu i wyliczenie bieżącego zysku
+        active_period = None
+        for p in self.periods:
+            if p.status == PeriodStatus.CURRENT:
+                active_period = p
+                break
+
+        # Odsetki narosłe TYLKO w trwającym (bieżącym) okresie do dnia obliczeń (ACT/ACT)
+        current_accrued_gross_per_bond = 0.0
+        if active_period:
+            current_accrued_gross_per_bond = self._calculate_act_act_interest_per_bond(
+                base_capital_per_bond=active_period.base_capital_per_bond,
+                rate=active_period.interest_rate,
+                start_date=active_period.start_date,
+                end_date=self.calculation_date
+            )
+            # Aktualizujemy model okresu o te dane w locie, żeby frontend miał do nich dostęp
+            active_period.accrued_interest_to_date = round(current_accrued_gross_per_bond * self.params.quantity, 2)
+            active_period.days_elapsed = (self.calculation_date - active_period.start_date).days
+
+        # 2. Kapitał pracujący (Baza bieżącego okresu + odsetki ACT/ACT do dzisiaj)
+        base_working_capital_per_bond = active_period.base_capital_per_bond if active_period else self.periods[-1].ending_capital_per_bond
+        current_value_per_bond = base_working_capital_per_bond + current_accrued_gross_per_bond
+        current_value = round(current_value_per_bond * self.params.quantity, 2)
+
+        # 3. Zrealizowane Zyski (Tylko z wypłaconych kuponów, nie kapitalizowanych)
+        realized_profit_gross = sum(
+            p.gross_interest for p in self.periods 
+            if p.status == PeriodStatus.PAST and not p.is_capitalized
+        )
+        realized_profit_net = round(max(0.0, realized_profit_gross) * (1 - self.TAX_RATE), 2)
+
+        # 4. Niezrealizowane Zyski (Skapitalizowane odsetki z przeszłości + bieżące narosłe)
+        unrealized_profit_gross = (current_value - total_invested)
+        unrealized_profit_net = round(max(0.0, unrealized_profit_gross) * (1 - self.TAX_RATE), 2)
+
+        # Całkowity zysk netto do dziś (zrealizowany + to co urośnie jeśli sprzedamy)
+        total_profit_net = realized_profit_net + unrealized_profit_net
+
+        # 5. Parametry bieżące
+        current_interest_rate = active_period.interest_rate if active_period else self.periods[-1].interest_rate
+        
+        # Opcjonalnie: pobieranie wartości przedterminowego wykupu na dzisiaj z istniejącej funkcji
+        current_early_redemption_value = 0.0
+        try:
+            # Zakładam opłatę 0, ale to zależy od tickera, można tu wstrzyknąć param.penalty_fee
+            penalty = getattr(self.params, 'penalty_fee', 2.00) if self.FREQUENCY_MAPPING.get(self.params.coupon_frequency) != 0 else 0.0
+            er_sim = self.simulate_early_redemption(self.calculation_date, penalty)
+            current_early_redemption_value = er_sim.total.net_payout
+        except ValueError:
+            # Gdy data wykupu > zapadalności
+            current_early_redemption_value = current_value 
+
+        # 6. ROI (Netto) na chwilę obecną
+        roi_net = (total_profit_net / total_invested) if total_invested > 0 else 0.0
+        
+        days_total_investment = (self.calculation_date - self.params.issue_date).days
+        annualized_roi_net = 0.0
+        if days_total_investment > 0 and total_invested > 0:
+            annual_multiplier = 365.25 / days_total_investment
+            annualized_roi_net = roi_net * annual_multiplier
+
+        # 7. Postęp i Zapadalność
+        days_to_maturity = max(0, (self.params.maturity_date - self.calculation_date).days)
+        total_life_days = (self.params.maturity_date - self.params.issue_date).days
+        overall_progress_percent = min(1.0, max(0.0, days_total_investment / total_life_days)) if total_life_days > 0 else 1.0
+
+        # 8. Prognozy (Zakładają dotrzymanie do końca przy obecnych stawkach - nie wliczają przyszłej inflacji)
+        projected_gross = sum(p.gross_interest for p in self.periods)
+        projected_net = round(max(0.0, projected_gross) * (1 - self.TAX_RATE), 2)
+        projected_payout = total_invested + projected_net # Uproszczenie, na koniec oddają kapitał i odsetki netto z ostatniego roku (i skapitalizowanych)
+
+        self.summary = BondAssetSummary(
+            bond_symbol=getattr(self.params, 'retail_series_type', '-'),
+            total_invested=total_invested,
+            current_working_capital=round(base_working_capital_per_bond * self.params.quantity, 2),
+            realized_profit_gross=round(realized_profit_gross, 2),
+            realized_profit_net=realized_profit_net,
+            unrealized_profit_gross=round(unrealized_profit_gross, 2),
+            unrealized_profit_net=unrealized_profit_net,
+            total_profit_net=round(total_profit_net, 2),
+            current_value=current_value,
+            current_early_redemption_value=round(current_early_redemption_value, 2),
+            current_interest_rate=current_interest_rate,
+            roi_net=round(roi_net, 4), # Lepiej wysłać ułamek i sformatować na froncie
+            annualized_roi_net=0.0,
+            days_to_maturity=days_to_maturity,
+            overall_progress_percent=round(overall_progress_percent, 4),
+            projected_total_gross_profit=round(projected_gross, 2),
+            projected_total_net_profit=projected_net,
+            projected_maturity_payout=round(projected_payout, 2)
+        )
+
+    def get_summary(self) -> BondAssetSummary | None:
+        """Zwraca gotowy model podsumowania portfela obligacji."""
+        return self.summary
 
     def get_all_periods(self) -> List[BondInterestPeriod]:
         """Zwraca gotową listę okresów odsetkowych."""
