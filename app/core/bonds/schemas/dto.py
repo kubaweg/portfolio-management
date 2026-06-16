@@ -3,7 +3,14 @@ from datetime import date
 from pydantic import BaseModel
 from typing import Optional, List
 
-from app.schemas.domain.bonds import CouponFrequency, InterestHandling
+from app.schemas.domain.assets import (
+    Category1, Category2, AssetType
+)
+
+from app.schemas.domain.bonds import (
+    CouponFrequency, InterestHandling
+)
+
 class PeriodStatus(Enum):
     PAST = "Przeszły"
     CURRENT = "Obecny"
@@ -60,7 +67,11 @@ class BondInputParams(BaseModel):
 
 class BondBaseData(BaseModel):
 
-    retail_series_type: str
+    ticker: str
+    name: str
+    category1: Category1
+    category2: Category2
+    type: AssetType
     issue_date: date
     maturity_date: date
     nominal_value: float
