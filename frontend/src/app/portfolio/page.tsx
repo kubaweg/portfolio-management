@@ -202,7 +202,6 @@ export default function PortfolioPage() {
                     <h3 className="font-bold text-slate-800">{title}</h3>
                     {headerExtra}
                 </div>
-                {/* Dodajemy relative i min-h-[350px] */}
                 <div className="flex-1 w-full min-h-[350px] relative">
                     {children}
                 </div>
@@ -238,7 +237,7 @@ export default function PortfolioPage() {
                         paddingAngle={1}
                         startAngle={90}
                         endAngle={-270}
-                        // Dodaj animację, żeby uniknąć nagłego "skoku" po zamontowaniu
+
                         animationBegin={0}
                         animationDuration={800}
                     />
@@ -271,7 +270,7 @@ export default function PortfolioPage() {
                     <StatCard
                         title="Wartość początkowa"
                         value={formatPLN(totals.invested_value)}
-                        icon={<Wallet className="h-5 w-5 text-slate-500" />} // Przykład ikony Lucide
+                        icon={<Wallet className="h-5 w-5 text-slate-500" />}
                     />
                     <StatCardDetailed
                         title="Wartość"
@@ -283,7 +282,7 @@ export default function PortfolioPage() {
                     <StatCard
                         title="Wartość obecna"
                         value={formatPLN(totals.current_value)}
-                        icon={<Wallet className="h-5 w-5 text-slate-500" />} // Przykład ikony Lucide
+                        icon={<Wallet className="h-5 w-5 text-slate-500" />}
                     />
                     <StatCardDetailed
                         title="Wartość"
@@ -347,7 +346,6 @@ export default function PortfolioPage() {
                             value={categoryType}
                             onChange={(e) => setCategoryType(e.target.value as any)}
                         >
-                            {/* <option value="category1">Kategoria 1</option> */}
                             <option value="category2">Kategoria</option>
                             <option value="label">Instrument</option>
                         </select>
@@ -364,10 +362,7 @@ export default function PortfolioPage() {
                         <tr>
                             <th className="p-4">Instrument</th>
                             <th className="p-4">Wolumen</th>
-                            {/* <th className="p-4">Średni kurs</th> */}
-                            {/* <th className="p-4">Średni kurs walutowy</th> */}
                             <th className="p-4">Obecna wartość</th>
-                            {/* <th className="p-4">ROI</th> */}
                             <th className="p-4">ROI (PLN)</th>
                             <th className="p-4">Zysk</th>
                             <th className="p-4"></th>
@@ -385,18 +380,7 @@ export default function PortfolioPage() {
                                         <div className="text-xs text-slate-500">{asset.base_data.name}</div>
                                     </td>
                                     <td className="p-4">{asset.summary.quantity.toLocaleString('pl-PL', { maximumFractionDigits: 4 })}</td>
-                                    {/* <td className="p-4">{formatValue(asset.summary.avg_price)} {asset.base_data.currency}</td> */}
-                                    {/* <td className="p-4">{asset.base_data.currency !== 'PLN' ? (
-                                        `${formatValue(asset.summary.avg_fx_rate)} PLN/${asset.base_data.currency}`
-                                    ) : (
-                                        '---'
-                                    )}</td> */}
                                     <td className="p-4 font-semibold">{formatPLN(asset.current_data.value_pln)}</td>
-                                    {/* <td className="p-4">{asset.base_data.currency !== 'PLN' ? (
-                                        `${formatPercent(asset.summary.roi)}`
-                                    ) : (
-                                        '---'
-                                    )}</td> */}
                                     <td className="p-4">{formatPercent(asset.summary.roi_pln)}</td>
                                     <td className={`p-4 font-medium ${asset.summary.profit_loss_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                         {formatPLN(asset.summary.profit_loss_pln)}
@@ -422,7 +406,7 @@ export default function PortfolioPage() {
                                                     />
                                                 )
                                             ) : (
-                                                <EtfAssetDetails asset={asset} /> // (Zakładam, że ten komponent istnieje u Ciebie w kodzie)
+                                                <EtfAssetDetails asset={asset} />
                                             )}
                                         </td>
                                     </tr>
