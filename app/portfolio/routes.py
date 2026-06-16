@@ -5,7 +5,7 @@ from datetime import date
 from app import get_db
 from app.schemas.database.asset import Asset, Bond, AssetType
 from app.schemas.database.transaction import Transaction, TransactionType
-from app.schemas.dto.portfolio import DashboardMainTableInput, DashboardMainTableOutput
+from app.schemas.dto.portfolio import DashboardMainPageInput, DashboardMainPageOutput
 
 from app.core.exchange.service import ExchangeEngine
 from app.core.exchange.schemas.dto import (
@@ -22,10 +22,10 @@ from app.portfolio.transformer import DashboardTransformer
 
 # Nowe routery - do produkcyjnego uruchomienia
 dashboard_router = APIRouter()
-@dashboard_router.get('/dashboard/main', response_model=DashboardMainTableOutput)
+@dashboard_router.get('/dashboard/main', response_model=DashboardMainPageOutput)
 def get_main_table_response(db: Session = Depends(get_db)):
 
-    input = DashboardMainTableInput(
+    input = DashboardMainPageInput(
         bond_response=get_bonds_summary(db),
         exchange_response=get_exchange_summary(db)
     )

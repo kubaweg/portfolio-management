@@ -4,7 +4,7 @@ from typing import List, Union, Any
 from app.core.bonds.schemas.dto import DashboardBondResponse
 from app.core.exchange.schemas.dto import DashboardExchangeResponse
 
-class DashboardMainTableInput(BaseModel):
+class DashboardMainPageInput(BaseModel):
 
     bond_response: DashboardBondResponse
     exchange_response: DashboardExchangeResponse
@@ -49,7 +49,7 @@ class DashboardMainTableDetailsData(BaseModel):
 
 #####################################################
 
-class DashboardMainTableOutput(BaseModel):
+class DashboardMainPageOutput(BaseModel):
 
     summary: DashboardSummaryData
     charts: DashboardAllocationChartsData

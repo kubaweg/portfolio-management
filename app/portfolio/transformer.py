@@ -2,7 +2,7 @@ from datetime import date
 from typing import Tuple, List
 
 from app.schemas.dto.portfolio import (
-    DashboardMainTableInput, DashboardMainTableOutput,
+    DashboardMainPageInput, DashboardMainPageOutput,
     DashboardSummaryData, DashboardAllocationChartsData, DashboardMainTableData, DashboardMainTableDetailsData,
     DashboardMainTableRowData, DashboardMainTableRowDetailsData,
     RowDetailsExchange, RowDetailsBond
@@ -10,13 +10,13 @@ from app.schemas.dto.portfolio import (
 
 
 class DashboardTransformer:
-    def build_dashboard(self, input_data: DashboardMainTableInput) -> DashboardMainTableOutput:
+    def build_dashboard(self, input_data: DashboardMainPageInput) -> DashboardMainPageOutput:
         """Główny punkt wejścia transformatora."""
         
         # 1. Przetwarzanie Tabeli i Detali (zwraca listę wierszy i listę detali)
         table_rows, details_rows = self._build_table_and_details(input_data)
         
-        return DashboardMainTableOutput(
+        return DashboardMainPageOutput(
             summary=self._calculate_summary(input_data),
             charts=self._calculate_charts(input_data),
             main_table=DashboardMainTableData(data=table_rows),
