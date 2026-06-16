@@ -1,13 +1,11 @@
 from typing import List
-from ..schemas.domain.transactions import (
+from app.schemas.domain.transactions import (
     TickerTransactions,
     BuyTransaction,
     SellTransaction,
-    InterestTransaction,
-    CapitalizationTransaction,
+    InterestTransaction
 )
-from ..schemas.domain.positions import OpenPosition, ClosedPosition
-# from ..schemas.domain.types import MoneyAmount, AssetQuantity, FXRate
+from app.schemas.domain.positions import OpenPosition, ClosedPosition
 
 
 class PositionBuilderResult:

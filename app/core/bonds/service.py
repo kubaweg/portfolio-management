@@ -7,7 +7,7 @@ from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 
 # Zakładam takie ścieżki na podstawie Twoich informacji
-from app.core.bonds import (
+from app.core.bonds.schemas.dto import (
     BondInputParams, BondInterestPeriod, BondAssetSummary, PeriodStatus, 
     EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics
 )
@@ -82,14 +82,14 @@ class BondEngine:
                 
         return current_date
 
-    def _fetch_benchmark_value(self, target_date: date) -> Tuple[Optional[float], bool]:
+    def _fetch_benchmark_value(self, target_date: date) -> Tuple[float, bool]:
         """
         Pobiera wartość benchmarku z bazy danych.
         Dla NBP: największa data <= target_date.
         Dla GUS (Inflacja): odczyt z miesiąca M-2 po kluczu 'YYYY-MM'.
         """
         if not self.params.is_indexed:
-            return None, False
+            return 0.0, False
 
         benchmark_val = None
         is_estimated = False
@@ -136,7 +136,7 @@ class BondEngine:
         if target_date > date.today():
             is_estimated = True
 
-        return float(benchmark_val), is_estimated
+        return float(benchmark_val), is_estimated # type: ignore
     
 
     def _calculate_act_act_interest_per_bond(self, base_capital_per_bond: float, rate: float, start_date: date, end_date: date) -> float:
@@ -385,7 +385,7 @@ class BondEngine:
                 days_total=days_total,
                 is_capitalized=is_capitalized,
                 margin=margin_for_period if margin_for_period is not None else 0.0,
-                benchmark_value=benchmark_value,
+                benchmark_value=benchmark_value or 0.0,
                 is_rate_estimated=is_rate_estimated,
                 interest_rate=calculated_interest_rate, # <--- Wpisujemy wyliczone oprocentowanie!
                 
@@ -397,8 +397,7 @@ class BondEngine:
                 ending_capital=0.0,
                 ending_capital_per_bond=0.0,
                 days_elapsed=None,
-                accrued_interest_to_date=None,
-                early_redemption=None
+                accrued_interest_to_date=0.0
             )
             
             self.periods.append(period)
@@ -488,7 +487,7 @@ class BondEngine:
         projected_payout = total_invested + projected_net # Uproszczenie, na koniec oddają kapitał i odsetki netto z ostatniego roku (i skapitalizowanych)
 
         self.summary = BondAssetSummary(
-            bond_symbol=getattr(self.params, 'retail_series_type', '-'),
+            quantity = self.params.quantity,
             total_invested=total_invested,
             current_working_capital=round(base_working_capital_per_bond * self.params.quantity, 2),
             realized_profit_gross=round(realized_profit_gross, 2),
@@ -500,7 +499,7 @@ class BondEngine:
             current_early_redemption_value=round(current_early_redemption_value, 2),
             current_interest_rate=current_interest_rate,
             roi_net=round(roi_net, 4), # Lepiej wysłać ułamek i sformatować na froncie
-            annualized_roi_net=0.0,
+            annualized_roi_net=0.0, # Na razie 0.0 dopóki nie potwierdzimy poprawności logiki
             days_to_maturity=days_to_maturity,
             overall_progress_percent=round(overall_progress_percent, 4),
             projected_total_gross_profit=round(projected_gross, 2),
@@ -508,9 +507,9 @@ class BondEngine:
             projected_maturity_payout=round(projected_payout, 2)
         )
 
-    def get_summary(self) -> BondAssetSummary | None:
+    def get_summary(self) -> BondAssetSummary:
         """Zwraca gotowy model podsumowania portfela obligacji."""
-        return self.summary
+        return self.summary # type: ignore
 
     def get_all_periods(self) -> List[BondInterestPeriod]:
         """Zwraca gotową listę okresów odsetkowych."""

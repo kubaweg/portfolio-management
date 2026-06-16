@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import get_db
 from app.schemas.dto.add_asset import AddAsset
-from app.portfolio.portfolio_engine import PortfolioEngine
 
 from app.schemas.database.asset import (
     ETF, ETC, Bond, Equity, Crypto

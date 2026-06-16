@@ -15,7 +15,7 @@ class TransactionMapper:
         ticker = tx.asset.ticker  # relacja z Asset
         ttype = tx.type
 
-        if ttype == TransactionType.BUY.value:
+        if ttype == TransactionType.BUY:
             return BuyTransaction(
                 ticker=ticker,
                 timestamp=tx.timestamp,
@@ -25,7 +25,7 @@ class TransactionMapper:
                 fx_rate=tx.fx_rate,
             )
 
-        if ttype == TransactionType.SELL.value:
+        if ttype == TransactionType.SELL:
             return SellTransaction(
                 ticker=ticker,
                 timestamp=tx.timestamp,
@@ -35,7 +35,7 @@ class TransactionMapper:
                 fx_rate=tx.fx_rate,
             )
 
-        if ttype == TransactionType.INTEREST.value:
+        if ttype == TransactionType.INTEREST:
             return InterestTransaction(
                 ticker=ticker,
                 timestamp=tx.timestamp,

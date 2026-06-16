@@ -1,72 +1,42 @@
-from typing import List, Tuple
+from typing import List
 from datetime import datetime
 
 from app.schemas.database.asset import Asset, AssetType
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
 from app.core.fx_calculator import FXCalculator
-from app.portfolio.position_builder import PositionBuilder
+from app.core.exchange.position_builder import PositionBuilder
 
-from app.schemas.dto.portfolio import (
-    AssetBaseData, AssetSummary, AssetFXData, AssetCurrentData, AssetData, 
-    PortfolioTotals, TransactionData,
-    CurrentInstrumentData
+from app.core.exchange.schemas.dto import (
+    ExchangeBaseData, ExchangeSummary, ExchangeFXData, ExchangeCurrentData, ExchangeData
 )
-from app.schemas.domain.transactions import TransactionType
 from app.core.market_data import MarketDataProvider
-from app.core.bonds import (
-    BondInputParams, map_frequency_to_months, resolve_early_redemption_type
-)
 
 import pandas as pd
 
 
-class PortfolioEngine:
+class ExchangeEngine:
 
     CONVERSION_FEE = 0.005
 
     # ---------------------------------------------------------
     # PUBLIC API
     # ---------------------------------------------------------
-    def build_portfolio(self, assets: List[Asset]) -> Tuple[List[AssetData], PortfolioTotals]:
+    def build_portfolio(self, assets: List[Asset]) -> List[ExchangeData]:
         domain_map = self._map_sqlalchemy_to_domain(assets)
         grouped = group_by_ticker(self._flatten(domain_map))
 
-        portfolio: List[AssetData] = []
-        totals = self._init_totals()
+        portfolio: List[ExchangeData] = []
         pb = PositionBuilder()
 
         for tt in grouped:
             asset = self._find_asset(assets, tt.ticker)
 
-            params = None if asset.asset_type != AssetType.BOND else BondInputParams(
-                quantity=int(sum(
-                    t.quantity if t.type == TransactionType.BUY
-                    # else -t.quantity if t.type == TransactionType.SELL
-                    else 0
-                    for t in tt.transactions
-                )),
-                retail_series_type=asset.retail_series_type,
-                issue_date=asset.issue_date,
-                maturity_date=asset.maturity_date,
-                nominal_value=asset.nominal_value,
-                interest_handling=asset.interest_handling,
-                coupon_frequency=map_frequency_to_months(asset.coupon_frequency),
-                initial_rate=asset.initial_rate,
-                is_indexed=asset.is_indexed,
-                margin=asset.margin if asset.margin is not None else 0.0,
-                benchmark=asset.benchmark,
-                early_redemption_type=resolve_early_redemption_type(asset.retail_series_type),
-                early_redemption_penalty=asset.early_redemption_penalty
-            )
-
-            prices = self._get_market_prices(asset, params=params)
-            # if asset.asset_type == AssetType.BOND:
-            #     print(params, '\n', prices, '\n')
+            prices = self._get_market_prices(asset)
 
             pb_result = pb.build(tt, current_price=prices["price"])
 
-            asset_data, metrics = self._build_asset_data(
+            asset_data = self._build_asset_data(
                 asset=asset,
                 tt=tt,
                 pb_result=pb_result,
@@ -74,12 +44,7 @@ class PortfolioEngine:
             )
             portfolio.append(asset_data)
 
-            self._update_totals(totals, asset_data, metrics)
-
-        self._finalize_totals(totals)
-        self._aggregate_totals(totals, grouper='category2')
-
-        return portfolio, totals
+        return portfolio
 
     # ---------------------------------------------------------
     # STEP 1 — Mapowanie SQLAlchemy → domena
@@ -99,30 +64,30 @@ class PortfolioEngine:
     # ---------------------------------------------------------
     # STEP 2 — Ceny rynkowe i FX
     # ---------------------------------------------------------
-    def _get_market_prices(self, asset: Asset, params: BondInputParams | None = None):
-        raw_price = MarketDataProvider.get_asset_price(asset.ticker, asset.asset_type, params=params)
-        asset_price = raw_price * (1.0 if asset.asset_type == AssetType.BOND else (1.0 - float(asset.spread)))
+    def _get_market_prices(self, asset: Asset):
+        raw_price = MarketDataProvider.get_asset_price(str(asset.ticker), AssetType(asset.asset_type))
+        asset_price = raw_price * (1.0 - float(asset.spread))
 
-        fx_rate = MarketDataProvider.get_fx_rate(asset.currency)
+        fx_rate = MarketDataProvider.get_fx_rate(str(asset.currency))
         fx_effective_rate = (
-            fx_rate * (1.0 - self.CONVERSION_FEE) if asset.currency != "PLN" else 1.0
+            fx_rate * (1.0 - self.CONVERSION_FEE) if str(asset.currency) != "PLN" else 1.0
         )
 
         # TODO: tutaj trzeba refactor na pydantic zrobić
         return {
             "price": asset_price,
-            "price_datetime": MarketDataProvider.get_asset_time(asset.ticker, asset.asset_type),
+            "price_datetime": MarketDataProvider.get_asset_time(str(asset.ticker), AssetType(asset.asset_type)),
             "fx_rate": fx_rate,
             "fx_effective_rate": fx_effective_rate,
-            "fx_datetime": MarketDataProvider.get_fx_time(asset.currency),
+            "fx_datetime": MarketDataProvider.get_fx_time(str(asset.currency)),
 
         }
 
     # ---------------------------------------------------------
     # STEP 3 — AssetData + metryki do totals
     # ---------------------------------------------------------
-    def _build_asset_base_data(self, **kwargs) -> AssetBaseData:
-        return AssetBaseData(
+    def _build_asset_base_data(self, **kwargs) -> ExchangeBaseData:
+        return ExchangeBaseData(
             ticker=kwargs.get("ticker", "-"),
             name=kwargs.get("name", "-"),
             type=kwargs.get("type", "-"),
@@ -131,8 +96,8 @@ class PortfolioEngine:
             currency=kwargs.get("currency", "-")
         )
     
-    def _build_asset_summary(self, **kwargs) -> AssetSummary:
-        return AssetSummary(
+    def _build_asset_summary(self, **kwargs) -> ExchangeSummary:
+        return ExchangeSummary(
             quantity=kwargs.get("quantity", 0.0),
             avg_price=kwargs.get("avg_price", 0.0),
             avg_price_pln=kwargs.get("avg_price_pln", 0.0),
@@ -151,19 +116,19 @@ class PortfolioEngine:
             roi_pa_pln=kwargs.get("roi_pa_pln", 0.0),
         )
     
-    def _build_asset_fx_data(self, **kwargs) -> AssetFXData:
-        return AssetFXData(
+    def _build_asset_fx_data(self, **kwargs) -> ExchangeFXData:
+        return ExchangeFXData(
             currency=kwargs.get("currency", "-"),
             fx_rate=kwargs.get("fx_rate", 0.0),
             fx_effective_rate=kwargs.get("fx_effective_rate", 0.0),
             fx_datetime=kwargs.get("fx_datetime", datetime(year=1900, month=1, day=1))
         )
     
-    def _build_asset_current_data(self, **kwargs) -> AssetCurrentData:
+    def _build_asset_current_data(self, **kwargs) -> ExchangeCurrentData:
 
         fx_data = self._build_asset_fx_data(**kwargs)
 
-        return AssetCurrentData(
+        return ExchangeCurrentData(
             price=kwargs.get("price", 0.0),
             value=kwargs.get("value", 0.0),
             value_pln=kwargs.get("value_pln", 0.0),
@@ -263,9 +228,6 @@ class PortfolioEngine:
             historical_cost_pln / historical_cost if historical_cost > 0 else 0.0
         )
 
-        # 9) DTO transakcji
-        enriched_transactions = self._build_transaction_dto(tt.transactions)
-
         base_data = self._build_asset_base_data(
             ticker=asset.ticker,
             name=asset.name,
@@ -304,7 +266,7 @@ class PortfolioEngine:
             price_datetime=prices["price_datetime"]
         )
 
-        asset_data = AssetData(
+        asset_data = ExchangeData(
             base_data=base_data,
             summary=summary,
             current_data=current_data,
@@ -312,151 +274,7 @@ class PortfolioEngine:
             closed_positions=closed_positions
         )
 
-        # TODO: tutaj trzeba zrobić refactor na pydantic
-        metrics = {
-            "historical_cost_pln": historical_cost_pln,
-            "current_value_pln": current_value_pln,
-            "realized_profit_pln": realized_profit_pln,
-            "unrealized_profit_pln": unrealized_profit_pln,
-            "interest_profit_pln": interest_profit_pln,
-        }
-
-        return asset_data, metrics
-
-    def _build_transaction_dto(self, txs):
-        dto = []
-        for tx in txs:
-            dto.append(
-                TransactionData(
-                    timestamp=tx.timestamp,
-                    type=tx.type.value,
-                    quantity=getattr(tx, "quantity", 0.0),
-                    price=getattr(tx, "price", 0.0),
-                    fx_rate=getattr(tx, "fx_rate", 1.0),
-                    roi=0.0,  # na razie 0.0
-                )
-            )
-        return dto
-
-    # ---------------------------------------------------------
-    # STEP 4 — Totals
-    # ---------------------------------------------------------
-    def _init_totals(self):
-        return PortfolioTotals(
-            invested_value=0.0,
-            invested_value_detailed={},
-
-            current_value=0.0,
-            current_value_detailed={},
-
-            interest=0.0,
-            interest_detailed={},
-
-            realized_profit=0.0,
-            realized_profit_detailed={},
-
-            unrealized_profit=0.0,
-            unrealized_profit_detailed={},
-
-            profit=0.0,
-            profit_detailed={},
-
-            roi=0.0,
-            roi_detailed={},
-
-            annualized_roi=0.0,
-            annualized_roi_detailed={},
-
-            instrument_data=[]
-        )
-
-    def _update_totals(self, totals, asset_data: AssetData, metrics: dict):
-        invested_value_pln = metrics["historical_cost_pln"]
-        current_value_pln = metrics["current_value_pln"]
-
-        realized_profit_pln = metrics["realized_profit_pln"]
-        unrealized_profit_pln = metrics["unrealized_profit_pln"]
-        interest_profit_pln = metrics["interest_profit_pln"]
-
-        totals.invested_value += invested_value_pln
-        totals.current_value += current_value_pln
-        totals.realized_profit += realized_profit_pln
-        totals.unrealized_profit += unrealized_profit_pln
-        totals.interest += interest_profit_pln
-
-        totals.instrument_data.append(
-            CurrentInstrumentData(
-                label=asset_data.base_data.ticker,
-                category1=asset_data.base_data.category1,
-                category2=asset_data.base_data.category2,
-                value=current_value_pln,
-                type=asset_data.base_data.type,
-            )
-        )
-
-        totals.invested_value_detailed[asset_data.base_data.type] = (
-            totals.invested_value_detailed.get(asset_data.base_data.type, 0.0)
-            + invested_value_pln
-        )
-
-        totals.current_value_detailed[asset_data.base_data.type] = (
-            totals.current_value_detailed.get(asset_data.base_data.type, 0.0)
-            + current_value_pln
-        )
-
-        totals.realized_profit_detailed[asset_data.base_data.type] = (
-            totals.realized_profit_detailed.get(asset_data.base_data.type, 0.0)
-            + realized_profit_pln
-        )
-
-        totals.unrealized_profit_detailed[asset_data.base_data.type] = (
-            totals.unrealized_profit_detailed.get(asset_data.base_data.type, 0.0)
-            + unrealized_profit_pln
-        )
-
-        totals.interest_detailed[asset_data.base_data.type] = (
-            totals.interest_detailed.get(asset_data.base_data.type, 0.0)
-            + interest_profit_pln
-        )
-
-
-    def _finalize_totals(self, totals):
-        totals.profit = totals.current_value + totals.interest - totals.invested_value
-        totals.roi = (
-            totals.profit / totals.invested_value if totals.invested_value > 0 else 0.0
-        )
-        totals.annualized_roi = 0.0  # na razie 0.0
-
-        for grouper, value in totals.current_value_detailed.items():
-            totals.profit_detailed[grouper] = \
-                totals.current_value_detailed[grouper] + \
-                    totals.interest_detailed[grouper] - \
-                        totals.invested_value_detailed[grouper]
-            
-            totals.roi_detailed[grouper] = \
-                totals.profit_detailed[grouper] / totals.invested_value_detailed[grouper] \
-                if totals.invested_value_detailed[grouper] > 0 else 0.0
-            
-            totals.annualized_roi_detailed = {}  # na razie pusty słownik
-
-    def _aggregate_totals(self, totals, grouper: str):
-
-        df = totals.instrument_data
-        df = pd.DataFrame(df)
-
-        try:
-        
-            df = df.groupby([grouper, 'type'])['value'].sum().reset_index()
-            df = df.rename(columns={grouper: 'category'})
-            df = df.to_dict('records')
-
-            # totals.instrument_data_aggregated = df
-        
-        except KeyError as e:
-
-            print(str(e).strip())
-
-            # totals.instrument_data_aggregated = []
+        return asset_data
 
     # ---------------------------------------------------------
     # HELPERS

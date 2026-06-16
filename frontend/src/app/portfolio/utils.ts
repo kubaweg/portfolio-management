@@ -8,6 +8,7 @@ export const formatPLN = (val: number): string => {
         currency: 'PLN',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
+        useGrouping: true
     }).format(val);
 };
 
