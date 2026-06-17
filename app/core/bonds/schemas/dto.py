@@ -12,13 +12,13 @@ from app.schemas.domain.bonds import (
 )
 
 class PeriodStatus(Enum):
-    PAST = "Przeszły"
-    CURRENT = "Obecny"
-    FUTURE = "Przyszły"
+    PAST = "PAST"
+    CURRENT = "CURRENT"
+    FUTURE = "FUTURE"
 
 class EarlyRedemptionType(Enum):
-    FORFEIT_INTEREST = "Utrata odsetek"
-    FEE = "Opłata"
+    FORFEIT_INTEREST = "FORFEIT_INTEREST"
+    FEE = "FEE"
 
 
 #############################################

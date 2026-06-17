@@ -60,7 +60,7 @@ class DashboardTransformer:
         """Adapter: BondData -> DashboardMainTableRowData"""
         return DashboardMainTableRowData(
             ticker=item.base_data.ticker, # lub inna identyfikacja obligacji
-            name="Obligacje Skarbowe",
+            name=item.base_data.name,
             quantity=str(item.summary.quantity),
             current_value_pln=item.summary.current_value,
             roi_pln=item.summary.roi_net,

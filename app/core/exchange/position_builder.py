@@ -1,4 +1,6 @@
 from typing import List
+from datetime import datetime
+
 from app.schemas.domain.transactions import (
     TickerTransactions,
     BuyTransaction,
@@ -78,6 +80,7 @@ class PositionBuilder:
         buy_lots.append(
             {
                 "quantity": tx.quantity,
+                "date_buy": tx.timestamp.date(),
                 "value_buy": tx.price,  # cena w walucie instrumentu,
                 "fx_buy": tx.fx_rate,      # historyczny kurs walutowy
             }
@@ -105,6 +108,7 @@ class PositionBuilder:
             lot_qty = lot["quantity"]
             lot_price = lot["value_buy"]
             lot_fx_rate = lot["fx_buy"]
+            lot_date_buy = lot["date_buy"]
 
             matched_qty = min(remaining_qty, lot_qty)
 
@@ -118,6 +122,8 @@ class PositionBuilder:
                 ClosedPosition(
                     ticker=tx.ticker,
                     quantity=matched_qty,
+                    date_buy=lot_date_buy,
+                    date_sell=tx.timestamp.date(),
                     value_buy=cost,
                     value_sell=proceeds,
                     fx_buy=lot_fx_rate,
@@ -158,6 +164,7 @@ class PositionBuilder:
                 OpenPosition(
                     ticker=ticker,
                     quantity=qty,
+                    date_buy=lot['date_buy'],
                     value_buy=cost,
                     fx_buy=lot['fx_buy'],
                     current_value=current_value,
