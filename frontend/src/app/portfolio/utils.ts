@@ -2,6 +2,24 @@
  * Narzędzia do formatowania danych finansowych i dat.
  */
 
+/**
+ * Formatuje liczbę (lub string reprezentujący liczbę) do formatu PL z określoną precyzją.
+ * @param value - Liczba do sformatowania (number lub string)
+ * @param maxDigits - Maksymalna liczba miejsc po przecinku (domyślnie 4)
+ */
+export const formatGenericFloat = (value: number | string, maxDigits: number = 4): string => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+
+    // Obsługa przypadku, gdy wartość to NaN
+    if (isNaN(num)) return '-';
+
+    return num.toLocaleString('pl-PL', {
+        maximumFractionDigits: maxDigits,
+        minimumFractionDigits: 0,
+        useGrouping: true
+    });
+};
+
 export const formatPLN = (val: number): string => {
     return new Intl.NumberFormat('pl-PL', {
         style: 'currency',

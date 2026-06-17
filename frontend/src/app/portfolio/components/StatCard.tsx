@@ -1,28 +1,55 @@
-import React from 'react';
+import { ReactNode } from 'react';
+import { formatGenericFloat, formatPLN, formatPercent, formatDate } from '../utils';
 
-export function StatCard({
-    title,
-    value,
-    subValue,
-    icon
-}: {
-    title: string,
-    value: string,
-    subValue?: string,
-    icon: React.ReactNode
-}) {
+
+export interface DetailedBreakdownProps {
+    detailed: Record<string, number>;
+    formatter: (val: number) => string;
+}
+
+export const DetailedBreakdown = ({ detailed, formatter }: DetailedBreakdownProps) => {
+    const exchangeVal = detailed?.exchange ?? 0;
+    const bondsVal = detailed?.bonds ?? 0;
+
     return (
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-start justify-between">
-            <div>
-                <p className="text-sm text-slate-500 font-medium">{title}</p>
-                <h3 className="text-xl font-bold mt-1 text-slate-900">{value}</h3>
-                {subValue && (
-                    <p className={`text-xs font-bold mt-1 ${subValue.startsWith('-') ? 'text-red-500' : 'text-emerald-500'}`}>
-                        {subValue}
-                    </p>
-                )}
+        <div className="flex flex-col gap-1 mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
+            {/* Wiersz 1: Giełda */}
+            <div className="flex justify-between items-center">
+                <span>ETF/ETC</span>
+                <span className="font-medium text-slate-700">{formatter(exchangeVal)}</span>
             </div>
-            <div className="p-2 bg-slate-50 rounded-lg">{icon}</div>
+
+            {/* Wiersz 2: Obligacje */}
+            <div className="flex justify-between items-center">
+                <span>Obligacje</span>
+                <span className="font-medium text-slate-700">{formatter(bondsVal)}</span>
+            </div>
+        </div>
+    );
+};
+
+
+export interface StatCardProps {
+    title: string;
+    value: string;
+    subValue?: string;
+    icon: ReactNode;
+    children?: ReactNode; // <-- DODAJ TĘ LINIJKĘ
+}
+
+export function StatCard({ title, value, icon, children }: StatCardProps) {
+    return (
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col">
+            <div className="flex justify-between items-start">
+                <div>
+                    <h3 className="text-sm font-medium text-slate-500">{title}</h3>
+                    <p className="text-2xl font-bold text-slate-800 mt-1">{value}</p>
+                </div>
+                <div className="p-2 bg-slate-50 rounded-md">{icon}</div>
+            </div>
+
+            {/* Renderowanie detali, jeśli zostały przekazane */}
+            {children}
         </div>
     );
 }
@@ -34,20 +61,6 @@ export interface StatCardDetailedProps {
 }
 
 export function StatCardDetailed({ title, detailedData = {}, isPercentage = false }: StatCardDetailedProps) {
-    const formatValue = (val: number) => {
-        if (isPercentage) {
-            return new Intl.NumberFormat('pl-PL', {
-                style: 'percent',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(val);
-        }
-        return new Intl.NumberFormat('pl-PL', {
-            style: 'currency',
-            currency: 'PLN',
-            useGrouping: true
-        }).format(val);
-    };
 
     const entries = Object.entries(detailedData);
     if (entries.length === 0) return null;
@@ -66,7 +79,7 @@ export function StatCardDetailed({ title, detailedData = {}, isPercentage = fals
                         <div key={asset} className="flex justify-between items-center text-xs">
                             <span className="font-medium text-slate-500">{asset}</span>
                             <span className={`font-semibold ${valueColor}`}>
-                                {formatValue(val)}
+                                {formatPLN(val)}
                             </span>
                         </div>
                     );

@@ -7,10 +7,10 @@ import { Wallet, Percent, ChevronDown, ChevronUp, BarChart2 } from 'lucide-react
 import { DashboardMainPageOutput } from './schema/main_table_schema';
 
 // Importy narzędzi
-import { formatPLN, formatPercent } from './utils';
+import { formatGenericFloat, formatPLN, formatPercent, formatDate } from './utils';
 
 // Importy z refaktoryzowanych plików
-import { StatCard } from './components/StatCard';
+import { StatCard, DetailedBreakdown } from './components/StatCard';
 import { ChartContainer, InteractiveChartContainer, PieChartComponent } from './components/PieCharts';
 import { EtfAssetDetails } from './components/ExchangeDetails';
 import { BondAssetDetails } from './components/BondDetails';
@@ -51,30 +51,85 @@ export default function PortfolioPage() {
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8 bg-slate-50 min-h-screen">
+
             {/* 1. Kafelki Podsumowania */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                {/* --- RZĄD 1: Wartości Kapitałowe --- */}
                 <StatCard
                     title="Zainwestowane Środki"
                     value={formatPLN(summary.invested_pln)}
-                    icon={<Wallet className="h-5 w-5 text-slate-500" />}
-                />
+                    icon={<Wallet className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.invested_pln_detailed} formatter={formatPLN} />
+                </StatCard>
+
                 <StatCard
                     title="Bieżąca Wartość"
                     value={formatPLN(summary.current_value_pln)}
-                    icon={<Wallet className="h-5 w-5 text-slate-500" />}
-                />
+                    icon={<Wallet className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.current_value_pln_detailed} formatter={formatPLN} />
+                </StatCard>
+
                 <StatCard
-                    title="Zysk / Strata"
-                    value={formatPLN(summary.profit_loss_pln)}
-                    subValue={summary.profit_loss_pln >= 0 ? `+${formatPLN(summary.profit_loss_pln)}` : formatPLN(summary.profit_loss_pln)}
-                    icon={<BarChart2 className="h-5 w-5 text-slate-500" />}
-                />
+                    title="Wartość z Odsetkami"
+                    value={formatPLN(summary.current_value_with_interest_pln)}
+                    icon={<Wallet className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.current_value_with_interest_pln_detailed} formatter={formatPLN} />
+                </StatCard>
+
+                {/* --- RZĄD 2: Zyski Kwotowe (Brutto) --- */}
                 <StatCard
-                    title="Wskaźnik ROI"
-                    value={formatPercent(summary.roi_pln)}
-                    subValue={summary.roi_pln >= 0 ? `+${formatPercent(summary.roi_pln)}` : formatPercent(summary.roi_pln)}
-                    icon={<Percent className="h-5 w-5 text-slate-500" />}
-                />
+                    title="Zysk Niezrealizowany"
+                    value={formatPLN(summary.unrealized_profit_pln_gross)}
+                    icon={<BarChart2 className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.unrealized_profit_pln_gross_detailed} formatter={formatPLN} />
+                </StatCard>
+
+                <StatCard
+                    title="Zysk Zrealizowany"
+                    value={formatPLN(summary.realized_profit_pln_gross)}
+                    icon={<BarChart2 className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.realized_profit_pln_gross_detailed} formatter={formatPLN} />
+                </StatCard>
+
+                <StatCard
+                    title="Całkowity Zysk"
+                    value={formatPLN(summary.total_profit_pln_gross)}
+                    icon={<BarChart2 className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.total_profit_pln_gross_detailed} formatter={formatPLN} />
+                </StatCard>
+
+                {/* --- RZĄD 3: Wskaźniki Procentowe (ROI) --- */}
+                <StatCard
+                    title="ROI Niezrealizowane"
+                    value={formatPercent(summary.unrealized_roi_gross)}
+                    icon={<Percent className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.unrealized_roi_gross_detailed} formatter={formatPercent} />
+                </StatCard>
+
+                <StatCard
+                    title="ROI Zrealizowane"
+                    value={formatPercent(summary.realized_roi_gross)}
+                    icon={<Percent className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.realized_roi_gross_detailed} formatter={formatPercent} />
+                </StatCard>
+
+                <StatCard
+                    title="Całkowite ROI"
+                    value={formatPercent(summary.total_roi_gross)}
+                    icon={<Percent className="h-5 w-5" />}
+                >
+                    <DetailedBreakdown detailed={summary.total_roi_gross_detailed} formatter={formatPercent} />
+                </StatCard>
+
             </div>
 
             {/* 2. Wykresy Kołowe */}
@@ -93,8 +148,8 @@ export default function PortfolioPage() {
                         <tr>
                             <th className="p-4">Instrument</th>
                             <th className="p-4">Wolumen</th>
-                            <th className="p-4">Wycena PLN</th>
-                            <th className="p-4">ROI</th>
+                            <th className="p-4">Wartość obecna</th>
+                            <th className="p-4">ROI (PLN)</th>
                             <th className="p-4">Zysk całkowity</th>
                             <th className="p-4"></th>
                         </tr>
@@ -120,7 +175,7 @@ export default function PortfolioPage() {
                                             <div className="text-xs text-slate-400">{row.name}</div>
                                         </td>
                                         <td className="p-4 font-medium text-slate-600">
-                                            {parseFloat(row.quantity).toLocaleString('pl-PL', { maximumFractionDigits: 4 })}
+                                            {formatGenericFloat(row.quantity, 4)}
                                         </td>
                                         <td className="p-4 font-semibold text-slate-800">{formatPLN(row.current_value_pln)}</td>
                                         <td className={`p-4 font-medium ${row.roi_pln >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>

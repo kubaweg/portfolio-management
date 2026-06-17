@@ -452,6 +452,7 @@ class BondEngine:
 
         # Całkowity zysk netto do dziś (zrealizowany + to co urośnie jeśli sprzedamy)
         total_profit_net = realized_profit_net + unrealized_profit_net
+        total_profit_gross = realized_profit_gross + unrealized_profit_gross
 
         # 5. Parametry bieżące
         current_interest_rate = active_period.interest_rate if active_period else self.periods[-1].interest_rate
@@ -467,14 +468,15 @@ class BondEngine:
             # Gdy data wykupu > zapadalności
             current_early_redemption_value = current_value 
 
-        # 6. ROI (Netto) na chwilę obecną
+        # 6. ROI na chwilę obecną
         roi_net = (total_profit_net / total_invested) if total_invested > 0 else 0.0
+        roi_gross = (total_profit_gross / total_invested) if total_invested > 0 else 0.0
         
         days_total_investment = (self.calculation_date - self.params.issue_date).days
-        annualized_roi_net = 0.0
+        annualized_roi_gross = 0.0
         if days_total_investment > 0 and total_invested > 0:
             annual_multiplier = 365.25 / days_total_investment
-            annualized_roi_net = roi_net * annual_multiplier
+            annualized_roi_gross = roi_gross * annual_multiplier
 
         # 7. Postęp i Zapadalność
         days_to_maturity = max(0, (self.params.maturity_date - self.calculation_date).days)
@@ -490,21 +492,17 @@ class BondEngine:
             quantity = self.params.quantity,
             total_invested=total_invested,
             current_working_capital=round(base_working_capital_per_bond * self.params.quantity, 2),
-            realized_profit_gross=round(realized_profit_gross, 2),
-            realized_profit_net=realized_profit_net,
-            unrealized_profit_gross=round(unrealized_profit_gross, 2),
-            unrealized_profit_net=unrealized_profit_net,
-            total_profit_net=round(total_profit_net, 2),
+            realized_profit_pln_gross=round(realized_profit_gross, 2),
+            realized_profit_pln_net=realized_profit_net,
+            unrealized_profit_pln_gross=round(unrealized_profit_gross, 2),
+            unrealized_profit_pln_net=unrealized_profit_net,
             current_value=current_value,
-            current_early_redemption_value=round(current_early_redemption_value, 2),
             current_interest_rate=current_interest_rate,
-            roi_net=round(roi_net, 4), # Lepiej wysłać ułamek i sformatować na froncie
+            roi_gross=roi_gross,
+            roi_net=roi_net,
             annualized_roi_net=0.0, # Na razie 0.0 dopóki nie potwierdzimy poprawności logiki
             days_to_maturity=days_to_maturity,
-            overall_progress_percent=round(overall_progress_percent, 4),
-            projected_total_gross_profit=round(projected_gross, 2),
-            projected_total_net_profit=projected_net,
-            projected_maturity_payout=round(projected_payout, 2)
+            overall_progress_percent=round(overall_progress_percent, 4)
         )
 
     def get_summary(self) -> BondAssetSummary:

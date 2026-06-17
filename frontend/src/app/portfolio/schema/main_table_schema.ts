@@ -13,10 +13,35 @@ export interface ChartItem {
 }
 
 export interface DashboardSummaryData {
+    // 1. Zainwestowany kapitał
     invested_pln: number;
+    invested_pln_detailed: Record<string, number>;
+
+    // 2. Bieżąca wartość portfela
     current_value_pln: number;
-    profit_loss_pln: number;
-    roi_pln: number;
+    current_value_pln_detailed: Record<string, number>;
+
+    // 3. Bieżąca wartość + odsetki/dywidendy
+    current_value_with_interest_pln: number;
+    current_value_with_interest_pln_detailed: Record<string, number>;
+
+    // 4. Zysk niezrealizowany + ROI
+    unrealized_profit_pln_gross: number;
+    unrealized_profit_pln_gross_detailed: Record<string, number>;
+    unrealized_roi_gross: number;
+    unrealized_roi_gross_detailed: Record<string, number>;
+
+    // 5. Zysk zrealizowany + ROI
+    realized_profit_pln_gross: number;
+    realized_profit_pln_gross_detailed: Record<string, number>;
+    realized_roi_gross: number;
+    realized_roi_gross_detailed: Record<string, number>;
+
+    // 6. Całkowity zysk + ROI
+    total_profit_pln_gross: number;
+    total_profit_pln_gross_detailed: Record<string, number>;
+    total_roi_gross: number;
+    total_roi_gross_detailed: Record<string, number>;
 }
 
 export interface DashboardAllocationChartsData {

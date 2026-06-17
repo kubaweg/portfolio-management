@@ -108,21 +108,17 @@ class BondAssetSummary(BaseModel):
     quantity: float
     total_invested: float
     current_working_capital: float
-    realized_profit_gross: float
-    realized_profit_net: float
-    unrealized_profit_gross: float
-    unrealized_profit_net: float
-    total_profit_net: float
+    realized_profit_pln_gross: float
+    realized_profit_pln_net: float
+    unrealized_profit_pln_gross: float
+    unrealized_profit_pln_net: float
     current_value: float
-    current_early_redemption_value: float
     current_interest_rate: float
+    roi_gross: float
     roi_net: float
     annualized_roi_net: float
     days_to_maturity: int
     overall_progress_percent: float
-    projected_total_gross_profit: float
-    projected_total_net_profit: float
-    projected_maturity_payout: float
 
 class BondData(BaseModel):
     base_data: BondBaseData

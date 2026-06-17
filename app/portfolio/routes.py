@@ -5,7 +5,7 @@ from datetime import date
 from app import get_db
 from app.schemas.database.asset import Asset, Bond, AssetType
 from app.schemas.database.transaction import Transaction, TransactionType
-from app.schemas.dto.portfolio import DashboardMainPageInput, DashboardMainPageOutput
+from app.portfolio.schemas.dto import DashboardMainPageInput, DashboardMainPageOutput
 
 from app.core.exchange.service import ExchangeEngine
 from app.core.exchange.schemas.dto import (
@@ -35,7 +35,7 @@ def get_main_table_response(db: Session = Depends(get_db)):
 
 # exchange_router = APIRouter()
 # @exchange_router.get('/exchange_summary', response_model=DashboardExchangeResponse)
-def get_exchange_summary(db: Session):
+def get_exchange_summary(db: Session) -> DashboardExchangeResponse:
 
     service = ExchangeEngine()
 
@@ -46,7 +46,7 @@ def get_exchange_summary(db: Session):
 
 # bond_router = APIRouter()
 # @bond_router.get('/bond_summary', response_model=DashboardBondResponse)
-def get_bonds_summary(db: Session):
+def get_bonds_summary(db: Session) -> DashboardBondResponse:
 
     response = DashboardBondResponse(
         data=[]

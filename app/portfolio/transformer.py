@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Tuple, List
 
-from app.schemas.dto.portfolio import (
+from app.portfolio.schemas.dto import (
     DashboardMainPageInput, DashboardMainPageOutput,
     DashboardSummaryData, DashboardAllocationChartsData, DashboardMainTableData, DashboardMainTableDetailsData,
     DashboardMainTableRowData, DashboardMainTableRowDetailsData,
@@ -64,35 +64,156 @@ class DashboardTransformer:
             quantity=str(item.summary.quantity),
             current_value_pln=item.summary.current_value,
             roi_pln=item.summary.roi_net,
-            total_profit_gross_pln=item.summary.total_profit_net
+            total_profit_gross_pln = item.summary.realized_profit_pln_gross + item.summary.unrealized_profit_pln_gross
         )
 
     def _calculate_summary(self, input_data) -> DashboardSummaryData:
-        """Suma portfela (Exchange + Bonds) dla kafelków dashboardu."""
+        """Suma portfela (Exchange + Bonds) dla kafelków dashboardu z rozbiciem szczegółowym."""
         
-        # 1. Agregacja z Exchange (giełda)
-        exch_invested = sum(item.summary.avg_price_pln * item.summary.quantity for item in input_data.exchange_response.data)
-        exch_current = sum(item.current_data.value_pln for item in input_data.exchange_response.data)
-        exch_profit = sum(item.summary.profit_loss_pln for item in input_data.exchange_response.data)
+        # =========================================================================
+        # 1. Agregacja z Exchange (Giełda: ETF/ETC)
+        # =========================================================================
+        exch_invested = sum(
+            item.summary.avg_price_pln * item.summary.quantity 
+            for item in input_data.exchange_response.data
+        )
+        exch_current = sum(
+            item.current_data.value_pln 
+            for item in input_data.exchange_response.data
+        )
+        # Wartość + dywidendy/odsetki
+        exch_current_with_interest = sum(
+            item.current_data.value_pln + item.summary.interest_profit_pln 
+            for item in input_data.exchange_response.data
+        )
         
-        # 2. Agregacja z Bond (obligacje)
-        bond_invested = sum(item.summary.total_invested for item in input_data.bond_response.data)
-        bond_current = sum(item.summary.current_value for item in input_data.bond_response.data)
-        bond_profit = sum(item.summary.total_profit_net for item in input_data.bond_response.data)
+        exch_unrealized_gross = sum(
+            item.summary.unrealized_profit_pln 
+            for item in input_data.exchange_response.data
+        )
+        exch_realized_gross = sum(
+            item.summary.realized_profit_pln 
+            for item in input_data.exchange_response.data
+        )
+        exch_total_gross = sum(
+            item.summary.profit_loss_pln 
+            for item in input_data.exchange_response.data
+        )
         
-        # 3. Sumowanie globalne
+        # ROI dla samej giełdy
+        exch_unrealized_roi = (exch_unrealized_gross / exch_invested) if exch_invested > 0 else 0.0
+        exch_realized_roi = (exch_realized_gross / exch_invested) if exch_invested > 0 else 0.0
+        exch_total_roi = (exch_total_gross / exch_invested) if exch_invested > 0 else 0.0
+
+        # =========================================================================
+        # 2. Agregacja z Bond (Obligacje skarbowe)
+        # =========================================================================
+        bond_invested = sum(
+            item.summary.total_invested 
+            for item in input_data.bond_response.data
+        )
+        bond_current = sum(
+            item.summary.current_value 
+            for item in input_data.bond_response.data
+        )
+        # Bieżąca wartość + zrealizowane już kupony odsetkowe
+        bond_current_with_interest = sum(
+            item.summary.current_value + item.summary.realized_profit_pln_gross 
+            for item in input_data.bond_response.data
+        )
+        
+        bond_unrealized_gross = sum(
+            item.summary.unrealized_profit_pln_gross 
+            for item in input_data.bond_response.data
+        )
+        bond_realized_gross = sum(
+            item.summary.realized_profit_pln_gross 
+            for item in input_data.bond_response.data
+        )
+        # Łączny zysk brutto dla obligacji (unrealized + realized)
+        bond_total_gross = bond_unrealized_gross + bond_realized_gross
+        
+        # ROI dla samych obligacji
+        bond_unrealized_roi = (bond_unrealized_gross / bond_invested) if bond_invested > 0 else 0.0
+        bond_realized_roi = (bond_realized_gross / bond_invested) if bond_invested > 0 else 0.0
+        bond_total_roi = (bond_total_gross / bond_invested) if bond_invested > 0 else 0.0
+
+        # =========================================================================
+        # 3. Sumowanie globalne (Global Sums)
+        # =========================================================================
         total_invested = exch_invested + bond_invested
         total_current = exch_current + bond_current
-        total_profit = exch_profit + bond_profit
+        total_current_with_interest = exch_current_with_interest + bond_current_with_interest
         
-        # Unikamy dzielenia przez zero
-        global_roi = (total_profit / total_invested) if total_invested > 0 else 0.0
+        total_unrealized_gross = exch_unrealized_gross + bond_unrealized_gross
+        total_realized_gross = exch_realized_gross + bond_realized_gross
+        total_profit_gross = exch_total_gross + bond_total_gross
         
+        # Globalne wskaźniki ROI
+        global_unrealized_roi = (total_unrealized_gross / total_invested) if total_invested > 0 else 0.0
+        global_realized_roi = (total_realized_gross / total_invested) if total_invested > 0 else 0.0
+        global_total_roi = (total_profit_gross / total_invested) if total_invested > 0 else 0.0
+
+        # =========================================================================
+        # 4. Budowanie i zwracanie obiektu wyjściowego
+        # =========================================================================
         return DashboardSummaryData(
+            # 1. Zainwestowane
             invested_pln=total_invested,
+            invested_pln_detailed={
+                "exchange": exch_invested,
+                "bonds": bond_invested
+            },
+            
+            # 2. Obecna wartość rynkowa
             current_value_pln=total_current,
-            profit_loss_pln=total_profit,
-            roi_pln=global_roi
+            current_value_pln_detailed={
+                "exchange": exch_current,
+                "bonds": bond_current
+            },
+            
+            # 3. Obecna wartość + odsetki/dywidendy
+            current_value_with_interest_pln=total_current_with_interest,
+            current_value_with_interest_pln_detailed={
+                "exchange": exch_current_with_interest,
+                "bonds": bond_current_with_interest
+            },
+            
+            # 4. Niezrealizowany zysk + ROI
+            unrealized_profit_pln_gross=total_unrealized_gross,
+            unrealized_profit_pln_gross_detailed={
+                "exchange": exch_unrealized_gross,
+                "bonds": bond_unrealized_gross
+            },
+            unrealized_roi_gross=global_unrealized_roi,
+            unrealized_roi_gross_detailed={
+                "exchange": exch_unrealized_roi,
+                "bonds": bond_unrealized_roi
+            },
+            
+            # 5. Zrealizowany zysk + ROI
+            realized_profit_pln_gross=total_realized_gross,
+            realized_profit_pln_gross_detailed={
+                "exchange": exch_realized_gross,
+                "bonds": bond_realized_gross
+            },
+            realized_roi_gross=global_realized_roi,
+            realized_roi_gross_detailed={
+                "exchange": exch_realized_roi,
+                "bonds": bond_realized_roi
+            },
+            
+            # 6. Całkowity zysk + ROI
+            total_profit_pln_gross=total_profit_gross,
+            total_profit_pln_gross_detailed={
+                "exchange": exch_total_gross,
+                "bonds": bond_total_gross
+            },
+            total_roi_gross=global_total_roi,
+            total_roi_gross_detailed={
+                "exchange": exch_total_roi,
+                "bonds": bond_total_roi
+            }
         )
 
     def _calculate_charts(self, input_data) -> DashboardAllocationChartsData:
