@@ -1,6 +1,7 @@
 export interface OpenPosition {
     ticker: string;
     quantity: number;
+    date_buy: string;
     value_buy: number;
     fx_buy: number;
     current_value: number;
@@ -11,6 +12,8 @@ export interface OpenPosition {
 export interface ClosedPosition {
     ticker: string;
     quantity: number;
+    date_buy: string;
+    date_sell: string;
     value_buy: number;
     value_sell: number;
     fx_buy: number;

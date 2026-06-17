@@ -72,27 +72,26 @@ function BondPeriodTable({ periods }: { periods: BondInterestPeriod[] }) {
     );
 }
 
-export function BondAssetDetails({ ticker, bondPayload }: { ticker: string, bondPayload: BondData }) {
-    const { periods, summary } = bondPayload;
+export function BondAssetDetails({ bondPayload }: { bondPayload: BondData }) {
 
     return (
-        <div className="space-y-4 text-xs text-slate-700">
+        <div className="w-full bg-slate-50 p-6 flex flex-col gap-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                     <span className="text-slate-400 block mb-1">Bieżące oprocentowanie:</span>
                     <span className="font-bold text-sm text-slate-800">
-                        {formatPercent(summary.current_interest_rate)}
+                        {formatPercent(bondPayload.summary.current_interest_rate)}
                     </span>
                 </div>
 
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                     <span className="text-slate-400 block mb-1">Dni do wykupu:</span>
                     <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-800">{summary.days_to_maturity}</span>
+                        <span className="font-bold text-sm text-slate-800">{bondPayload.summary.days_to_maturity}</span>
                         <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-blue-500 rounded-full"
-                                style={{ width: `${summary.overall_progress_percent * 100}%` }}
+                                style={{ width: `${bondPayload.summary.overall_progress_percent * 100}%` }}
                             />
                         </div>
                     </div>
@@ -101,14 +100,14 @@ export function BondAssetDetails({ ticker, bondPayload }: { ticker: string, bond
                 <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm">
                     <span className="text-emerald-700 block mb-1 font-medium">Zysk zrealizowany:</span>
                     <span className="text-sm font-bold text-emerald-800">
-                        {formatPLN(summary.realized_profit_gross)}
+                        {formatPLN(bondPayload.summary.realized_profit_pln_gross)}
                     </span>
                 </div>
 
                 <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm">
                     <span className="text-emerald-700 block mb-1 font-medium">Narosłe odsetki:</span>
                     <span className="text-sm font-bold text-emerald-800">
-                        {formatPLN(summary.current_value - summary.total_invested)}
+                        {formatPLN(bondPayload.summary.current_value - bondPayload.summary.total_invested)}
                     </span>
                 </div>
             </div>
@@ -117,7 +116,7 @@ export function BondAssetDetails({ ticker, bondPayload }: { ticker: string, bond
                 <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mt-4">
                     Harmonogram Odsetkowy
                 </h4>
-                <BondPeriodTable periods={periods} />
+                <BondPeriodTable periods={bondPayload.periods} />
             </div>
         </div>
     );

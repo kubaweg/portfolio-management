@@ -12,7 +12,7 @@ import { formatGenericFloat, formatPLN, formatPercent, formatDate } from './util
 // Importy z refaktoryzowanych plików
 import { StatCard, DetailedBreakdown } from './components/StatCard';
 import { ChartContainer, InteractiveChartContainer, PieChartComponent } from './components/PieCharts';
-import { EtfAssetDetails } from './components/ExchangeDetails';
+import { ExchangeRowDetails } from './components/ExchangeDetails';
 import { BondAssetDetails } from './components/BondDetails';
 
 export default function PortfolioPage() {
@@ -191,12 +191,30 @@ export default function PortfolioPage() {
 
                                     {/* 4. Renderowanie odpowiednich szczegółów */}
                                     {isExpanded && detailData && (
-                                        <tr>
-                                            <td colSpan={6} className="bg-slate-50/50 p-6 shadow-inner">
-                                                {detailData.type === 'BOND' ? (
-                                                    <BondAssetDetails ticker={row.ticker} bondPayload={detailData.details.data as any} />
-                                                ) : (
-                                                    <EtfAssetDetails asset={detailData.details.data as any} />
+                                        <tr className="bg-slate-50">
+                                            <td colSpan={6}> {/* Ustaw colSpan na tyle, ile masz kolumn w tabeli głównej (tu: 6) */}
+                                                {(detailData.details.data.base_data as any).type === 'ETF' && (
+                                                    <ExchangeRowDetails
+                                                        item={detailData.details.data as any}
+                                                        formatPLN={formatPLN}
+                                                        formatPercent={formatPercent}
+                                                        formatCurrency={(val: number, cur: string) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: cur }).format(val)}
+                                                    />
+                                                )}
+
+                                                {(detailData.details.data.base_data as any).type === 'ETC' && (
+                                                    <ExchangeRowDetails
+                                                        item={detailData.details.data as any}
+                                                        formatPLN={formatPLN}
+                                                        formatPercent={formatPercent}
+                                                        formatCurrency={(val: number, cur: string) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: cur }).format(val)}
+                                                    />
+                                                )}
+
+                                                {(detailData.details.data.base_data as any).type === 'Obligacja' && (
+                                                    <BondAssetDetails
+                                                        bondPayload={detailData.details.data}
+                                                    />
                                                 )}
                                             </td>
                                         </tr>
