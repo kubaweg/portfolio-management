@@ -193,21 +193,15 @@ export default function PortfolioPage() {
                                     {isExpanded && detailData && (
                                         <tr className="bg-slate-50">
                                             <td colSpan={6}> {/* Ustaw colSpan na tyle, ile masz kolumn w tabeli głównej (tu: 6) */}
-                                                {(detailData.details.data.base_data as any).type === 'ETF' && (
+                                                {(detailData.details.data.base_data).type === 'ETF' && (
                                                     <ExchangeRowDetails
-                                                        item={detailData.details.data as any}
-                                                        formatPLN={formatPLN}
-                                                        formatPercent={formatPercent}
-                                                        formatCurrency={(val: number, cur: string) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: cur }).format(val)}
+                                                        exchangePayload={detailData.details.data}
                                                     />
                                                 )}
 
                                                 {(detailData.details.data.base_data as any).type === 'ETC' && (
                                                     <ExchangeRowDetails
-                                                        item={detailData.details.data as any}
-                                                        formatPLN={formatPLN}
-                                                        formatPercent={formatPercent}
-                                                        formatCurrency={(val: number, cur: string) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: cur }).format(val)}
+                                                        exchangePayload={detailData.details.data as any}
                                                     />
                                                 )}
 

@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
-import { formatGenericFloat, formatPLN, formatPercent } from '../utils';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { formatGenericFloat, formatPLN, formatPercent, formatDate } from '../utils';
+import { ExchangeBaseData, ExchangeCurrentData, ExchangeFXData, ExchangeSummary, ExchangeData } from '../schema/exchange_schema';
+import { ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -24,7 +25,7 @@ const DetailedRow = ({ label, value, isBold = false, isMono = false }: any) => (
 );
 
 const MiniCard = ({ title, children }: any) => (
-    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between">
+    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col">
         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">{title}</h4>
         <div className="flex flex-col gap-1">{children}</div>
     </div>
@@ -169,37 +170,161 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
     );
 };
 
+interface BaseDataRow {
+    label: string;
+    value: React.ReactNode;
+}
+
+const columnHelper = createColumnHelper<BaseDataRow>();
+
+interface ExchangeBaseDataTableProps {
+    baseData: ExchangeBaseData;
+}
+
+export const ExchangeBaseDataTable: React.FC<ExchangeBaseDataTableProps> = ({ baseData }) => {
+    // 1. Przygotowanie danych do tabeli (mapowanie obiektu na wiersze)
+    const tableData: BaseDataRow[] = useMemo(() => [
+        {
+            label: 'Symbol (Ticker)',
+            value: <span className="font-bold text-slate-800">{baseData.ticker}</span>
+        },
+        {
+            label: 'Pełna nazwa',
+            value: baseData.name
+        },
+        {
+            label: 'Typ instrumentu',
+            value: baseData.type // np. ETF, ETC
+        },
+        {
+            label: 'Kategoria bazowa',
+            value: baseData.category1 // np. Equity, Commodities
+        },
+        {
+            label: 'Podkategoria',
+            value: baseData.category2 || '-'
+        },
+        {
+            label: 'Waluta notowania',
+            value: <span>{baseData.currency}</span>
+        },
+    ], [baseData]);
+
+    // 2. Definicja kolumn TanStack
+    const columns = useMemo(() => [
+        columnHelper.accessor('label', {
+            header: 'Parametr',
+            cell: info => <span className="text-slate-500 font-medium">{info.getValue()}</span>,
+        }),
+        columnHelper.accessor('value', {
+            header: 'Wartość',
+            cell: info => <span className="text-slate-800">{info.getValue()}</span>,
+        }),
+    ], []);
+
+    // 3. Inicjalizacja tabeli
+    const table = useReactTable({
+        data: tableData,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+    });
+
+    return (
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            <table className="w-full text-left text-sm">
+                <tbody className="divide-y divide-slate-100">
+                    {table.getRowModel().rows.map(row => (
+                        <tr key={row.id} className="hover:bg-slate-50/50">
+                            {row.getVisibleCells().map((cell, index) => (
+                                <td key={cell.id} className="px-4 py-2.5 w-1/2">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div >
+    );
+};
+
 // =========================================================================
 // GŁÓWNY EKSPORT
 // =========================================================================
 
-export const ExchangeRowDetails = ({ item }: any) => {
-    const { base_data, summary, current_data, open_positions } = item;
+export const ExchangeRowDetails = ({ exchangePayload }: { exchangePayload: ExchangeData }) => {
+
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false); // Domyślnie zamknięte, zmień na true jeśli ma być domyślnie otwarte
+
+    {/* Wyciągamy flagę logiczną do sprawdzenia, czy waluta bazowa to PLN */ }
+    const isPLN = exchangePayload.base_data.currency === 'PLN';
+
+    console.log(exchangePayload)
 
     return (
-        <div className="w-full bg-slate-50 p-6 flex flex-col gap-6">
-            <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-1 bg-white border border-slate-200 rounded text-xs font-semibold">{base_data.name} ({base_data.ticker})</span>
-                <span className="text-xs text-slate-500 ml-auto">Waluta: {base_data.currency}</span>
+        <div className="w-full bg-slate-50 p-6 flex flex-col gap-0">
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white mb-3">
+                {/* KLIKALNY NAGŁÓWEK SEKCIJI */}
+                <button
+                    type="button"
+                    onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+                    className="w-full px-4 py-3 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between select-none border-b border-slate-100"
+                >
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        Informacje szczegółowe
+                    </h4>
+                    {/* Animowana strzałka, która obraca się o 180 stopni przy zwijaniu */}
+                    <ChevronDown
+                        className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${isDetailsOpen ? '' : '-rotate-90'
+                            }`}
+                    />
+                </button>
+
+                {/* WARUNKOWE RENDEROWANIE TABELI */}
+                {isDetailsOpen && (
+                    <ExchangeBaseDataTable baseData={exchangePayload.base_data} />
+                )}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <MiniCard title="Wycena i Kurs FX">
-                    <DetailedRow label="Śr. cena zakupu" value={formatGenericFloat(summary.avg_price)} />
-                    <DetailedRow label="Bieżący kurs FX" value={formatGenericFloat(current_data.fx_data.fx_rate)} />
-                    <DetailedRow label="Bieżący kurs FX" value={formatGenericFloat(current_data.fx_data.fx_effective_rate)} />
+            {/* Dynamicznie przypisujemy siatkę: 3 kolumny dla PLN, 4 kolumny dla obcych walut */}
+            <div className={`grid grid-cols-1 ${isPLN ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3 mb-3`}>
+
+                {/* 1. KAFELEK: Wycena */}
+                <MiniCard title="Wycena">
+                    <DetailedRow label="Średni kurs zakupu" value={formatGenericFloat(exchangePayload.summary.avg_price)} />
+                    <DetailedRow label="Kurs obecny" value={formatGenericFloat(exchangePayload.current_data.price)} />
                 </MiniCard>
+
+                {/* 2. KAFELEK: Kurs FX (Renderowany warunkowo, tylko jeśli waluta to NIE PLN) */}
+                {!isPLN && (
+                    <MiniCard title={`Kurs FX (${exchangePayload.base_data.currency})`}>
+                        <DetailedRow label="Bieżący kurs FX" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate)} />
+                        <DetailedRow label="Efektywny kurs FX (buy)" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate / 0.995)} />
+                        <DetailedRow label="Efektywny kurs FX (sell)" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate / 1.005)} />
+                    </MiniCard>
+                )}
+
+                {/* 3. KAFELEK: Struktura Wyniku */}
                 <MiniCard title="Struktura Wyniku">
-                    <DetailedRow label="Zysk Niezrealizowany (PLN)" value={formatPLN(summary.unrealized_profit_pln)} />
-                    <DetailedRow label="Wynik Całkowity" value={formatPLN(summary.profit_loss_pln)} isBold />
+                    <DetailedRow label="Zysk zrealizowany" value={formatPLN(exchangePayload.summary.realized_profit_pln)} />
+                    <DetailedRow label="Zysk niezrealizowany" value={formatPLN(exchangePayload.summary.unrealized_profit_pln)} />
+                    <DetailedRow label="Wynik całkowity" value={formatPLN(exchangePayload.summary.profit_loss_pln)} isBold />
                 </MiniCard>
+
+                {/* 4. KAFELEK: Efektywność */}
                 <MiniCard title="Efektywność">
-                    <DetailedRow label="ROI (PLN)" value={formatPercent(summary.roi_pln)} isBold />
-                    <DetailedRow label="ROI Roczne (PA)" value={formatPercent(summary.roi_pa)} />
+                    <DetailedRow label="ROI (PLN)" value={formatPercent(exchangePayload.summary.roi_pln)} isBold />
+                    <DetailedRow label="ROI w skali roku (PLN)" value={formatPercent(exchangePayload.summary.roi_pa)} />
                 </MiniCard>
+
             </div>
 
-            <OpenPositionsTable data={open_positions} currency={base_data.currency} totalQuantity={summary.quantity} currentPrice={current_data.price} />
-        </div>
+            <OpenPositionsTable
+                data={exchangePayload.open_positions}
+                currency={exchangePayload.base_data.currency}
+                totalQuantity={exchangePayload.summary.quantity}
+                currentPrice={exchangePayload.current_data.price}
+            />
+        </div >
     );
 };
