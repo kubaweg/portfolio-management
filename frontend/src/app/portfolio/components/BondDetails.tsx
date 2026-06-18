@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { formatPLN, formatPercent, formatDate } from '../utils';
-import { BondData, BondInterestPeriod, PeriodStatus } from '../schema/bond_schema';
+import { BondData, BondBaseData, BondInterestPeriod, PeriodStatus } from '../schema/bond_schema';
+import { ChevronDown } from 'lucide-react'; // Zakładam, że używasz lucide-react do ikon
 import {
     useReactTable,
     getCoreRowModel,
@@ -120,9 +121,9 @@ export const BondPeriodTable: React.FC<BondPeriodTableProps> = ({
     });
 
     return (
-        <div className="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm mt-4 custom-scrollbar">
+        <div className="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm custom-scrollbar">
             <table className="w-full text-xs text-left text-slate-600">
-                <thead className="bg-slate-100 border-b border-slate-200 font-bold uppercase text-slate-600 tracking-wider">
+                <thead className="bg-white border-b border-slate-200 font-bold uppercase text-slate-800 tracking-wider">
                     {table.getHeaderGroups().map(headerGroup => (
                         <tr key={headerGroup.id}>
                             {headerGroup.headers.map(header => {
@@ -160,58 +161,238 @@ export const BondPeriodTable: React.FC<BondPeriodTableProps> = ({
     );
 };
 
+// Typ pomocniczy dla wierszy tabeli szczegółów
+interface BaseDataRow {
+    label: string;
+    value: React.ReactNode;
+}
+
+const detailColumnHelper = createColumnHelper<BaseDataRow>();
+
+export const BondBaseDataTable = ({ baseData }: { baseData: BondBaseData }) => {
+    // Transformacja obiektu base_data na wiersze tabeli
+    const tableData: BaseDataRow[] = useMemo(() => [
+        { label: 'Symbol (Ticker)', value: <span className="font-mono font-bold text-slate-800">{baseData.ticker}</span> },
+        { label: 'Pełna nazwa', value: baseData.name },
+        { label: 'Kategoria', value: `${baseData.category1} / ${baseData.category2}` },
+        { label: 'Data emisji', value: formatDate(baseData.issue_date) },
+        { label: 'Data wykupu', value: formatDate(baseData.maturity_date) },
+        { label: 'Typ oprocentowania', value: baseData.is_indexed ? 'Zmiennoprocentowe (Indeksowane)' : 'Stałoprocentowe' },
+        { label: 'Kapitalizacja odsetek', value: baseData.interest_handling },
+        { label: 'Częstotliwość kuponu', value: baseData.coupon_frequency },
+    ], [baseData, formatDate]);
+
+    const columns = useMemo(() => [
+        detailColumnHelper.accessor('label', {
+            header: 'Atrybut',
+            cell: info => <span className="text-slate-500 font-medium">{info.getValue()}</span>,
+        }),
+        detailColumnHelper.accessor('value', {
+            header: 'Wartość',
+            cell: info => <span className="text-slate-800">{info.getValue()}</span>,
+        }),
+    ], []);
+
+    const table = useReactTable({
+        data: tableData,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+    });
+
+    return (
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            <table className="w-full text-sm text-left">
+                <tbody className="divide-y divide-slate-100">
+                    {table.getRowModel().rows.map(row => (
+                        <tr key={row.id} className="hover:bg-slate-50/50">
+                            {row.getVisibleCells().map(cell => (
+                                <td key={cell.id} className="px-4 py-2.5 w-1/2">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
 
 export function BondAssetDetails({ bondPayload }: { bondPayload: BondData }) {
 
-    return (
-        <div className="w-full bg-slate-50 p-6 flex flex-col gap-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                    <span className="text-slate-400 block mb-1">Bieżące oprocentowanie:</span>
-                    <span className="font-bold text-sm text-slate-800">
-                        {formatPercent(bondPayload.summary.current_interest_rate)}
-                    </span>
-                </div>
+    // Znajdź bieżący okres, aby pobrać z niego wartość benchmarku (np. inflacji lub WIBOR-u)
+    const currentPeriod = bondPayload.periods.find(p => p.status === 'CURRENT') || bondPayload.periods.at(-1);
+    const currentBenchmarkValue = currentPeriod?.benchmark_value || 0;
+    const isIndexed = bondPayload.base_data.is_indexed;
 
-                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                    <span className="text-slate-400 block mb-1">Dni do wykupu:</span>
-                    <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-800">{bondPayload.summary.days_to_maturity}</span>
-                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-blue-500 rounded-full"
-                                style={{ width: `${bondPayload.summary.overall_progress_percent * 100}%` }}
-                            />
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false); // Domyślnie zamknięte, zmień na true jeśli ma być domyślnie otwarte
+    const [isScheduleOpen, setIsScheduleOpen] = useState(false); // Domyślnie zamknięte, zmień na true jeśli ma być domyślnie otwarte
+
+    return (
+        <div className="w-full bg-slate-50 p-6 flex flex-col gap-0">
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white mb-3">
+                {/* KLIKALNY NAGŁÓWEK SEKCIJI */}
+                <button
+                    type="button"
+                    onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+                    className="w-full px-4 py-3 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between select-none border-b border-slate-100"
+                >
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        Informacje szczegółowe
+                    </h4>
+                    {/* Animowana strzałka, która obraca się o 180 stopni przy zwijaniu */}
+                    <ChevronDown
+                        className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${isScheduleOpen ? '' : '-rotate-90'
+                            }`}
+                    />
+                </button>
+
+                {/* WARUNKOWE RENDEROWANIE TABELI */}
+                {isDetailsOpen && (
+                    <BondBaseDataTable baseData={bondPayload.base_data} />
+                )}
+            </div>
+
+            {/* --- SEKCJA PROGRESU I OPROCENTOWANIA (ZALEŻNA OD WARIANTU) --- */}
+            {!isIndexed ? (
+                /* Wariant A: Stałoprocentowy (2 kafelki, prosta siatka 1-kolumnowa na mobile, 2-kolumnowa na desktopie) */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm col-span-2 md:col-span-1 flex flex-col justify-between">
+                        {/* Pasek postępu i informacja o procentach linijkę niżej */}
+                        <div>
+                            {/* Linia nad paskiem: tekst po lewej, procenty po prawej */}
+                            <div className="flex justify-between items-baseline mb-1">
+                                <span className="text-slate-400 font-medium">
+                                    Postęp do wykupu: <span className="font-medium text-slate-800 ml-1">{bondPayload.summary.days_to_maturity} dni</span>
+                                </span>
+                                <span className="font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                    {Math.round(bondPayload.summary.overall_progress_percent * 100)}%
+                                </span>
+                            </div>
+
+                            {/* Pasek postępu biorący 100% szerokości kafelka */}
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                                    style={{ width: `${bondPayload.summary.overall_progress_percent * 100}%` }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                        <span className="text-slate-400 block mb-1">Oprocentowanie (stałe):</span>
+                        <span className="font-bold text-lg text-slate-800">
+                            {formatPercent(bondPayload.summary.current_interest_rate)}
+                        </span>
+                    </div>
+                </div>
+            ) : (
+                /* Wariant B: Zmiennoprocentowy (3 kafelki zajmujące po równo 1/3 szerokości na desktopie) */
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-3">
+
+                    {/* Na mobile zajmuje całą szerokość (2/2), na desktopie 1/3 (1/3) */}
+                    <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm col-span-2 md:col-span-1 flex flex-col justify-between">
+                        {/* Pasek postępu i informacja o procentach linijkę niżej */}
+                        <div className="mt-2">
+                            {/* Linia nad paskiem: tekst po lewej, procenty po prawej */}
+                            <div className="flex justify-between items-baseline mb-1">
+                                <span className="text-slate-400 font-medium">
+                                    Postęp do wykupu: <span className="font-medium text-slate-800 ml-1">{bondPayload.summary.days_to_maturity} dni</span>
+                                </span>
+                                <span className="font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                    {Math.round(bondPayload.summary.overall_progress_percent * 100)}%
+                                </span>
+                            </div>
+
+                            {/* Pasek postępu biorący 100% szerokości kafelka */}
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                                    style={{ width: `${bondPayload.summary.overall_progress_percent * 100}%` }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Oprocentowanie początkowe – 1 kolumna */}
+                    <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm col-span-1">
+                        <span className="text-slate-400 block mb-1">Oprocentowanie początkowe:</span>
+                        <span className="font-bold text-xl text-slate-800">
+                            {formatPercent(bondPayload.base_data.initial_rate)}
+                        </span>
+                    </div>
+
+                    {/* Pełne równanie – 1 kolumna */}
+                    <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm col-span-1">
+                        <span className="text-slate-400 block mb-1 font-medium tracking-wider">
+                            Bieżące oprocentowanie:
+                        </span>
+                        <div className="flex flex-col gap-1.5">
+                            {/* Główna wartość i równanie w jednej linii */}
+                            <div className="flex items-baseline gap-2 flex-wrap">
+                                <span className="font-bold text-xl text-slate-800">
+                                    {formatPercent(bondPayload.summary.current_interest_rate)}
+                                </span>
+                                {/* O jeden rozmiar mniejsza czcionka (text-lg) i font-medium */}
+                                <span className="text-base font-medium text-slate-600">
+                                    = {formatPercent(currentBenchmarkValue)} <span className="text-xs font-medium text-slate-600">(baza)</span> + {formatPercent(bondPayload.base_data.margin)} <span className="text-xs font-medium text-slate-600">(marża)</span>
+                                </span>
+                            </div>
+
+                            <span className="text-xs font-medium text-slate-400">
+                                Benchmark: {bondPayload.base_data.benchmark || '-'}
+                            </span>
                         </div>
                     </div>
                 </div>
+            )}
 
-                <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm">
+            {/* ZYSKI */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm col-span-2">
                     <span className="text-emerald-700 block mb-1 font-medium">Zysk zrealizowany:</span>
-                    <span className="text-sm font-bold text-emerald-800">
+                    <span className="text-lg font-bold text-emerald-800">
                         {formatPLN(bondPayload.summary.realized_profit_pln_gross)}
                     </span>
                 </div>
 
-                <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm">
-                    <span className="text-emerald-700 block mb-1 font-medium">Narosłe odsetki:</span>
-                    <span className="text-sm font-bold text-emerald-800">
+                <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm col-span-2">
+                    <span className="text-emerald-700 block mb-1 font-medium">Narosłe odsetki (Niezrealizowane):</span>
+                    <span className="text-lg font-bold text-emerald-800">
                         {formatPLN(bondPayload.summary.current_value - bondPayload.summary.total_invested)}
                     </span>
                 </div>
             </div>
 
-            <div>
-                <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mt-4">
-                    Harmonogram Odsetkowy
-                </h4>
-                <BondPeriodTable
-                    periods={bondPayload.periods}
-                    formatDate={formatDate}
-                    formatPercent={formatPercent}
-                    formatPLN={formatPLN}
-                    statusConfig={statusConfig}
-                />
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                {/* KLIKALNY NAGŁÓWEK SEKCIJI */}
+                <button
+                    type="button"
+                    onClick={() => setIsScheduleOpen(!isScheduleOpen)}
+                    className="w-full px-4 py-3 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between select-none border-b border-slate-100"
+                >
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        Harmonogram Odsetkowy
+                    </h4>
+                    {/* Animowana strzałka, która obraca się o 180 stopni przy zwijaniu */}
+                    <ChevronDown
+                        className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${isScheduleOpen ? '' : '-rotate-90'
+                            }`}
+                    />
+                </button>
+
+                {/* WARUNKOWE RENDEROWANIE TABELI */}
+                {isScheduleOpen && (
+                    <BondPeriodTable
+                        periods={bondPayload.periods}
+                        formatDate={formatDate}
+                        formatPercent={formatPercent}
+                        formatPLN={formatPLN}
+                        statusConfig={statusConfig}
+                    />
+                )}
             </div>
         </div>
     );
