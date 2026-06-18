@@ -88,34 +88,3 @@ class TransactionProcessor:
         self.stats['cost_pln'] = sum(lot['qty'] * lot['price_curr'] * lot['rate'] for lot in self.buy_lots)
         
         return self.stats
-
-def calculate_annualized_return(transactions: List[Any], current_value_pln: float, total_qty: float) -> float:
-    """Oblicza XIRR dla strumienia przepływów pieniężnych (całe portfolio lub ticker)."""
-    amounts = []
-    dates = []
-
-    for t in transactions:
-        val_pln = t.quantity * t.price_per_unit * t.exchange_rate
-        
-        if t.transaction_type == 'KUPNO':
-            amounts.append(-val_pln) # Pieniądze wychodzą z portfela
-            dates.append(t.date)
-        elif t.transaction_type in ['SPRZEDAŻ', 'ODSETKI', 'KAPITALIZACJA']:
-            # Pieniądze wracają do portfela (zrealizowany zysk/kapitał)
-            amounts.append(val_pln)
-            dates.append(t.date)
-
-    # Dodajemy końcową wycenę wszystkiego, co jeszcze trzymamy
-    if current_value_pln > 0:
-        amounts.append(current_value_pln)
-        dates.append(datetime.now())
-
-    if len(amounts) >= 2:
-        try:
-            # XIRR wymaga co najmniej jednej wartości ujemnej i jednej dodatniej
-            if any(x < 0 for x in amounts) and any(x > 0 for x in amounts):
-                result = xirr(dates, amounts)
-                return result if result else 0.0
-        except Exception:
-            return 0.0
-    return 0.0

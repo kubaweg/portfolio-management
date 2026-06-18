@@ -81,8 +81,8 @@ class PositionBuilder:
             {
                 "quantity": tx.quantity,
                 "date_buy": tx.timestamp.date(),
-                "value_buy": tx.price,  # cena w walucie instrumentu,
-                "fx_buy": tx.fx_rate,      # historyczny kurs walutowy
+                "price_buy": tx.price,  # cena w walucie instrumentu,
+                "fx_buy": tx.fx_rate,   # historyczny kurs walutowy
             }
         )
         
@@ -106,7 +106,7 @@ class PositionBuilder:
         while remaining_qty > 0 and buy_lots:
             lot = buy_lots[0]
             lot_qty = lot["quantity"]
-            lot_price = lot["value_buy"]
+            lot_price = lot["price_buy"]
             lot_fx_rate = lot["fx_buy"]
             lot_date_buy = lot["date_buy"]
 
@@ -155,7 +155,7 @@ class PositionBuilder:
 
         for lot in buy_lots:
             qty = lot["quantity"]
-            cost = qty * lot["value_buy"]
+            cost = qty * lot["price_buy"]
             current_value = qty * current_price
             unrealized = current_value - cost
             total_unrealized += unrealized
