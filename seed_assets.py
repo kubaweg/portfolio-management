@@ -1,5 +1,5 @@
-from backend import SessionLocal
-from backend.schemas.database.asset import (
+from app import SessionLocal
+from app.schemas.database.asset import (
     Asset, ETF, ETC, Bond,
     AssetType, Category1, Category2, GeoRegion, GeoCountry, MarketType,
     DistributionPolicy, ReplicationMethod, CouponFrequency, InterestHandling, RetailBondBenchmark
