@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import List
-from app.schemas.domain.positions import OpenPosition, ClosedPosition
-from app.schemas.domain.transactions import TransactionType
+from backend.schemas.domain.positions import OpenPosition, ClosedPosition
+from backend.schemas.domain.transactions import TransactionType
 
 
 class TransactionData(BaseModel):

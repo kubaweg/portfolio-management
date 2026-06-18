@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import get_db
-from app.schemas.dto.add_asset import AddAsset
+from backend import get_db
+from backend.schemas.dto.add_asset import AddAsset
 
-from app.schemas.database.asset import (
+from backend.schemas.database.asset import (
     ETF, ETC, Bond, Equity, Crypto
 )
 
-from app.schemas.domain.assets import (AssetType, Category1, Category2, 
+from backend.schemas.domain.assets import (AssetType, Category1, Category2, 
     GeoRegion, GeoCountry, MarketType, DistributionPolicy, ReplicationMethod, 
     CouponFrequency, InterestHandling, RetailBondBenchmark
 )

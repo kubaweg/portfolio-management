@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Numeric, String, Enum, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
-from app import Base # Importujemy naszą bazę
+from backend import Base # Importujemy naszą bazę
 
 from ..domain.transactions import TransactionType
 

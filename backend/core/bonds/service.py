@@ -7,12 +7,12 @@ from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 
 # Zakładam takie ścieżki na podstawie Twoich informacji
-from app.core.bonds.schemas.dto import (
+from backend.core.bonds.schemas.dto import (
     BondInputParams, BondInterestPeriod, BondAssetSummary, PeriodStatus, 
     EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics
 )
-from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling
-from app.schemas.database.macroeconomics import Inflation, InterestRate
+from backend.schemas.domain.assets import RetailBondBenchmark, InterestHandling
+from backend.schemas.database.macroeconomics import Inflation, InterestRate
 
 class BondEngine:
     def __init__(self, db: Session, params: BondInputParams, calculation_date: date | None = None):

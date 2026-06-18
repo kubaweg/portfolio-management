@@ -2,23 +2,23 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from datetime import date
 
-from app import get_db
-from app.schemas.database.asset import Asset, Bond, AssetType
-from app.schemas.database.transaction import Transaction, TransactionType
-from app.portfolio.schemas.dto import DashboardMainPageInput, DashboardMainPageOutput
+from backend import get_db
+from backend.schemas.database.asset import Asset, Bond, AssetType
+from backend.schemas.database.transaction import Transaction, TransactionType
+from backend.portfolio.schemas.dto import DashboardMainPageInput, DashboardMainPageOutput
 
-from app.core.exchange.service import ExchangeEngine
-from app.core.exchange.schemas.dto import (
+from backend.core.exchange.service import ExchangeEngine
+from backend.core.exchange.schemas.dto import (
     DashboardExchangeResponse
 )
 
-from app.core.bonds.service import BondEngine
-from app.core.bonds.schemas.dto import (
+from backend.core.bonds.service import BondEngine
+from backend.core.bonds.schemas.dto import (
     BondInputParams, DashboardBondResponse, BondData, BondBaseData,
     map_frequency_to_months, resolve_early_redemption_type
 )
 
-from app.portfolio.transformer import DashboardTransformer
+from backend.portfolio.transformer import DashboardTransformer
 
 # Nowe routery - do produkcyjnego uruchomienia
 dashboard_router = APIRouter()

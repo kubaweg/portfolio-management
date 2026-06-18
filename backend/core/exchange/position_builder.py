@@ -1,13 +1,13 @@
 from typing import List
 from datetime import datetime
 
-from app.schemas.domain.transactions import (
+from backend.schemas.domain.transactions import (
     TickerTransactions,
     BuyTransaction,
     SellTransaction,
     InterestTransaction
 )
-from app.schemas.domain.positions import OpenPosition, ClosedPosition
+from backend.schemas.domain.positions import OpenPosition, ClosedPosition
 
 
 class PositionBuilderResult:

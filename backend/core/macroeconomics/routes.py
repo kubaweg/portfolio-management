@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import get_db
+from backend import get_db
 
-from app.schemas.database.macroeconomics import (
+from backend.schemas.database.macroeconomics import (
     Inflation, InterestRate, 
     InflationData, InflationDataPeriod,
     InterestRateData, InterestRateDataPeriod

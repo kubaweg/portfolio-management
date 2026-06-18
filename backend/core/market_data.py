@@ -2,12 +2,12 @@ import yfinance as yf
 from typing import Tuple, Optional, List
 from datetime import date, datetime, timedelta
 
-from app import SessionLocal
-from app.schemas.dto.charts import ChartDataPoint, VolumeDataPoint
-from app.schemas.database.asset import AssetType
-from app.core.bonds.service import BondEngine
-from app.core.bonds.schemas.dto import BondInputParams
-from app.schemas.database.asset import Bond
+from backend import SessionLocal
+from backend.schemas.dto.charts import ChartDataPoint, VolumeDataPoint
+from backend.schemas.database.asset import AssetType
+from backend.core.bonds.service import BondEngine
+from backend.core.bonds.schemas.dto import BondInputParams
+from backend.schemas.database.asset import Bond
 
 
 # BOND_PRICES_INPUT_FILES = [

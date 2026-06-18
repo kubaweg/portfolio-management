@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, Numeric, String, Date, DateTime, func
 from sqlalchemy.orm import relationship
 
-from app import Base
+from backend import Base
 from pydantic import BaseModel
 from datetime import date
 from typing import List

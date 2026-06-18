@@ -1,7 +1,7 @@
 # Nowy kod (Czyste SQLAlchemy dla FastAPI)
 from sqlalchemy import Column, Integer, Numeric, String, Enum, Boolean, Text, ForeignKey, Date
 from sqlalchemy.orm import relationship
-from app import Base # Importujemy naszą bazę
+from backend import Base # Importujemy naszą bazę
 
 from ..domain.assets import (
     AssetType, 

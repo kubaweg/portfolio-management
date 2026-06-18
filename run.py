@@ -1,7 +1,7 @@
-from app import app
+from backend import app
 
-from app.core.macroeconomics.sync import sync_inflation_data, sync_interest_rates
-from app.core.macroeconomics.fetch import get_cpi, get_ref
+from backend.core.macroeconomics.sync import sync_inflation_data, sync_interest_rates
+from backend.core.macroeconomics.fetch import get_cpi, get_ref
 
 import os
 
@@ -27,8 +27,8 @@ import os
 
 # Tworzenie tabel w bazie danych, jeśli jeszcze nie istnieją
 with app.app_context():
-    from app.schemas.database.asset import Asset
-    from app.schemas.database.transaction import Transaction
+    from backend.schemas.database.asset import Asset
+    from backend.schemas.database.transaction import Transaction
     db.create_all()
 
     # init_macro_data()

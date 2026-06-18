@@ -3,11 +3,11 @@ from datetime import date
 from pydantic import BaseModel
 from typing import Optional, List
 
-from app.schemas.domain.assets import (
+from backend.schemas.domain.assets import (
     Category1, Category2, AssetType
 )
 
-from app.schemas.domain.bonds import (
+from backend.schemas.domain.bonds import (
     CouponFrequency, InterestHandling
 )
 

@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Tuple, List
 
-from app.portfolio.schemas.dto import (
+from backend.portfolio.schemas.dto import (
     DashboardMainPageInput, DashboardMainPageOutput,
     DashboardSummaryData, DashboardAllocationChartsData, DashboardMainTableData, DashboardMainTableDetailsData,
     DashboardMainTableRowData, DashboardMainTableRowDetailsData,

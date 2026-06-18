@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import get_db
-from app.schemas.dto.add_transaction import AddTransaction
-from app.schemas.database.asset import Asset
-from app.schemas.database.transaction import Transaction
-from app.schemas.domain.transactions import TransactionType
+from backend import get_db
+from backend.schemas.dto.add_transaction import AddTransaction
+from backend.schemas.database.asset import Asset
+from backend.schemas.database.transaction import Transaction
+from backend.schemas.domain.transactions import TransactionType
 
 add_transaction_router = APIRouter()
 @add_transaction_router.post("/transactions/add")

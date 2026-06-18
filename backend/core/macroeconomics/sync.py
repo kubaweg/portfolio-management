@@ -1,7 +1,7 @@
 import pandas as pd
 
-from app import SessionLocal
-from app.schemas.database.macroeconomics import Inflation, InterestRate
+from backend import SessionLocal
+from backend.schemas.database.macroeconomics import Inflation, InterestRate
 
 # Zmień import parsowania na swój własny:
 from .fetch import get_cpi, get_ref 

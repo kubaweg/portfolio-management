@@ -30,15 +30,15 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from app.portfolio.routes import dashboard_router #, exchange_router, bond_router
+from backend.portfolio.routes import dashboard_router #, exchange_router, bond_router
 # from app.analysis.routes import ticker_history_router
-from app.assets.routes import enums_router, add_asset_router
+from backend.assets.routes import enums_router, add_asset_router
 
-from app.transactions.routes import list_assets_router, transaction_enums_router, add_transaction_router
+from backend.transactions.routes import list_assets_router, transaction_enums_router, add_transaction_router
 
-from app.core.macroeconomics.fetch import get_cpi, get_ref
-from app.core.macroeconomics.sync import sync_inflation_data, sync_interest_rates
-from app.core.macroeconomics.routes import get_macroeconomic_data_router
+from backend.core.macroeconomics.fetch import get_cpi, get_ref
+from backend.core.macroeconomics.sync import sync_inflation_data, sync_interest_rates
+from backend.core.macroeconomics.routes import get_macroeconomic_data_router
 
 # Uruchamiamy synchronizację danych makroekonomicznych
 rates_added = sync_interest_rates(get_ref())

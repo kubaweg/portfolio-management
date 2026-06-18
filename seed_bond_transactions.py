@@ -6,11 +6,11 @@ import os
 # 1. Konfiguracja ścieżek
 sys.path.append(os.getcwd())
 
-from app import SessionLocal
+from backend import SessionLocal
 
-from app.schemas.database.asset import Asset
-from app.schemas.database.transaction import Transaction
-from app.schemas.domain.transactions import TransactionType
+from backend.schemas.database.asset import Asset
+from backend.schemas.database.transaction import Transaction
+from backend.schemas.domain.transactions import TransactionType
 
 def finalize_bond_import(input_file):
     print(f"Rozpoczynam inteligentny import z pliku: {input_file}...")

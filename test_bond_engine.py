@@ -1,10 +1,10 @@
-from app import SessionLocal
+from backend import SessionLocal
 
-from app.core.bonds.service import BondEngine
-from app.core.bonds import (
+from backend.core.bonds.service import BondEngine
+from backend.core.bonds import (
     BondInputParams, EarlyRedemptionType, map_frequency_to_months, resolve_early_redemption_type
 )
-from app.schemas.database.asset import Bond
+from backend.schemas.database.asset import Bond
 
 from datetime import date, timedelta
 

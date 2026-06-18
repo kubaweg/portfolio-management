@@ -1,16 +1,16 @@
 from typing import List
 from datetime import datetime
 
-from app.schemas.database.asset import Asset, AssetType
-from app.schemas.mappers import TransactionMapper
-from app.schemas.groupers import group_by_ticker
-from app.core.fx_calculator import FXCalculator
-from app.core.exchange.position_builder import PositionBuilder
+from backend.schemas.database.asset import Asset, AssetType
+from backend.schemas.mappers import TransactionMapper
+from backend.schemas.groupers import group_by_ticker
+from backend.core.fx_calculator import FXCalculator
+from backend.core.exchange.position_builder import PositionBuilder
 
-from app.core.exchange.schemas.dto import (
+from backend.core.exchange.schemas.dto import (
     ExchangeBaseData, ExchangeSummary, ExchangeFXData, ExchangeCurrentData, ExchangeData
 )
-from app.core.market_data import MarketDataProvider
+from backend.core.market_data import MarketDataProvider
 
 import pandas as pd
 

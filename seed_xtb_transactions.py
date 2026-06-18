@@ -1,8 +1,8 @@
 import pandas as pd
-from app import db, create_app
-from app.schemas.database.asset import Asset
-from app.schemas.database.transaction import Transaction
-from app.schemas.domain.transactions import TransactionType
+from backend import db, create_app
+from backend.schemas.database.asset import Asset
+from backend.schemas.database.transaction import Transaction
+from backend.schemas.domain.transactions import TransactionType
 from decimal import Decimal
 
 def import_from_excel(file_path):

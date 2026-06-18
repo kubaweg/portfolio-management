@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from typing import List, Union, Any
 
-from app.core.bonds.schemas.dto import DashboardBondResponse
-from app.core.exchange.schemas.dto import DashboardExchangeResponse
+from backend.core.bonds.schemas.dto import DashboardBondResponse
+from backend.core.exchange.schemas.dto import DashboardExchangeResponse
 
 class DashboardMainPageInput(BaseModel):
 
