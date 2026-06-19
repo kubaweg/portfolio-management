@@ -18,7 +18,7 @@ def _npv_derivative(rate: float, amounts: np.ndarray, times: np.ndarray) -> floa
     # Pochodna z P / (1+r)^t wynosi -P * t * (1+r)^(-t-1)
     return np.sum(-amounts * times / ((1 + rate) ** (times + 1)))
 
-def calculate_xirr(amounts: List[float], dates: List[date], guess: float = 0.20) -> float:
+def calculate_xirr(amounts: List[float], dates: List[date], guess: float = 0.10) -> float:
     """
     Oblicza XIRR przy użyciu metody Newtona-Raphsona i surowego numpy.
     """
@@ -61,6 +61,7 @@ def calculate_xirr(amounts: List[float], dates: List[date], guess: float = 0.20)
         
     return rate # Jeśli nie zbiegło się, zwracamy ostatnią próbę
 
+# Model pod output
 class AnnualizedRoiOutput(BaseModel):
     roi_pa: float = Field(default=0.0, description='Stopa zwrotu w skali roku w walucie instrumentu')
     roi_pa_pln: float = Field(default=0.0, description='Stopa zwrotu w skali roku w PLN')

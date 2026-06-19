@@ -85,7 +85,7 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
             id: 'roi_currency',
             header: `ROI (${currency})`,
             cell: info => {
-                const roi = info.row.original.unrealized_profit / info.row.original.value_buy;
+                const roi = info.row.original.roi_unrealized
                 return <span className={roi >= 0 ? 'text-emerald-600' : 'text-rose-600'}>{formatPercent(roi)}</span>;
             },
             size: 100,
@@ -94,12 +94,9 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
             id: 'fx_impact',
             header: 'Wpływ FX',
             cell: info => {
-                const buyPln = info.row.original.value_buy * info.row.original.fx_buy;
-                const roiPln = info.row.original.unrealized_profit_pln / buyPln;
-                const roiCur = info.row.original.unrealized_profit / info.row.original.value_buy;
-                const delta = roiPln - roiCur;
-                return <span className={`font-medium ${delta >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {delta > 0 ? '+' : ''}{formatPercent(delta)}
+                const impact = info.row.original.fx_percentage_impact;
+                return <span className={`font-medium ${impact >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {impact > 0 ? '+' : ''}{formatPercent(impact)}
                 </span>;
             },
             size: 90,
@@ -114,18 +111,26 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
             },
             size: 140,
         }),
+        // openColumnHelper.display({
+        //     id: 'unrealized_profit_pln',
+        //     header: 'Zysk niezrealizowany (PLN)',
+        //     cell: info => {
+        //         const unrealizedProfit = info.row.original.unrealized_profit_pln;
+        //         return <span className="text-slate-700">{formatPLN(unrealizedProfit)}</span>;
+        //     },
+        //     size: 140,
+        // }),
         openColumnHelper.display({
             id: 'roi_pln',
             header: 'ROI (PLN)',
             cell: info => {
-                const buyPln = info.row.original.value_buy * info.row.original.fx_buy;
-                const roiPln = info.row.original.unrealized_profit_pln / buyPln;
+                const roiPln = info.row.original.roi_unrealized_pln
                 return <span className={`font-bold ${roiPln >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {roiPln > 0 ? '+' : ''}{formatPercent(roiPln)}
                 </span>;
             },
             size: 100,
-        }),
+        })
     ], [currency, totalQuantity, currentPrice]);
 
     const table = useReactTable({
@@ -133,7 +138,7 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
         columns,
         state: {
             sorting,
-            columnVisibility: { fx_buy: isForeign, fx_impact: isForeign },
+            columnVisibility: { fx_buy: isForeign, fx_impact: isForeign, roi_currency: isForeign },
             columnPinning: { left: ['date_buy', 'quantity'], right: ['current_value_pln', 'roi_pln'] }
         },
         onSortingChange: setSorting,
@@ -144,7 +149,7 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
     return (
         <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
             <table className="w-full text-left text-xs text-slate-600" style={{ minWidth: table.getTotalSize() }}>
-                <thead className="bg-slate-50 text-slate-500 uppercase text-[10px]">
+                <thead className="w-full bg-slate-50 text-slate-500 uppercase text-[10px]">
                     {table.getHeaderGroups().map(hg => (
                         <tr key={hg.id}>
                             {hg.headers.map(h => (
