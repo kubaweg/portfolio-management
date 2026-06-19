@@ -192,21 +192,24 @@ export default function PortfolioPage() {
                                     {/* 4. Renderowanie odpowiednich szczegółów */}
                                     {isExpanded && detailData && (
                                         <tr className="bg-slate-50">
-                                            <td colSpan={6}> {/* Ustaw colSpan na tyle, ile masz kolumn w tabeli głównej (tu: 6) */}
+                                            <td colSpan={6}>
                                                 {(detailData.details.data.base_data).type === 'ETF' && (
                                                     <ExchangeRowDetails
+                                                        // @ts-ignore   
                                                         exchangePayload={detailData.details.data}
                                                     />
                                                 )}
 
                                                 {(detailData.details.data.base_data as any).type === 'ETC' && (
                                                     <ExchangeRowDetails
+                                                        // @ts-ignore
                                                         exchangePayload={detailData.details.data as any}
                                                     />
                                                 )}
 
                                                 {(detailData.details.data.base_data as any).type === 'Obligacja' && (
                                                     <BondAssetDetails
+                                                        // @ts-ignore
                                                         bondPayload={detailData.details.data}
                                                     />
                                                 )}
