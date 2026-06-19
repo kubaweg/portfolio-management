@@ -33,21 +33,31 @@ class ExchangeSummary(BaseModel):
     avg_fx_rate: float = Field(ge=0)
 
     realized_profit: float
+    roi_realized: float
+    roi_realized_pa: float
+
     realized_profit_pln: float
+    roi_realized_pln: float
+    roi_realized_pa_pln: float
 
     unrealized_profit: float
+    roi_unrealized: float
+    roi_unrealized_pa: float
+
     unrealized_profit_pln: float
+    roi_unrealized_pln: float
+    roi_unrealized_pa_pln: float
 
     interest_profit: float = Field(ge=0)
     interest_profit_pln: float = Field(ge=0)
 
-    profit_loss: float
-    profit_loss_pln: float
+    total_profit: float
+    total_profit_pln: float
 
     roi: float
-    roi_pln: float
-
     roi_pa: float
+
+    roi_pln: float
     roi_pa_pln: float
 
 class ExchangeFXData(BaseModel):
@@ -55,7 +65,8 @@ class ExchangeFXData(BaseModel):
     currency: str
 
     fx_rate: float = Field(ge=0)
-    fx_effective_rate: float = Field(ge=0)
+    fx_effective_rate_buy: float = Field(ge=0)
+    fx_effective_rate_sell: float = Field(ge=0)
 
     fx_datetime: datetime
 

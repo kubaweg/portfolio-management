@@ -1,6 +1,6 @@
 from app import SessionLocal
 from app.schemas.database.asset import Asset
-from app.core.annualized_roi import calculate_annualized_roi
+from app.core.exchange.annualized_roi import calculate_annualized_roi
 from app.portfolio.routes import get_exchange_summary
 if __name__ == "__main__":
 
@@ -8,8 +8,17 @@ if __name__ == "__main__":
 
         summary = get_exchange_summary(db=db)
         
-        exchange_data = summary.data[1]
-        print('\n', exchange_data.open_positions, '\n')
+        exchange_data = summary.data[0]
+
+        roi = calculate_annualized_roi(exchange_data.open_positions, [])
+        print(f"Wszystkie pozycje otwarte | waluta: {roi.roi_pa} | pln: {roi.roi_pa_pln}\n")
+
+        roi = calculate_annualized_roi([], exchange_data.closed_positions)
+        print(f"Wszystkie pozycje zamknięte | waluta: {roi.roi_pa} | pln: {roi.roi_pa_pln}\n")
 
         roi = calculate_annualized_roi(exchange_data.open_positions, exchange_data.closed_positions)
-        print(roi['currency'], roi['pln'])
+        print(f"Wszystkie pozycje | waluta: {roi.roi_pa} | pln: {roi.roi_pa_pln}\n")
+
+        for i, pos in enumerate(exchange_data.open_positions):
+            roi = calculate_annualized_roi([pos], [])
+            print(f"Pozycja {i+1} | waluta: {roi.roi_pa} | pln: {roi.roi_pa_pln}")

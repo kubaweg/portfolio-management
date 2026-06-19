@@ -301,6 +301,7 @@ export const ExchangeRowDetails = ({ exchangePayload }: { exchangePayload: Excha
                         <DetailedRow label="Bieżący kurs FX" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate)} />
                         <DetailedRow label="Efektywny kurs FX (buy)" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate / 0.995)} />
                         <DetailedRow label="Efektywny kurs FX (sell)" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate / 1.005)} />
+                        <DetailedRow label="% różnicy vs średni kurs zakupu" value={formatPercent(exchangePayload.current_data.fx_data.fx_effective_rate_sell / exchangePayload.summary.avg_fx_rate - 1)} />
                     </MiniCard>
                 )}
 
@@ -308,13 +309,19 @@ export const ExchangeRowDetails = ({ exchangePayload }: { exchangePayload: Excha
                 <MiniCard title="Struktura Wyniku">
                     <DetailedRow label="Zysk zrealizowany" value={formatPLN(exchangePayload.summary.realized_profit_pln)} />
                     <DetailedRow label="Zysk niezrealizowany" value={formatPLN(exchangePayload.summary.unrealized_profit_pln)} />
-                    <DetailedRow label="Wynik całkowity" value={formatPLN(exchangePayload.summary.profit_loss_pln)} isBold />
+                    <DetailedRow label="Wynik całkowity" value={formatPLN(exchangePayload.summary.total_profit_pln)} isBold />
                 </MiniCard>
 
                 {/* 4. KAFELEK: Efektywność */}
                 <MiniCard title="Efektywność">
+                    {!isPLN && (
+                        <>
+                            <DetailedRow label={`ROI (${exchangePayload.base_data.currency})`} value={formatPercent(exchangePayload.summary.roi)} isBold />
+                            {/* <DetailedRow label={`ROI w skali roku (${exchangePayload.base_data.currency})`} value={formatPercent(exchangePayload.summary.roi_pa)} isBold /> */}
+                        </>
+                    )}
                     <DetailedRow label="ROI (PLN)" value={formatPercent(exchangePayload.summary.roi_pln)} isBold />
-                    <DetailedRow label="ROI w skali roku (PLN)" value={formatPercent(exchangePayload.summary.roi_pa)} />
+                    <DetailedRow label="ROI w skali roku (PLN)" value={formatPercent(exchangePayload.summary.roi_pa_pln)} />
                 </MiniCard>
 
             </div>

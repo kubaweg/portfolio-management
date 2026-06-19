@@ -1,7 +1,7 @@
 import numpy as np
 from datetime import date
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.schemas.domain.positions import OpenPosition, ClosedPosition
 
 class CashFlowInstance(BaseModel):
@@ -18,7 +18,7 @@ def _npv_derivative(rate: float, amounts: np.ndarray, times: np.ndarray) -> floa
     # Pochodna z P / (1+r)^t wynosi -P * t * (1+r)^(-t-1)
     return np.sum(-amounts * times / ((1 + rate) ** (times + 1)))
 
-def calculate_xirr(amounts: List[float], dates: List[date], guess: float = 0.1) -> float:
+def calculate_xirr(amounts: List[float], dates: List[date], guess: float = 0.20) -> float:
     """
     Oblicza XIRR przy użyciu metody Newtona-Raphsona i surowego numpy.
     """
@@ -41,17 +41,18 @@ def calculate_xirr(amounts: List[float], dates: List[date], guess: float = 0.1) 
     
     # Metoda Newtona
     rate = guess
-    max_iter = 100
+    max_iter = 30
     tolerance = 1e-7
     
     for _ in range(max_iter):
+
         f = _npv(rate, amounts, times)                      # type: ignore
         f_prime = _npv_derivative(rate, amounts, times)     # type: ignore
         
         if abs(f_prime) < 1e-10: # Unikamy dzielenia przez zero
             return 0.0
             
-        new_rate = rate - f / f_prime
+        new_rate = np.max([rate - f / f_prime, -0.9999])
         
         if abs(new_rate - rate) < tolerance:
             return new_rate
@@ -60,8 +61,11 @@ def calculate_xirr(amounts: List[float], dates: List[date], guess: float = 0.1) 
         
     return rate # Jeśli nie zbiegło się, zwracamy ostatnią próbę
 
+class AnnualizedRoiOutput(BaseModel):
+    roi_pa: float = Field(default=0.0, description='Stopa zwrotu w skali roku w walucie instrumentu')
+    roi_pa_pln: float = Field(default=0.0, description='Stopa zwrotu w skali roku w PLN')
 
-def calculate_annualized_roi(open_positions: List[OpenPosition], closed_positions: List[ClosedPosition]) -> dict[str, float]:
+def calculate_annualized_roi(open_positions: List[OpenPosition], closed_positions: List[ClosedPosition]) -> AnnualizedRoiOutput:
     """
     Główna funkcja wyciągająca dane z modeli i wywołująca XIRR.
     """
@@ -76,10 +80,10 @@ def calculate_annualized_roi(open_positions: List[OpenPosition], closed_position
     # Pozycje otwarte: zakup (-) i wycena bieżąca (+)
     for pos in open_positions:
         cash_flows.append(CashFlowInstance(date=pos.date_buy, value=-pos.value_buy, fx_rate=pos.fx_buy))
-        cash_flows.append(CashFlowInstance(date=today, value=pos.current_value, fx_rate=1.0)) # na razie, dopóki nie dodamy current_fx do OpenPosition
+        cash_flows.append(CashFlowInstance(date=today, value=pos.current_value, fx_rate=pos.fx_current)) # na razie, dopóki nie dodamy current_fx do OpenPosition
 
     if len(cash_flows) < 2:
-        return {'currency': 0.0, 'pln': 0.0}
+        return AnnualizedRoiOutput(roi_pa=0.0, roi_pa_pln=0.0)
 
     # Sortowanie chronologiczne
     cash_flows.sort(key=lambda cfi: cfi.date)
@@ -88,4 +92,7 @@ def calculate_annualized_roi(open_positions: List[OpenPosition], closed_position
     amounts = [cf.value for cf in cash_flows]
     amounts_pln = [cf.value * cf.fx_rate for cf in cash_flows]
     
-    return {'currency': calculate_xirr(amounts, dates), 'pln': calculate_xirr(amounts_pln, dates)}
+    return AnnualizedRoiOutput(
+        roi_pa=calculate_xirr(amounts, dates), 
+        roi_pa_pln=calculate_xirr(amounts_pln, dates)
+    )

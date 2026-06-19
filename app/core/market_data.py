@@ -39,7 +39,7 @@ class MarketDataProvider:
     def get_asset_price(ticker_symbol: str, asset_type: AssetType, fallback_price: float = 0.0, params: BondInputParams | None = None) -> float:
         """Pobiera aktualną cenę instrumentu z Yahoo Finance."""
         if asset_type == AssetType.BOND:
-            return _get_current_bond_price(ticker=ticker_symbol, params=params)
+            return _get_current_bond_price(ticker=ticker_symbol, params=params) # type: ignore
 
         try:
             ticker_yf = yf.Ticker(ticker_symbol)
@@ -128,7 +128,7 @@ class MarketDataProvider:
             for timestamp, row in hist.iterrows():
                 # Czyścimy dane: resetujemy czas do samej daty i zaokrąglamy cenę
                 chart_data.append(ChartDataPoint(
-                    date=timestamp.strftime('%Y-%m-%d'),
+                    date=timestamp.strftime('%Y-%m-%d'),    # type: ignore
                     open=round(float(row['Open']), 4),
                     high=round(float(row['High']), 4),
                     low=round(float(row['Low']), 4),
@@ -136,7 +136,7 @@ class MarketDataProvider:
                 ))
 
                 volume_data.append(VolumeDataPoint(
-                    date=timestamp.strftime('%Y-%m-%d'),
+                    date=timestamp.strftime('%Y-%m-%d'),    # type: ignore
                     volume=int(row['Volume'])
                 ))
                 

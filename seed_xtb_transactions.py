@@ -1,13 +1,13 @@
 import pandas as pd
-from app import db, create_app
+from app import SessionLocal
 from app.schemas.database.asset import Asset
 from app.schemas.database.transaction import Transaction
 from app.schemas.domain.transactions import TransactionType
 from decimal import Decimal
 
 def import_from_excel(file_path):
-    app = create_app()
-    with app.app_context():
+
+    with SessionLocal() as db:
         
         added_count = 0
         already_exists_count = 0
@@ -22,7 +22,7 @@ def import_from_excel(file_path):
         for index, row in df.iterrows():
             ticker = str(row['ticker']).strip()
             
-            asset = Asset.query.filter_by(ticker=ticker).first()
+            asset = db.query(Asset).filter_by(ticker=ticker).first()
             if not asset:
                 print(f"BŁĄD: Nie znaleziono '{ticker}' (wiersz {index}).")
                 skipped_no_asset_count += 1
@@ -39,7 +39,7 @@ def import_from_excel(file_path):
                 
                 # --- KLUCZOWY MOMENT: Sprawdzenie duplikatu ---
                 # Szukamy czy identyczna transakcja już jest w bazie
-                existing = Transaction.query.filter_by(
+                existing = db.query(Transaction).filter_by(
                     asset_id=asset.id,
                     type=tx_type,
                     timestamp=ts_value,
@@ -64,14 +64,14 @@ def import_from_excel(file_path):
                     notes=str(row['notes']) if pd.notna(row['notes']) else None
                 )
 
-                db.session.add(new_tx)
+                db.add(new_tx)
                 added_count += 1
                 
             except Exception as e:
                 print(f"BŁĄD w wierszu {index} ({ticker}): {e}")
                 skipped_no_asset_count += 1
 
-        db.session.commit()
+        db.commit()
         print("-" * 30)
         print(f"PODSUMOWANIE IMPORTU:")
         print(f"✅ Dodano nowych: {added_count}")

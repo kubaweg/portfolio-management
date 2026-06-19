@@ -64,7 +64,7 @@ class DashboardAllocationChartsData(BaseModel):
 class DashboardMainTableRowData(BaseModel):
     ticker: str
     name: str
-    quantity: str
+    quantity: float
     current_value_pln: float
     roi_pln: float
     total_profit_gross_pln: float

@@ -50,10 +50,10 @@ class DashboardTransformer:
         return DashboardMainTableRowData(
             ticker=item.base_data.ticker,
             name=item.base_data.name,
-            quantity=str(item.summary.quantity),
+            quantity=item.summary.quantity,
             current_value_pln=item.current_data.value_pln,
             roi_pln=item.summary.roi_pln,
-            total_profit_gross_pln=item.summary.profit_loss_pln
+            total_profit_gross_pln=item.summary.total_profit_pln
         )
 
     def _map_bond_to_row(self, item) -> DashboardMainTableRowData:
@@ -61,7 +61,7 @@ class DashboardTransformer:
         return DashboardMainTableRowData(
             ticker=item.base_data.ticker, # lub inna identyfikacja obligacji
             name=item.base_data.name,
-            quantity=str(item.summary.quantity),
+            quantity=item.summary.quantity,
             current_value_pln=item.summary.current_value,
             roi_pln=item.summary.roi_net,
             total_profit_gross_pln = item.summary.realized_profit_pln_gross + item.summary.unrealized_profit_pln_gross
@@ -96,7 +96,7 @@ class DashboardTransformer:
             for item in input_data.exchange_response.data
         )
         exch_total_gross = sum(
-            item.summary.profit_loss_pln 
+            item.summary.total_profit_pln 
             for item in input_data.exchange_response.data
         )
         
