@@ -9,8 +9,10 @@ from dateutil.relativedelta import relativedelta
 # Zakładam takie ścieżki na podstawie Twoich informacji
 from app.core.bonds.schemas.dto import (
     BondInputParams, BondCurrentData, BondInterestPeriod, BondSummary, PeriodStatus, 
-    EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics
+    EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics, BondEarlyRedemption
 )
+
+from app.schemas.domain.positions import OpenPosition, ClosedPosition
 from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling
 from app.schemas.database.macroeconomics import Inflation, InterestRate
 
@@ -20,9 +22,14 @@ class BondEngine:
         self.TAX_RATE = 0.19
         self.params = params
         self.calculation_date = calculation_date or date.today()
-        self.periods: List[BondInterestPeriod] = []
+
         self.summary: BondSummary | None = None
         self.current_data: BondCurrentData | None = None
+        self.periods: List[BondInterestPeriod] = []
+        self.open_positions: List[OpenPosition] = []
+        self.closed_positions: List[ClosedPosition] = []
+        self.early_redemptions: List[BondEarlyRedemption]
+
 
         # Mapowanie stringów na liczbę okresów w roku (frequency)
         self.FREQUENCY_MAPPING = {
@@ -402,125 +409,7 @@ class BondEngine:
             self.periods.append(period)
 
         self._calculate_financials()
-        self._build_summary()
 
-    def _build_summary(self):
-        """
-        Agreguje dane z okresów odsetkowych i buduje główne modele podsumowujące:
-        self.summary (BondSummary) oraz self.current_data (BondCurrentData).
-        """
-        if not self.periods:
-            return
-
-        total_invested = self.params.nominal_value * self.params.quantity
-        
-        # 1. Znalezienie aktywnego okresu i wyliczenie bieżącego zysku
-        active_period = None
-        for p in self.periods:
-            if p.status == PeriodStatus.CURRENT:
-                active_period = p
-                break
-
-        # Odsetki narosłe TYLKO w trwającym (bieżącym) okresie do dnia obliczeń (ACT/ACT)
-        current_accrued_gross_per_bond = 0.0
-        if active_period:
-            current_accrued_gross_per_bond = self._calculate_act_act_interest_per_bond(
-                base_capital_per_bond=active_period.base_capital_per_bond,
-                rate=active_period.interest_rate,
-                start_date=active_period.start_date,
-                end_date=self.calculation_date
-            )
-            # Aktualizujemy model okresu o te dane w locie, żeby frontend miał do nich dostęp
-            active_period.accrued_interest_to_date = round(current_accrued_gross_per_bond * self.params.quantity, 2)
-            active_period.days_elapsed = (self.calculation_date - active_period.start_date).days
-
-        # 2. Kapitał pracujący (Baza bieżącego okresu + odsetki ACT/ACT do dzisiaj)
-        base_working_capital_per_bond = active_period.base_capital_per_bond if active_period else self.periods[-1].ending_capital_per_bond
-        current_value_per_bond = base_working_capital_per_bond + current_accrued_gross_per_bond
-        current_value = round(current_value_per_bond * self.params.quantity, 2)
-
-        # 3. Zrealizowane Zyski (Tylko z wypłaconych kuponów, nie kapitalizowanych)
-        realized_profit_gross = sum(
-            p.gross_interest for p in self.periods 
-            if p.status == PeriodStatus.PAST and not p.is_capitalized
-        )
-        realized_profit_net = round(max(0.0, realized_profit_gross) * (1 - self.TAX_RATE), 2)
-
-        # 4. Niezrealizowane Zyski (Skapitalizowane odsetki z przeszłości + bieżące narosłe)
-        unrealized_profit_gross = (current_value - total_invested)
-        unrealized_profit_net = round(max(0.0, unrealized_profit_gross) * (1 - self.TAX_RATE), 2)
-
-        # Całkowity zysk netto do dziś (zrealizowany + to co urośnie przy przedwczesnym wyjściu/wykupie)
-        total_profit_net = realized_profit_net + unrealized_profit_net
-
-        # 5. Parametry bieżące
-        current_interest_rate = active_period.interest_rate if active_period else self.periods[-1].interest_rate
-        days_total_investment = (self.calculation_date - self.params.issue_date).days
-
-        # 6. Kalkulacja bazowych wskaźników ROI (Net)
-        roi_net = (total_profit_net / total_invested) if total_invested > 0 else 0.0
-        roi_realized_net = (realized_profit_net / total_invested) if total_invested > 0 else 0.0
-        roi_unrealized_net = (unrealized_profit_net / total_invested) if total_invested > 0 else 0.0
-
-        # 7. Odblokowanie i wyliczenie wskaźników rocznych (p.a.)
-        if days_total_investment > 0:
-            roi_realized_pa_net = roi_realized_net * 365 / days_total_investment
-            roi_unrealized_pa_net = roi_unrealized_net * 365 / days_total_investment
-            roi_pa_net = roi_net * 365 / days_total_investment
-        else:
-            roi_realized_pa_net = 0.0
-            roi_unrealized_pa_net = 0.0
-            roi_pa_net = 0.0
-
-        # 8. Postęp i Zapadalność
-        days_to_maturity = max(0, (self.params.maturity_date - self.calculation_date).days)
-        total_life_days = (self.params.maturity_date - self.params.issue_date).days
-        overall_progress_percent = min(1.0, max(0.0, days_total_investment / total_life_days)) if total_life_days > 0 else 1.0
-
-        # -----------------------------------------------------------------
-        # INICJALIZACJA NOWYCH MODELI DTO
-        # -----------------------------------------------------------------
-
-        # Budowanie komponentu bieżącej wyceny (odchudzony odpowiednik giełdowego CurrentData)
-        # Obsługuje bezpieczną konwersję daty kalkulacji na pełny obiekt datetime
-        price_datetime = (
-            self.calculation_date 
-            if isinstance(self.calculation_date, datetime) 
-            else datetime.combine(self.calculation_date, time.min)
-        )
-
-        self.current_data = BondCurrentData(
-            price=round(current_value_per_bond, 4),
-            interest_rate=active_period.interest_rate if active_period else 0.0,
-            value_pln=current_value,
-            price_datetime=price_datetime
-        )
-
-        # Budowanie odchudzonego, zunifikowanego BondSummary
-        self.summary = BondSummary(
-            quantity=self.params.quantity,
-            total_invested=self.params.quantity * self.params.nominal_value,
-
-            realized_profit_gross=round(realized_profit_gross, 2),
-            realized_profit_net=realized_profit_net,
-            roi_realized_net=round(roi_realized_net, 4),
-            roi_realized_pa_net=round(roi_realized_pa_net, 4),
-            
-            unrealized_profit_gross=round(unrealized_profit_gross, 2),
-            unrealized_profit_net=unrealized_profit_net,
-            roi_unrealized_net=round(roi_unrealized_net, 4),
-            roi_unrealized_pa_net=round(roi_unrealized_pa_net, 4),
-            
-            # Kluczowe dla obligacji: wypłacone już fizycznie kupony w ujęciu netto (odpowiednik interest_profit z Exchange)
-            interest_profit_net=realized_profit_net,
-            
-            total_profit_net=total_profit_net,
-            roi_net=round(roi_net, 4),
-            roi_pa_net=round(roi_pa_net, 4),
-            
-            days_to_maturity=days_to_maturity,
-            overall_progress_percent=round(overall_progress_percent, 4)
-        )
 
     def get_summary(self) -> BondSummary:
         """Zwraca gotowy model podsumowania portfela obligacji."""
