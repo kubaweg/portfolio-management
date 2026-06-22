@@ -281,7 +281,7 @@ export function BondAssetDetails({ bondPayload }: { bondPayload: BondData }) {
                         <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-center">
                             <span className="text-slate-400 block mb-1">Oprocentowanie (stałe):</span>
                             <span className="font-bold text-lg text-slate-800">
-                                {formatPercent(bondPayload.summary.current_interest_rate)}
+                                {formatPercent(bondPayload.current_data.interest_rate)}
                             </span>
                         </div>
                     ) : (
@@ -300,7 +300,7 @@ export function BondAssetDetails({ bondPayload }: { bondPayload: BondData }) {
                                 </span>
                                 <div className="flex flex-col gap-1.5">
                                     <span className="font-bold text-xl text-slate-800">
-                                        {formatPercent(bondPayload.summary.current_interest_rate)} <span className="text-base font-medium text-slate-600">
+                                        {formatPercent(bondPayload.current_data.interest_rate)} <span className="text-base font-medium text-slate-600">
                                             = {formatPercent(currentBenchmarkValue)} <span className="text-sm font-medium text-slate-600">(baza)</span> + {formatPercent(bondPayload.base_data.margin)} <span className="text-sm font-medium text-slate-600">(marża)</span>
                                         </span>
                                     </span>
@@ -321,14 +321,14 @@ export function BondAssetDetails({ bondPayload }: { bondPayload: BondData }) {
                     <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm col-span-2">
                         <span className="text-emerald-700 block mb-1 font-medium">Zysk zrealizowany:</span>
                         <span className="text-lg font-bold text-emerald-800">
-                            {formatPLN(bondPayload.summary.realized_profit_pln_gross)}
+                            {formatPLN(bondPayload.summary.realized_profit_gross)}
                         </span>
                     </div>
 
                     <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm col-span-2">
                         <span className="text-emerald-700 block mb-1 font-medium">Narosłe odsetki (Niezrealizowane):</span>
                         <span className="text-lg font-bold text-emerald-800">
-                            {formatPLN(bondPayload.summary.current_value - bondPayload.summary.total_invested)}
+                            {formatPLN(bondPayload.summary.unrealized_profit_gross)}
                         </span>
                     </div>
                 </div>

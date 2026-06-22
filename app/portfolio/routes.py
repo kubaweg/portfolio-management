@@ -104,8 +104,14 @@ def get_bonds_summary(db: Session) -> DashboardBondResponse:
             engine.build_periods()
             response.data.append(BondData(
                 base_data=base_data,
+                current_data=engine.get_current_data(),
                 summary=engine.get_summary(),
-                periods=engine.get_all_periods()
+                periods=engine.get_all_periods(),
+
+                open_positions=[],
+                closed_positions=[],
+
+                early_redemptions=[]
             ))
 
     return response

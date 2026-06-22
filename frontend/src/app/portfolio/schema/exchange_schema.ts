@@ -1,46 +1,4 @@
-export interface OpenPosition {
-    ticker: string;
-    quantity: number;
-    date_buy: string;
-
-    value_buy: number;
-    current_value: number;
-
-    fx_buy: number;
-    fx_current: number;
-    fx_percentage_impact: number;
-
-    unrealized_profit: number;
-    roi_unrealized: number;
-    roi_unrealized_pa: number;
-
-    unrealized_profit_pln: number;
-    roi_unrealized_pln: number;
-    roi_unrealized_pa_pln: number;
-}
-
-export interface ClosedPosition {
-    ticker: string;
-    quantity: number;
-
-    date_buy: string;
-    date_sell: string;
-
-    value_buy: number;
-    value_sell: number;
-
-    fx_buy: number;
-    fx_sell: number;
-    fx_percentage_impact: number;
-
-    realized_profit: number;
-    roi_realized: number;
-    roi_realized_pa: number;
-
-    realized_profit_pln: number;
-    roi_realized_pln: number;
-    roi_realized_pa_pln: number;
-}
+import { OpenPosition, ClosedPosition } from "./main_table_schema";
 
 export interface ExchangeBaseData {
     ticker: string;

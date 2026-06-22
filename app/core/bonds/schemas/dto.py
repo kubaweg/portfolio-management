@@ -1,6 +1,6 @@
 from enum import Enum
-from datetime import date
-from pydantic import BaseModel
+from datetime import date, datetime
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 from app.schemas.domain.assets import (
@@ -9,6 +9,10 @@ from app.schemas.domain.assets import (
 
 from app.schemas.domain.bonds import (
     CouponFrequency, InterestHandling
+)
+
+from app.schemas.domain.positions import (
+    OpenPosition, ClosedPosition
 )
 
 class PeriodStatus(Enum):
@@ -44,26 +48,39 @@ class EarlyRedemptionSimulation(BaseModel):
     per_bond: PerBondRedemptionMetrics
     total: TotalRedemptionMetrics
 
+class BondEarlyRedemption(BaseModel):
+    # Data operacji przedterminowego wykupu
+    redemption_date: date
+    
+    # Liczba sztuk (obligacji) podlegających wycofaniu
+    quantity: float = Field(ge=0.0)
+    
+    # Metoda naliczania kary: używamy istniejącego już u Ciebie enuma EarlyRedemptionType
+    # przyjmującego wartości odpowiadające m.in. FORFEIT_INTEREST lub FEE
+    penalty_method: EarlyRedemptionType
+    
+    # Wysokość kary potrącanej z odsetek za 1 sztukę obligacji (np. 0.70 PLN dla COI lub 2.00 PLN dla EDO)
+    penalty_per_unit: float = Field(ge=0.0)
 
 #############################################
 # Modele do obsługi standardowego outputu z silnika obligacji
 
 class BondInputParams(BaseModel):
 
-    quantity: float
+    quantity: float = Field(ge=0.0)
 
     retail_series_type: str
     issue_date: date
     maturity_date: date
-    nominal_value: float
+    nominal_value: float = Field(ge=0.0)
     interest_handling: str
     coupon_frequency: int
-    initial_rate: float
+    initial_rate: float = Field(ge=0.0)
     is_indexed: bool
-    margin: float
+    margin: float = Field(ge=0.0)
     benchmark: Optional[str]
     early_redemption_type: EarlyRedemptionType
-    early_redemption_penalty: float
+    early_redemption_penalty: float = Field(ge=0.0)
 
 class BondBaseData(BaseModel):
 
@@ -74,57 +91,80 @@ class BondBaseData(BaseModel):
     type: AssetType
     issue_date: date
     maturity_date: date
-    nominal_value: float
+    nominal_value: float = Field(ge=0.0)
     interest_handling: InterestHandling
     coupon_frequency: CouponFrequency
-    initial_rate: float
+    initial_rate: float = Field(ge=0.0)
     is_indexed: bool
-    margin: float
+    margin: float = Field(ge=0.0)
     benchmark: Optional[str]
     early_redemption_type: EarlyRedemptionType
-    early_redemption_penalty: float
+    early_redemption_penalty: float = Field(ge=0.0)
+
+class BondCurrentData(BaseModel):
+    # Bieżąca wycena jednej sztuki obligacji (nominał + narosłe odsetki)
+    price: float = Field(ge=0)
+    interest_rate: float = Field(ge=0.0, default=0.0)
+
+    # Całkowita bieżąca wartość posiadanego pakietu (quantity * price)
+    value_pln: float = Field(ge=0)
+
+    # Moment przeliczenia wyceny
+    price_datetime: datetime
 
 class BondInterestPeriod(BaseModel):
     period_number: int
     start_date: date
     end_date: date
     status: PeriodStatus
-    base_capital: float
-    base_capital_per_bond: float
-    interest_rate: float
+    base_capital: float = Field(ge=0)
+    base_capital_per_bond: float = Field(ge=0)
+    interest_rate: float = Field(ge=0)
     is_rate_estimated: bool
-    benchmark_value: float
-    margin: float
-    gross_interest: float
-    gross_interest_per_bond: float
+    benchmark_value: float = Field(ge=0)
+    margin: float = Field(ge=0, default=0.0)
+    gross_interest: float = Field(ge=0)
+    gross_interest_per_bond: float = Field(ge=0)
     is_capitalized: bool
-    ending_capital: float
-    ending_capital_per_bond: float
+    ending_capital: float = Field(ge=0)
+    ending_capital_per_bond: float = Field(ge=0)
     days_elapsed: Optional[int]
     days_total: int
-    accrued_interest_to_date: float
+    accrued_interest_to_date: float = Field(ge=0)
 
-class BondAssetSummary(BaseModel):
-    quantity: float
-    total_invested: float
-    current_working_capital: float
-    realized_profit_pln_gross: float
-    realized_profit_pln_net: float
-    unrealized_profit_pln_gross: float
-    unrealized_profit_pln_net: float
-    current_value: float
-    current_interest_rate: float
-    roi_gross: float
+class BondSummary(BaseModel):
+    quantity: float = Field(ge=0)
+    total_invested: float = Field(ge=0)
+    
+    realized_profit_gross: float
+    realized_profit_net: float
+    roi_realized_net: float
+    roi_realized_pa_net: float
+    
+    unrealized_profit_gross: float
+    unrealized_profit_net: float
+    roi_unrealized_net: float
+    roi_unrealized_pa_net: float
+    
+    interest_profit_net: float = Field(ge=0)
+    
+    total_profit_net: float
     roi_net: float
-    annualized_roi_net: float
+    roi_pa_net: float
+    
     days_to_maturity: int
     overall_progress_percent: float
 
 class BondData(BaseModel):
     base_data: BondBaseData
-    summary: BondAssetSummary
+    current_data: BondCurrentData
+    summary: BondSummary
     periods: List[BondInterestPeriod]
 
+    open_positions: List[OpenPosition]
+    closed_positions: List[ClosedPosition]
+
+    early_redemptions: List[BondEarlyRedemption]
 
 #############################################
 

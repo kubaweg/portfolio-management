@@ -8,6 +8,9 @@ from app.portfolio.schemas.dto import (
     RowDetailsExchange, RowDetailsBond
 )
 
+from app.core.exchange.schemas.dto import ExchangeData
+from app.core.bonds.schemas.dto import BondData
+
 
 class DashboardTransformer:
     def build_dashboard(self, input_data: DashboardMainPageInput) -> DashboardMainPageOutput:
@@ -45,7 +48,7 @@ class DashboardTransformer:
 
         return table_rows, details_rows
 
-    def _map_exchange_to_row(self, item) -> DashboardMainTableRowData:
+    def _map_exchange_to_row(self, item: ExchangeData) -> DashboardMainTableRowData:
         """Adapter: ExchangeData -> DashboardMainTableRowData"""
         return DashboardMainTableRowData(
             ticker=item.base_data.ticker,
@@ -56,15 +59,15 @@ class DashboardTransformer:
             total_profit_gross_pln=item.summary.total_profit_pln
         )
 
-    def _map_bond_to_row(self, item) -> DashboardMainTableRowData:
+    def _map_bond_to_row(self, item: BondData) -> DashboardMainTableRowData:
         """Adapter: BondData -> DashboardMainTableRowData"""
         return DashboardMainTableRowData(
             ticker=item.base_data.ticker, # lub inna identyfikacja obligacji
             name=item.base_data.name,
             quantity=item.summary.quantity,
-            current_value_pln=item.summary.current_value,
+            current_value_pln=item.current_data.value_pln,
             roi_pln=item.summary.roi_net,
-            total_profit_gross_pln = item.summary.realized_profit_pln_gross + item.summary.unrealized_profit_pln_gross
+            total_profit_gross_pln = item.summary.realized_profit_gross + item.summary.unrealized_profit_gross
         )
 
     def _calculate_summary(self, input_data) -> DashboardSummaryData:
@@ -109,25 +112,25 @@ class DashboardTransformer:
         # 2. Agregacja z Bond (Obligacje skarbowe)
         # =========================================================================
         bond_invested = sum(
-            item.summary.total_invested 
+            item.summary.total_invested
             for item in input_data.bond_response.data
         )
         bond_current = sum(
-            item.summary.current_value 
+            item.current_data.value_pln 
             for item in input_data.bond_response.data
         )
-        # Bieżąca wartość + zrealizowane już kupony odsetkowe
+        # Bieżąca wartość + zrealizowane już kupony odsetkowe (brutto)
         bond_current_with_interest = sum(
-            item.summary.current_value + item.summary.realized_profit_pln_gross 
+            item.current_data.value_pln + item.summary.realized_profit_gross 
             for item in input_data.bond_response.data
         )
         
         bond_unrealized_gross = sum(
-            item.summary.unrealized_profit_pln_gross 
+            item.summary.unrealized_profit_gross 
             for item in input_data.bond_response.data
         )
         bond_realized_gross = sum(
-            item.summary.realized_profit_pln_gross 
+            item.summary.realized_profit_gross 
             for item in input_data.bond_response.data
         )
         # Łączny zysk brutto dla obligacji (unrealized + realized)
@@ -221,7 +224,6 @@ class DashboardTransformer:
         
         combined_assets = []
         
-        # ... (kod zbierający combined_assets pozostaje bez zmian) ...
         for e in input_data.exchange_response.data:
             combined_assets.append({
                 "invested": e.summary.avg_price_pln * e.summary.quantity,
@@ -235,7 +237,7 @@ class DashboardTransformer:
         for b in input_data.bond_response.data:
             combined_assets.append({
                 "invested": b.summary.total_invested,
-                "current": b.summary.current_value,
+                "current": b.current_data.value_pln,
                 "type": b.base_data.type,
                 "category2": b.base_data.category2,
                 "name": b.base_data.name,

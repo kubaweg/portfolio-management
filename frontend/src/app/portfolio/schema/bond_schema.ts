@@ -1,5 +1,14 @@
+import { OpenPosition, ClosedPosition } from "./main_table_schema";
+
 export type PeriodStatus = 'PAST' | 'CURRENT' | 'FUTURE';
 export type EarlyRedemptionType = 'FORFEIT_INTEREST' | 'FEE';
+
+export interface BondEarlyRedemption {
+    redemption_date: string; // Format 'YYYY-MM-DD'
+    quantity: number;
+    penalty_method: EarlyRedemptionType;
+    penalty_per_unit: number;
+}
 
 export interface BondBaseData {
     ticker: string;
@@ -41,26 +50,50 @@ export interface BondInterestPeriod {
     accrued_interest_to_date: number;
 }
 
-export interface BondAssetSummary {
+// NOWY MODEL: Wycena bieżąca (zgodna z silnikiem)
+export interface BondCurrentData {
+    price: number;
+    interest_rate: number;
+    value_pln: number;
+    price_datetime: string;
+}
+
+// ZAKTUALIZOWANY MODEL: Podsumowanie (zastępuje BondAssetSummary)
+export interface BondSummary {
     quantity: number;
     total_invested: number;
-    current_working_capital: number;
-    realized_profit_pln_gross: number;
-    realized_profit_pln_net: number;
-    unrealized_profit_pln_gross: number;
-    unrealized_profit_pln_net: number;
-    current_value: number;
-    current_interest_rate: number;
+
+    realized_profit_gross: number;
+    realized_profit_net: number;
+    roi_realized_net: number;
+    roi_realized_pa_net: number;
+
+    unrealized_profit_gross: number;
+    unrealized_profit_net: number;
+    roi_unrealized_net: number;
+    roi_unrealized_pa_net: number;
+
+    interest_profit_net: number;
+    total_profit_net: number;
+
     roi_net: number;
-    annualized_roi_net: number;
+    roi_pa_net: number;
+
     days_to_maturity: number;
     overall_progress_percent: number;
 }
 
+// ZAKTUALIZOWANY MODEL GŁÓWNY
 export interface BondData {
     base_data: BondBaseData;
-    summary: BondAssetSummary;
+    summary: BondSummary;
+    current_data: BondCurrentData;
     periods: BondInterestPeriod[];
+
+    // Listy obsługujące transakcje (zgodne z orkiestratorem na backendzie)
+    open_positions: OpenPosition[];       // TODO: Otypować zgodnie z modelem Position
+    closed_positions: ClosedPosition[];     // TODO: Otypować zgodnie z modelem Position
+    early_redemptions: BondEarlyRedemption[];    // TODO: Otypować zgodnie z modelem EarlyRedemption
 }
 
 export interface DashboardBondResponse {
