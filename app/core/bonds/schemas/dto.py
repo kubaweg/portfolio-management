@@ -107,6 +107,7 @@ class BondCurrentData(BaseModel):
     interest_rate: float = Field(ge=0.0, default=0.0)
 
     # Całkowita bieżąca wartość posiadanego pakietu (quantity * price)
+    interest_pln: float = Field(ge=0)
     value_pln: float = Field(ge=0)
 
     # Moment przeliczenia wyceny

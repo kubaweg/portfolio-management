@@ -102,14 +102,21 @@ def get_bonds_summary(db: Session) -> DashboardBondResponse:
         engine = BondEngine(db=db, params=params, calculation_date=calc_date)
         if params.quantity > 0: 
             engine.build_periods()
+            engine.build_positions()
+            op, cp = engine.get_positions()
+
+            engine.build_current_data()
+            engine.build_summary()
+            
+            print(f'summary: {engine.get_summary()}')
             response.data.append(BondData(
                 base_data=base_data,
                 current_data=engine.get_current_data(),
                 summary=engine.get_summary(),
                 periods=engine.get_all_periods(),
 
-                open_positions=[],
-                closed_positions=[],
+                open_positions=op,
+                closed_positions=cp,
 
                 early_redemptions=[]
             ))
