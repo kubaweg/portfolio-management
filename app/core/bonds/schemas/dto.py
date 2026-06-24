@@ -24,6 +24,12 @@ class EarlyRedemptionType(Enum):
     FORFEIT_INTEREST = "FORFEIT_INTEREST"
     FEE = "FEE"
 
+class BondCashFlowType(Enum):
+    BUY = "BUY"
+    INTEREST = "INTEREST"
+    EARLY_REDEMPTION = "EARLY_REDEMPTION"
+    BOND_EXCHANGE = "BOND_EXCHANGE"
+
 
 #############################################
 # Modele do obsługi przedterminowego wykupu
@@ -65,23 +71,6 @@ class BondEarlyRedemption(BaseModel):
 #############################################
 # Modele do obsługi standardowego outputu z silnika obligacji
 
-class BondInputParams(BaseModel):
-
-    quantity: float = Field(ge=0.0)
-
-    retail_series_type: str
-    issue_date: date
-    maturity_date: date
-    nominal_value: float = Field(ge=0.0)
-    interest_handling: str
-    coupon_frequency: int
-    initial_rate: float = Field(ge=0.0)
-    is_indexed: bool
-    margin: float = Field(ge=0.0)
-    benchmark: Optional[str]
-    early_redemption_type: EarlyRedemptionType
-    early_redemption_penalty: float = Field(ge=0.0)
-
 class BondBaseData(BaseModel):
 
     ticker: str
@@ -113,25 +102,40 @@ class BondCurrentData(BaseModel):
     # Moment przeliczenia wyceny
     price_datetime: datetime
 
+class BondCashFlowInstance(BaseModel):
+    type: BondCashFlowType
+    date: date
+    value: float
+
 class BondInterestPeriod(BaseModel):
     period_number: int
+
     start_date: date
     end_date: date
+
     status: PeriodStatus
-    base_capital: float = Field(ge=0)
-    base_capital_per_bond: float = Field(ge=0)
+    days_elapsed: Optional[int]
+    days_total: int
+
     interest_rate: float = Field(ge=0)
+
     is_rate_estimated: bool
     benchmark_value: float = Field(ge=0)
     margin: float = Field(ge=0, default=0.0)
+    
+    is_capitalized: bool
+
+    base_capital: float = Field(ge=0)
+    base_capital_per_bond: float = Field(ge=0)
+
     gross_interest: float = Field(ge=0)
     gross_interest_per_bond: float = Field(ge=0)
-    is_capitalized: bool
+
     ending_capital: float = Field(ge=0)
     ending_capital_per_bond: float = Field(ge=0)
-    days_elapsed: Optional[int]
-    days_total: int
+
     accrued_interest_to_date: float = Field(ge=0)
+    accrued_interest_to_date_per_bond: float = Field(ge=0)
 
 class BondSummary(BaseModel):
     quantity: float = Field(ge=0)
@@ -192,13 +196,13 @@ def resolve_early_redemption_type(retail_series_type: str) -> EarlyRedemptionTyp
     # obowiązuje stała opłata (FEE) określona w liście emisyjnym (np. 1 zł lub 2 zł)
     return EarlyRedemptionType.FEE
 
-def map_frequency_to_months(freq_enum_value: str) -> int:
+def map_frequency_to_months(coupon_frequency: CouponFrequency) -> int:
     """Zmienia string z Enuma na liczbę miesięcy dla funkcji relativedelta."""
     mapping = {
-        "Co miesiąc": 1,
-        "Co kwartał": 3,
-        "Co pół roku": 6,
-        "Co roku": 12,
+        "Co miesiąc": 12,
+        "Co kwartał": 4,
+        "Co pół roku": 2,
+        "Co roku": 1,
         "Przy wykupie": 0
     }
-    return mapping.get(freq_enum_value, 12)
+    return mapping.get(coupon_frequency.value, 12)

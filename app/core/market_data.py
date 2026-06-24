@@ -6,40 +6,22 @@ from app import SessionLocal
 from app.schemas.dto.charts import ChartDataPoint, VolumeDataPoint
 from app.schemas.database.asset import AssetType
 from app.core.bonds.service import BondEngine
-from app.core.bonds.schemas.dto import BondInputParams
+from app.core.bonds.schemas.dto import BondInterestPeriod
 from app.schemas.database.asset import Bond
 
 
-# BOND_PRICES_INPUT_FILES = [
-#     'obligacjeskarbowe/Kuba/StanRachunkuRejestrowego.xls',
-#     'obligacjeskarbowe/Natalka/StanRachunkuRejestrowego.xls'
-# ]
-
-def _get_current_bond_price(ticker: str, params: BondInputParams) -> float:
-    
-    with SessionLocal() as db:
-        bond_db = db.query(Bond).filter(Bond.ticker == ticker).first()
-        
-        if not bond_db:
-            print(f"Błąd: Nie znaleziono obligacji {ticker}")
-            return -1.0
-
-        # 3. Odpalamy silnik dla konkretnej daty wyliczeń (np. dzisiaj)
-        engine = BondEngine(db=db, params=params, calculation_date=date.today())
-        engine.build_periods()
-        value = engine.get_current_value(current_date=date.today())
-
-        return value / params.quantity
+def _get_current_bond_price(ticker: str) -> float:
+    return -1
 
     
 class MarketDataProvider:
     """Klasa odpowiedzialna za pobieranie danych z rynków zewnętrznych."""
 
     @staticmethod
-    def get_asset_price(ticker_symbol: str, asset_type: AssetType, fallback_price: float = 0.0, params: BondInputParams | None = None) -> float:
+    def get_asset_price(ticker_symbol: str, asset_type: AssetType, fallback_price: float = 0.0) -> float:
         """Pobiera aktualną cenę instrumentu z Yahoo Finance."""
         if asset_type == AssetType.BOND:
-            return _get_current_bond_price(ticker=ticker_symbol, params=params) # type: ignore
+            return _get_current_bond_price(ticker=ticker_symbol)
 
         try:
             ticker_yf = yf.Ticker(ticker_symbol)

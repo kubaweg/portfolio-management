@@ -26,7 +26,7 @@ class PositionBuilderResult(BaseModel):
 class PositionBuilder:
     """
     Buduje pozycje otwarte/zamknięte dla jednego tickera na podstawie
-    listy transakcji domenowych (FIFO).
+    listy transakcji domenowych.
     """
 
     def build(self, tt: TickerTransactions, current_price: float, fx_current: float) -> PositionBuilderResult:

@@ -15,32 +15,32 @@ class TransactionMapper:
         ticker = tx.asset.ticker  # relacja z Asset
         ttype = tx.type
 
-        if ttype == TransactionType.BUY:
+        if ttype == TransactionType.BUY:        # type: ignore
             return BuyTransaction(
                 ticker=ticker,
-                timestamp=tx.timestamp,
+                timestamp=tx.timestamp,         # type: ignore
                 type=TransactionType.BUY,
-                quantity=tx.quantity,
-                price=tx.price,
-                fx_rate=tx.fx_rate,
+                quantity=tx.quantity,           # type: ignore
+                price=tx.price,                 # type: ignore
+                fx_rate=tx.fx_rate,             # type: ignore
             )
 
-        if ttype == TransactionType.SELL:
+        if ttype == TransactionType.SELL:       # type: ignore
             return SellTransaction(
                 ticker=ticker,
-                timestamp=tx.timestamp,
+                timestamp=tx.timestamp,         # type: ignore
                 type=TransactionType.SELL,
-                quantity=tx.quantity,
-                price=tx.price,
-                fx_rate=tx.fx_rate,
+                quantity=tx.quantity,           # type: ignore
+                price=tx.price,                 # type: ignore
+                fx_rate=tx.fx_rate,             # type: ignore
             )
 
-        if ttype == TransactionType.INTEREST:
+        if ttype == TransactionType.INTEREST:   # type: ignore
             return InterestTransaction(
                 ticker=ticker,
-                timestamp=tx.timestamp,
+                timestamp=tx.timestamp,         # type: ignore
                 type=TransactionType.INTEREST,
-                value=tx.price * tx.fx_rate,
+                value=tx.price * tx.fx_rate,    # type: ignore
             )
 
         raise ValueError(f"Unknown transaction_type: {ttype}")
