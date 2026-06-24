@@ -164,10 +164,9 @@ class BondData(BaseModel):
     base_data: BondBaseData
     current_data: BondCurrentData
     summary: BondSummary
-    periods: List[BondInterestPeriod]
 
-    open_positions: List[OpenPosition]
-    closed_positions: List[ClosedPosition]
+    periods: List[BondInterestPeriod]
+    cash_flows: List[BondCashFlowInstance]
 
     early_redemptions: List[BondEarlyRedemption]
 
