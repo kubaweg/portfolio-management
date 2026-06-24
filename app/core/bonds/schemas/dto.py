@@ -161,13 +161,13 @@ class BondSummary(BaseModel):
     overall_progress_percent: float
 
 class BondData(BaseModel):
+    
     base_data: BondBaseData
-    current_data: BondCurrentData
     summary: BondSummary
+    current_data: BondCurrentData
 
     periods: List[BondInterestPeriod]
     cash_flows: List[BondCashFlowInstance]
-
     early_redemptions: List[BondEarlyRedemption]
 
 #############################################
