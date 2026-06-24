@@ -84,8 +84,6 @@ class ExchangeCurrentData(BaseModel):
 
 # klasa główna
 class ExchangeData(BaseModel):
-    
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     base_data: ExchangeBaseData
     summary: ExchangeSummary
