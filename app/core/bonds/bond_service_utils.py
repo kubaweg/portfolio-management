@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 from app import SessionLocal
 
 from app.core.bonds.schemas.dto import (
-    BondCurrentData, BondInterestPeriod,
+    BondCurrentData, BondInterestPeriod, BondCashFlowInstance,
     PeriodStatus,
     EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics, BondEarlyRedemption,
     resolve_early_redemption_type, map_frequency_to_months
@@ -24,12 +24,12 @@ from app.schemas.domain.transactions import (
 
 from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling, CouponFrequency
 from app.schemas.database.macroeconomics import Inflation, InterestRate
-from app.core.bonds.schemas.dto import BondInterestPeriod, BondCashFlowInstance
 
 class PortfolioBuilderResult(BaseModel):
 
     periods: List[BondInterestPeriod]
     cash_flows: List[BondCashFlowInstance]
+    early_redemptions: List[BondEarlyRedemption]
 
 
 class PortfolioBuilder:
@@ -82,9 +82,10 @@ class PortfolioBuilder:
             nominal_value=nominal_value
         )
 
-        cash_flows = self._build_cash_flows(periods=periods, transactions=tt)
+        early_redemptions = self._build_early_redemptions(tt=tt)
+        cash_flows = self._build_cash_flows(periods=periods, early_redemptions=early_redemptions)
 
-        return PortfolioBuilderResult(periods=periods, cash_flows=cash_flows)
+        return PortfolioBuilderResult(periods=periods, cash_flows=cash_flows, early_redemptions=early_redemptions)
     
 
     # Metody pomocnicze
@@ -478,7 +479,15 @@ class PortfolioBuilder:
 
         return periods
     
-    def _build_cash_flows(self, periods: List[BondInterestPeriod], transactions: TickerTransactions) -> List[BondCashFlowInstance]:
+    def _build_early_redemptions(self, tt: TickerTransactions) -> List[BondEarlyRedemption]:
+
+        early_redemptions: List[BondEarlyRedemption] = []
+
+        ...
+
+        return early_redemptions
+    
+    def _build_cash_flows(self, periods: List[BondInterestPeriod], early_redemptions: List[BondEarlyRedemption]) -> List[BondCashFlowInstance]:
 
         cash_flows: List[BondCashFlowInstance] = []
 

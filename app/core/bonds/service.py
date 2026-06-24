@@ -2,7 +2,10 @@ from datetime import date
 from typing import List
 
 from app.core.bonds.bond_service_utils import PortfolioBuilder, PortfolioBuilderResult
-from app.core.bonds.schemas.dto import BondData
+from app.core.bonds.schemas.dto import (
+    BondData,
+    BondBaseData, BondSummary, BondCurrentData, BondEarlyRedemption
+)
 
 from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling, CouponFrequency
 from app.schemas.database.asset import Bond
@@ -25,7 +28,6 @@ class BondEngine:
 
         for tt in grouped:
             bond = self._find_asset(bonds, tt.ticker)
-            print(bond)
 
             pb_result = pb.build(
                 tt=tt,
@@ -40,22 +42,55 @@ class BondEngine:
                 margin=float(bond.margin) if bond.margin is not None else 0.0,              # type: ignore
                 benchmark=RetailBondBenchmark(bond.benchmark) if bond.benchmark is not None else None
             )
-
-            print(pb_result)
-            print()
             
-            asset_data = self._build_bond_data(
+            bond_data = self._build_bond_data(
                 bond=bond,
                 pb_result=pb_result
             )
-            portfolio.append(asset_data)
+            portfolio.append(bond_data)
 
         return portfolio
 
     ### Metody pomocnicze
-    def _build_bond_data(self, bond: Bond, pb_result: PortfolioBuilderResult) -> ...:
+    def _build_bond_data(self, bond: Bond, pb_result: PortfolioBuilderResult) -> BondData:
 
-        return ...
+        base_data: BondBaseData = self._build_bond_base_data(...)
+        summary: BondSummary = self._build_bond_summary(...)
+        current_data: BondCurrentData = self._build_bond_current_data(...)
+
+        periods = pb_result.periods
+        cash_flows = pb_result.cash_flows
+        early_redemptions = pb_result.early_redemptions
+
+        return BondData(
+            base_data=base_data,
+            summary=summary,
+            current_data=current_data,
+
+            periods=periods,
+            cash_flows=cash_flows,
+            early_redemptions=early_redemptions
+        )
+    
+    def _build_bond_base_data(self, ...) -> BondBaseData:
+        ...
+        return BondBaseData(...)
+    
+    def _build_bond_summary(self, ...) -> BondSummary:
+        ...
+        return BondSummary(...)
+    
+    def _build_bond_current_data(self, ...) -> BondCurrentData:
+        ...
+        return BondCurrentData(...)
+    
+    def _build_bond_early_redemptions(self, ...) -> List[BondEarlyRedemption]:
+        
+        early_redemptions: List[BondEarlyRedemption] = []
+
+        ...
+
+        return early_redemptions
     
     # Mapowanie SQLAlchemy → domena
     def _map_sqlalchemy_to_domain(self, assets: List[Bond]):
