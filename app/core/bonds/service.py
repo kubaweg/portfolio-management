@@ -88,7 +88,7 @@ class BondEngine:
             initial_rate=float(bond.initial_rate),                                  # type: ignore
             is_indexed=bond.is_indexed,                                             # type: ignore
             margin=float(bond.margin) if bond.margin is not None else 0.0,          # type: ignore
-            benchmark=str(bond.benchmark) if bond.benchmark is not None else 0.0,   # type: ignore
+            benchmark=str(bond.benchmark) if bond.benchmark is not None else None,  # type: ignore
             early_redemption_type=resolve_early_redemption_type(str(bond.ticker)).value,
             early_redemption_penalty=float(bond.early_redemption_penalty) if bond.early_redemption_penalty is not None else 0.0 # type: ignore
         )

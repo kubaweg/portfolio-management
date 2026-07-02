@@ -476,7 +476,15 @@ class PortfolioBuilder:
 
         early_redemptions: List[BondEarlyRedemption] = []
 
-        ...
+        # dodajemy mockowy wykup, bo nie mamy żadnego rzeczywistego
+        early_redemptions.append(
+            BondEarlyRedemption(
+                redemption_date = date(2026, 6, 30),
+                quantity = 10,
+                penalty_method = EarlyRedemptionType.FEE,
+                penalty_per_unit = 2.0
+            )
+        )
 
         return early_redemptions
     
