@@ -55,13 +55,13 @@ class BondEngine:
     ### Metody pomocnicze
     def _build_bond_data(self, bond: Bond, pb_result: PortfolioBuilderResult) -> BondData:
 
-        base_data: BondBaseData = self._build_bond_base_data(bond=bond)
-        summary: BondSummary = self._build_bond_summary(...)
-        current_data: BondCurrentData = self._build_bond_current_data(...)
-
         periods = pb_result.periods
         cash_flows = pb_result.cash_flows
         early_redemptions = pb_result.early_redemptions
+        
+        base_data: BondBaseData = self._build_bond_base_data(bond=bond)
+        summary: BondSummary = self._build_bond_summary()
+        current_data: BondCurrentData = self._build_bond_current_data()
 
         return BondData(
             base_data=base_data,
@@ -80,32 +80,30 @@ class BondEngine:
             category1=str(bond.category1.value),
             category2=str(bond.category2.value),
             type=str(bond.asset_type.value),
-            issue_date=bond.issue_date,
-            maturity_date=bond.maturity_date,
-            nominal_value=bond.nominal_value,
+            issue_date=bond.issue_date,                 # type: ignore 
+            maturity_date=bond.maturity_date,           # type: ignore
+            nominal_value=float(bond.nominal_value),    # type: ignore
             interest_handling=bond.interest_handling.value,
             coupon_frequency=str(bond.coupon_frequency),
             initial_rate=float(bond.initial_rate),                                  # type: ignore
             is_indexed=bond.is_indexed,                                             # type: ignore
             margin=float(bond.margin) if bond.margin is not None else 0.0,          # type: ignore
             benchmark=str(bond.benchmark) if bond.benchmark is not None else 0.0,   # type: ignore
-            early_redemption_type=resolve_early_redemption_type(str(bond.ticker)),
+            early_redemption_type=resolve_early_redemption_type(str(bond.ticker)).value,
             early_redemption_penalty=float(bond.early_redemption_penalty) if bond.early_redemption_penalty is not None else 0.0 # type: ignore
         )
     
-    def _build_bond_summary(self, ...) -> BondSummary:
-        ...
-        return BondSummary(...)
+    def _build_bond_summary(self) -> BondSummary:
+        
+        return BondSummary.empty()
     
-    def _build_bond_current_data(self, ...) -> BondCurrentData:
+    def _build_bond_current_data(self) -> BondCurrentData:
         ...
-        return BondCurrentData(...)
+        return BondCurrentData.empty()
     
-    def _build_bond_early_redemptions(self, ...) -> List[BondEarlyRedemption]:
+    def _build_bond_early_redemptions(self) -> List[BondEarlyRedemption]:
         
         early_redemptions: List[BondEarlyRedemption] = []
-
-        ...
 
         return early_redemptions
     

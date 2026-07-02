@@ -9,26 +9,23 @@ from dateutil.relativedelta import relativedelta
 from app import SessionLocal
 
 from app.core.bonds.schemas.dto import (
-    BondCurrentData, BondInterestPeriod, BondCashFlowInstance,
+    BondCurrentData, BondInterestPeriod,
     PeriodStatus,
     EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics, BondEarlyRedemption,
     resolve_early_redemption_type, map_frequency_to_months
 )
 
 from app.schemas.domain.transactions import (
-    TickerTransactions,
-    BuyTransaction,
-    SellTransaction,
-    InterestTransaction
+    TickerTransactions
 )
-
+from app.schemas.domain.cash_flows import CashFlowInstance
 from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling, CouponFrequency
 from app.schemas.database.macroeconomics import Inflation, InterestRate
 
 class PortfolioBuilderResult(BaseModel):
 
     periods: List[BondInterestPeriod]
-    cash_flows: List[BondCashFlowInstance]
+    cash_flows: List[CashFlowInstance]
     early_redemptions: List[BondEarlyRedemption]
 
 
@@ -228,11 +225,11 @@ class PortfolioBuilder:
         interest = (base_capital_per_bond * rate) / frequency
         return round(interest, 2)
 
-    # def simulate_early_redemption(self, redemption_date: date, penalty_fee: float) -> EarlyRedemptionSimulation:
-    #     """
-    #     Symuluje wcześniejszy wykup na zadany dzień z uwzględnieniem podatku Belki.
-    #     Zwraca ustrukturyzowany model EarlyRedemptionSimulation.
-    #     """
+    def simulate_early_redemption(self, redemption_date: date, penalty_fee: float) -> EarlyRedemptionSimulation:
+        """
+        Symuluje wcześniejszy wykup na zadany dzień z uwzględnieniem podatku Belki.
+        Zwraca ustrukturyzowany model EarlyRedemptionSimulation.
+        """
     #     if not self.periods or redemption_date <= self.periods[0].start_date:
     #         raise ValueError("Data wykupu musi być późniejsza niż data zakupu obligacji.")
 
@@ -298,11 +295,7 @@ class PortfolioBuilder:
     #         net_payout=round(net_payout_per_bond * quantity, 2)
     #     )
         
-    #     return EarlyRedemptionSimulation(
-    #         redemption_date=redemption_date,
-    #         per_bond=per_bond_metrics,
-    #         total=total_metrics
-    #     )
+        return EarlyRedemptionSimulation.empty()
 
     def _update_periods(self, 
             periods: List[BondInterestPeriod],
@@ -487,10 +480,8 @@ class PortfolioBuilder:
 
         return early_redemptions
     
-    def _build_cash_flows(self, periods: List[BondInterestPeriod], early_redemptions: List[BondEarlyRedemption]) -> List[BondCashFlowInstance]:
+    def _build_cash_flows(self, periods: List[BondInterestPeriod], early_redemptions: List[BondEarlyRedemption]) -> List[CashFlowInstance]:
 
-        cash_flows: List[BondCashFlowInstance] = []
-
-        ...
+        cash_flows: List[CashFlowInstance] = []
 
         return cash_flows

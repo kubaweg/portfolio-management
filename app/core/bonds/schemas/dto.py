@@ -1,18 +1,12 @@
 from enum import Enum
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-from app.schemas.domain.assets import (
-    Category1, Category2, AssetType
-)
+from app.schemas.domain.cash_flows import CashFlowInstance
 
 from app.schemas.domain.bonds import (
     CouponFrequency, InterestHandling
-)
-
-from app.schemas.domain.positions import (
-    OpenPosition, ClosedPosition
 )
 
 class PeriodStatus(Enum):
@@ -42,6 +36,17 @@ class PerBondRedemptionMetrics(BaseModel):
     tax_applied: float
     net_payout: float
 
+    @classmethod
+    def empty(cls) -> "PerBondRedemptionMetrics":
+        return cls(
+            nominal=0.0,
+            accrued_interest=0.0,
+            penalty_applied=0.0,
+            gross_payout=0.0,
+            tax_applied=0.0,
+            net_payout=0.0
+        )
+
 class TotalRedemptionMetrics(BaseModel):
     quantity: float
     gross_payout: float
@@ -49,10 +54,28 @@ class TotalRedemptionMetrics(BaseModel):
     total_tax: float
     net_payout: float
 
+    @classmethod
+    def empty(cls) -> "TotalRedemptionMetrics":
+        return cls(
+            quantity=0.0,
+            gross_payout=0.0,
+            total_penalty=0.0,
+            total_tax=0.0,
+            net_payout=0.0
+        )
+
 class EarlyRedemptionSimulation(BaseModel):
     redemption_date: date
     per_bond: PerBondRedemptionMetrics
     total: TotalRedemptionMetrics
+
+    @classmethod
+    def empty(cls) -> "EarlyRedemptionSimulation":
+        return cls(
+            redemption_date=date(1970, 1, 1),
+            per_bond=PerBondRedemptionMetrics.empty(),
+            total=TotalRedemptionMetrics.empty()
+        )
 
 class BondEarlyRedemption(BaseModel):
     # Data operacji przedterminowego wykupu
@@ -75,19 +98,19 @@ class BondBaseData(BaseModel):
 
     ticker: str
     name: str
-    category1: Category1
-    category2: Category2
-    type: AssetType
+    category1: str
+    category2: str
+    type: str
     issue_date: date
     maturity_date: date
     nominal_value: float = Field(ge=0.0)
-    interest_handling: InterestHandling
-    coupon_frequency: CouponFrequency
+    interest_handling: str
+    coupon_frequency: str
     initial_rate: float = Field(ge=0.0)
     is_indexed: bool
     margin: float = Field(ge=0.0)
     benchmark: Optional[str]
-    early_redemption_type: EarlyRedemptionType
+    early_redemption_type: str
     early_redemption_penalty: float = Field(ge=0.0)
 
 class BondCurrentData(BaseModel):
@@ -102,10 +125,15 @@ class BondCurrentData(BaseModel):
     # Moment przeliczenia wyceny
     price_datetime: datetime
 
-class BondCashFlowInstance(BaseModel):
-    type: BondCashFlowType
-    date: date
-    value: float
+    @classmethod
+    def empty(cls) -> "BondCurrentData":
+        return cls(
+            price=0.0,
+            interest_rate=0.0,
+            interest_pln=0.0,
+            value_pln=0.0,
+            price_datetime=datetime(1970, 1, 1, tzinfo=timezone.utc)
+        )
 
 class BondInterestPeriod(BaseModel):
     period_number: int
@@ -160,6 +188,27 @@ class BondSummary(BaseModel):
     days_to_maturity: int
     overall_progress_percent: float
 
+    @classmethod
+    def empty(cls) -> "BondSummary":
+        return cls(
+            quantity=0.0,
+            total_invested=0.0,
+            realized_profit_gross=0.0,
+            realized_profit_net=0.0,
+            roi_realized_net=0.0,
+            roi_realized_pa_net=0.0,
+            unrealized_profit_gross=0.0,
+            unrealized_profit_net=0.0,
+            roi_unrealized_net=0.0,
+            roi_unrealized_pa_net=0.0,
+            interest_profit_net=0.0,
+            total_profit_net=0.0,
+            roi_net=0.0,
+            roi_pa_net=0.0,
+            days_to_maturity=0,
+            overall_progress_percent=0.0
+        )
+
 class BondData(BaseModel):
     
     base_data: BondBaseData
@@ -167,7 +216,7 @@ class BondData(BaseModel):
     current_data: BondCurrentData
 
     periods: List[BondInterestPeriod]
-    cash_flows: List[BondCashFlowInstance]
+    cash_flows: List[CashFlowInstance]
     early_redemptions: List[BondEarlyRedemption]
 
 #############################################

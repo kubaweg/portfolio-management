@@ -32,74 +32,84 @@ def finalize_bond_import(input_file):
         already_exists_count = 0
         skipped_no_asset_count = 0
         
-        for index, row in df.iterrows():
+        for i, row in df.iterrows():
             dyspozycja = str(row.get('RODZAJ DYSPOZYCJI', '')).lower()
             ticker = str(row.get('KOD OBLIGACJI', '')).strip().upper()
             
-            if not ticker or ticker == 'nan':
-                continue
+            if not ticker or ticker == 'nan': continue
 
             asset = db.query(Asset).filter_by(ticker=ticker).first()
+            nominal_value = float(asset.nominal_value) # type: ignore
+
             if not asset:
                 skipped_no_asset_count += 1
-                print(row)
                 continue
 
-            # --- Przetwarzanie daty ---
-            raw_date = row.get('DATA DYSPOZYCJI')
-            if pd.isna(raw_date): continue
-            
-            if isinstance(raw_date, str):
-                try:
-                    date_obj = datetime.strptime(raw_date, '%Y-%m-%d')
-                except:
-                    date_obj = datetime.strptime(raw_date, '%d.%m.%Y')
-            else:
-                date_obj = raw_date
-            
-            # Standaryzujemy godzinę na 09:00, tak jak w poprzednim skrypcie
-            transaction_date = date_obj.replace(hour=9, minute=0, second=0)
-            kwota = float(row.get('KWOTA OPERACJI', 0))
+            # --- Przetwarzanie daty (pozostaje bez zmian) ---
+            tx_date = row.get('DATA DYSPOZYCJI')
+            value_net = float(row.get('KWOTA OPERACJI', 0))
+            quantity = float(row.get('LICZBA OBLIGACJI', 0))
 
-            # --- Mapowanie typów ---
-            if "zakup papierów" in dyspozycja and "zamiana" not in dyspozycja:
-                typ, ilosc, cena = TransactionType.BUY, kwota / float(asset.nominal_value), float(asset.nominal_value)
+            if pd.isna(tx_date):
+                raise ValueError('Brak daty transakcji w pliku.')
+
+            tx_timestamp = (
+                datetime.strptime(tx_date, '%Y-%m-%d') if isinstance(tx_date, str) else tx_date
+            ).replace(hour=9, minute=0, second=0)
+
+            # --- Nowa logika mapowania ---
+            is_exchange = False
+            is_early_redemption = False
+
+            # Pomijamy odsetki i wykupy (tylko BUY i SELL/Early Redemption)
+            if "zakup papierów" in dyspozycja and 'zamiana' not in dyspozycja:
+                tx_type = TransactionType.BUY
+                price = value_net / quantity
+                if abs(price-nominal_value) > 0.001: 
+                    is_exchange = True
+                
             elif "naliczenie wykupu" in dyspozycja:
-                # Wykup kapitału: kwota operacji to ilosc sztuk * asset.nominal_value
-                # Traktujemy to jako SPRZEDAŻ, aby zdjąć jednostki ze stanu
-                typ, ilosc, cena = TransactionType.SELL, kwota / float(asset.nominal_value), float(asset.nominal_value)
-            elif "naliczenie odsetek" in dyspozycja or "wykup - odsetki" in dyspozycja:
-                typ, ilosc, cena = TransactionType.INTEREST, 1.0, kwota
-            else:
+                # jeszcze nie wiemy jak w danych wygląda przedterminowy wykup
+                # tx_type = TransactionType.SELL
+                # is_early_redemption = True
+                # price = 0.0
                 continue
 
-            # --- KLUCZOWY MOMENT: Sprawdzenie duplikatu ---
-            # Szukamy czy identyczna transakcja już jest w bazie
+            else:
+                # Pomijamy wszystko inne (odsetki, operacje zamiany itp.)
+                continue
+
+            # --- Sprawdzenie duplikatu ---
+            # Szukamy po asset_id, type, timestamp, quantity, price
             existing = db.query(Transaction).filter_by(
                 asset_id=asset.id,
-                type=typ,
-                timestamp=transaction_date,
-                quantity=ilosc,
-                price=cena
+                value_net=value_net,
+                type=tx_type,
+                timestamp=tx_timestamp,
+                quantity=quantity,
+                price=price
             ).first()
 
             if existing:
                 already_exists_count += 1
-                # Logujemy tylko co jakiś czas, żeby nie zaśmiecać konsoli przy 1000 rekordów
-                if already_exists_count % 10 == 0:
-                    print(f"Info: Znaleziono już {already_exists_count} istniejących rekordów...")
                 continue
 
-            # Jeśli nie ma duplikatu - dodajemy
+            # --- Tworzenie nowej transakcji ---
+            # Używamy słownika dla pól specyficznych, żeby kod był czytelny
             new_trans = Transaction(
                 asset_id=asset.id,
-                type=typ,
-                timestamp=transaction_date,
-                created_at=datetime.now(),
-                quantity=ilosc,
-                price=cena,
-                fx_rate=1.0
+                type=tx_type,
+                timestamp=tx_timestamp,
+                value_net=value_net,
+                fee=0.0,
+                tax=0.0,
+                quantity=quantity,
+                price=price,
+                fx_rate=1.0,
+                is_exchange=is_exchange,
+                is_early_redemption=is_early_redemption
             )
+            print(ticker, tx_type, tx_timestamp, value_net, quantity, price, is_exchange)
             db.add(new_trans)
             added_count += 1
 
