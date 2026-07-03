@@ -3,22 +3,24 @@ from pydantic import BaseModel
 
 import holidays
 import calendar
-from datetime import timedelta, datetime, date
+from datetime import timedelta, date
 from dateutil.relativedelta import relativedelta
 
 from app import SessionLocal
 
 from app.core.bonds.schemas.dto import (
-    BondCurrentData, BondInterestPeriod,
+    BondInterestPeriod,
     PeriodStatus,
-    EarlyRedemptionType, EarlyRedemptionSimulation, PerBondRedemptionMetrics, TotalRedemptionMetrics, BondEarlyRedemption,
-    resolve_early_redemption_type, map_frequency_to_months
+    EarlyRedemptionType, EarlyRedemptionSimulation, BondEarlyRedemption,
+    map_frequency_to_months, resolve_early_redemption_type
 )
 
+from app.core.cash.schemas.dto import CashFlowType, CashFlowInstance
+
 from app.schemas.domain.transactions import (
-    TickerTransactions
+    BuyTransaction, TickerTransactions
 )
-from app.schemas.domain.cash_flows import CashFlowInstance
+from app.schemas.database.transaction import TransactionType, Transaction
 from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling, CouponFrequency
 from app.schemas.database.macroeconomics import Inflation, InterestRate
 
@@ -80,7 +82,14 @@ class PortfolioBuilder:
         )
 
         early_redemptions = self._build_early_redemptions(tt=tt)
-        cash_flows = self._build_cash_flows(periods=periods, early_redemptions=early_redemptions)
+        buy_transactions = self._build_buy_transactions(tt=tt)
+        cash_flows = self._build_cash_flows(
+            calculation_date=calculation_date,
+            nominal_value=nominal_value,
+            buy_transactions=buy_transactions, 
+            periods=periods, 
+            early_redemptions=early_redemptions
+        )
 
         return PortfolioBuilderResult(periods=periods, cash_flows=cash_flows, early_redemptions=early_redemptions)
     
@@ -297,7 +306,8 @@ class PortfolioBuilder:
         
         return EarlyRedemptionSimulation.empty()
 
-    def _update_periods(self, 
+    def _update_periods(
+            self, 
             periods: List[BondInterestPeriod],
             calculation_date: date,
             coupon_frequency: CouponFrequency,
@@ -371,7 +381,8 @@ class PortfolioBuilder:
 
         return periods
     
-    def _build_periods(self, 
+    def _build_periods(
+            self, 
             calculation_date: date,
 
             issue_date: date,
@@ -476,6 +487,18 @@ class PortfolioBuilder:
 
         early_redemptions: List[BondEarlyRedemption] = []
 
+        with SessionLocal() as db:
+            redemption_txs = db.query(Transaction).filter(Transaction.type == TransactionType.SELL and Transaction.is_early_redemption).all()
+
+            for tx in redemption_txs:
+                early_redemptions.append(
+                    BondEarlyRedemption(
+                        redemption_date=tx.timestamp.date(),
+                        quantity=float(tx.quantity),                                        # type: ignore
+                        penalty_method=resolve_early_redemption_type(tt.ticker),
+                        penalty_per_unit=tx.asset.early_redemption_penalty
+                    )
+                )
         # dodajemy mockowy wykup, bo nie mamy żadnego rzeczywistego
         early_redemptions.append(
             BondEarlyRedemption(
@@ -488,8 +511,179 @@ class PortfolioBuilder:
 
         return early_redemptions
     
-    def _build_cash_flows(self, periods: List[BondInterestPeriod], early_redemptions: List[BondEarlyRedemption]) -> List[CashFlowInstance]:
+    def _build_buy_transactions(self, tt: TickerTransactions) -> List[BuyTransaction]:
+        "Filtruje transakcje, wybierając z nich wyłącznie transakcje BUY"
+
+        buy_transactions: List[BuyTransaction] = [tx for tx in tt.transactions if tx.type == TransactionType.BUY]
+        return buy_transactions
+    
+    def _get_active_quantity_at_date(
+        self, 
+        calculation_date: date, 
+        initial_quantity: float, 
+        early_redemptions: List[BondEarlyRedemption]
+    ) -> float:
+        """
+        Zwraca ilość aktywnych obligacji na podany dzień, 
+        odejmując zrealizowane do tego czasu przedterminowe wykupy.
+        """
+        redeemed_quantity = sum(
+            r.quantity for r in early_redemptions 
+            if r.redemption_date <= calculation_date
+        )
+        return max(0.0, initial_quantity - redeemed_quantity)
+
+    def _get_active_period_for_date(
+        self, 
+        target_date: date, 
+        periods: List[BondInterestPeriod]
+    ) -> BondInterestPeriod:
+        """
+        Znajduje okres odsetkowy, w którym przypada wskazana data.
+        """
+        for period in periods:
+            if period.start_date <= target_date <= period.end_date:
+                return period
+                
+        raise ValueError(f"Nie znaleziono okresu odsetkowego obejmującego datę: {target_date}")
+    
+    def _build_cash_flows(
+        self, 
+        calculation_date: date,
+        nominal_value: float,
+        buy_transactions: List[BuyTransaction],  # Zastąp właściwym typem modelu transakcji BUY
+        periods: List[BondInterestPeriod], 
+        early_redemptions: List[BondEarlyRedemption]        
+    ) -> List[CashFlowInstance]:
 
         cash_flows: List[CashFlowInstance] = []
 
+        if calculation_date < periods[0].start_date:
+            return cash_flows
+        
+        # 1. Wyliczamy początkową pulę obligacji na podstawie transakcji zakupowych
+        initial_quantity = sum(buy.quantity for buy in buy_transactions)
+
+        # --- A. PRZEPŁYWY ZAKUPU (Inicjalne) ---
+        for buy in buy_transactions:
+            # Używamy faktycznie zapłaconej kwoty (value_net uwzględnia ew. dyskonto przy zamianie)
+            # Wymaga dostosowania do Twojego modelu (np. czy to buy.timestamp.date() czy buy.date)
+            is_exchange_str = "(Zamiana)" if getattr(buy, 'is_exchange', False) else "(Gotówka)"
+            cash_flows.append(
+                CashFlowInstance(
+                    date=buy.timestamp.date(),
+                    amount=buy.value_net, 
+                    flow_type=CashFlowType.BUY,
+                    description=f"Zakup {buy.quantity} szt. {is_exchange_str}"
+                )
+            )
+
+        if not periods or initial_quantity <= 0:
+            return sorted(cash_flows, key=lambda cf: cf.date)
+
+        # --- B. PRZEPŁYWY Z REGULARNYCH OKRESÓW ODSETKOWYCH ---
+        for i, period in enumerate(periods):
+            # Pomijamy okresy, które kończą się w przyszłości względem daty wyceny
+            if period.end_date > calculation_date:
+                continue
+
+            active_quantity = self._get_active_quantity_at_date(period.end_date, initial_quantity, early_redemptions)
+            
+            if active_quantity <= 0:
+                continue 
+
+            # 1. Wypłata odsetek w trakcie trwania obligacji (tylko niezapitalizowane)
+            if not period.is_capitalized and period.gross_interest_per_bond > 0:
+                amount = active_quantity * period.gross_interest_per_bond
+                cash_flows.append(
+                    CashFlowInstance(
+                        date=period.end_date,
+                        amount=amount,
+                        flow_type=CashFlowType.INTEREST,
+                        description=f"Wypłata odsetek (okres {period.period_number}) dla {active_quantity} szt."
+                    )
+                )
+
+            # 2. Zwrot kapitału na koniec (Wykup terminowy)
+            if i == len(periods) - 1 and period.ending_capital_per_bond > 0:
+                amount = active_quantity * period.ending_capital_per_bond
+                cash_flows.append(
+                    CashFlowInstance(
+                        date=period.end_date,
+                        amount=amount, 
+                        flow_type=CashFlowType.MATURITY,
+                        description=f"Wykup terminowy (zapadalność) dla {active_quantity} szt."
+                    )
+                )
+
+        # --- C. PRZEPŁYWY Z PRZEDTERMINOWYCH WYKUPÓW ---
+        for redemption in early_redemptions:
+            if redemption.redemption_date > calculation_date:
+                continue
+
+            # 1. Pobranie właściwego okresu dla daty wykupu
+            active_period = self._get_active_period_for_date(redemption.redemption_date, periods)
+
+            returned_capital = redemption.quantity * nominal_value
+            
+            # 2. Wyliczenie odsetek z wykorzystaniem parametrów z active_period
+            accrued_per_bond = self._calculate_act_act_interest_per_bond(
+                base_capital_per_bond=active_period.base_capital_per_bond,
+                rate=active_period.interest_rate,
+                start_date=active_period.start_date,
+                end_date=redemption.redemption_date
+            )
+            accrued_total = redemption.quantity * accrued_per_bond
+
+            penalty = 0.0
+            if redemption.penalty_method == EarlyRedemptionType.FORFEIT_INTEREST:
+                penalty = accrued_total
+            elif redemption.penalty_method == EarlyRedemptionType.FEE:
+                max_penalty_calculated = redemption.quantity * redemption.penalty_per_unit
+                penalty = min(accrued_total, max_penalty_calculated)
+
+            payout = returned_capital + accrued_total - penalty
+
+            cash_flows.append(
+                CashFlowInstance(
+                    date=redemption.redemption_date,
+                    amount=payout,
+                    flow_type=CashFlowType.EARLY_REDEMPTION,
+                    description=f"Przedterminowy wykup {redemption.quantity} szt."
+                )
+            )
+
+        # --- D. BIEŻĄCA WYCENA (Terminal Value) ---
+        if calculation_date > periods[-1].end_date:
+            final_active_quantity = 0
+        else:
+            final_active_quantity = self._get_active_quantity_at_date(calculation_date, initial_quantity, early_redemptions)
+
+
+        if final_active_quantity > 0:
+            # 1. Pobranie właściwego okresu dla daty wyceny (calculation_date)
+            active_period = self._get_active_period_for_date(calculation_date, periods)
+
+            # 2. Wyliczenie odsetek narosłych do dziś z wykorzystaniem parametrów z active_period
+            accrued_today_per_bond = self._calculate_act_act_interest_per_bond(
+                base_capital_per_bond=active_period.base_capital_per_bond,
+                rate=active_period.interest_rate,
+                start_date=active_period.start_date,
+                end_date=calculation_date
+            )
+            
+            current_value = final_active_quantity * (nominal_value + accrued_today_per_bond)
+
+            cash_flows.append(
+                CashFlowInstance(
+                    date=calculation_date,
+                    amount=current_value,
+                    flow_type=CashFlowType.CURRENT_VALUATION,
+                    description=f"Wycena bieżąca {final_active_quantity} szt. na dzień {calculation_date}"
+                )
+            )
+
+        # --- FINALNE SORTOWANIE ---
+        cash_flows.sort(key=lambda cf: cf.date)
+        
         return cash_flows

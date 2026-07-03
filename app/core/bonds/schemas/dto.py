@@ -3,7 +3,7 @@ from datetime import date, datetime, timezone
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-from app.schemas.domain.cash_flows import CashFlowInstance
+from app.core.cash.schemas.dto import CashFlowInstance
 
 from app.schemas.domain.bonds import (
     CouponFrequency, InterestHandling

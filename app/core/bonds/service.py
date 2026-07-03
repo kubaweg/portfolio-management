@@ -98,14 +98,9 @@ class BondEngine:
         return BondSummary.empty()
     
     def _build_bond_current_data(self) -> BondCurrentData:
-        ...
+        
         return BondCurrentData.empty()
     
-    def _build_bond_early_redemptions(self) -> List[BondEarlyRedemption]:
-        
-        early_redemptions: List[BondEarlyRedemption] = []
-
-        return early_redemptions
     
     # Mapowanie SQLAlchemy → domena
     def _map_sqlalchemy_to_domain(self, assets: List[Bond]):
