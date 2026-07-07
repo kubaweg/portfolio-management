@@ -51,5 +51,5 @@ def get_bonds_summary(db: Session) -> DashboardBondResponse:
     bond_assets = db.query(Bond).all()
     portfolio = service.build_portfolio(bond_assets)
 
-    return DashboardBondResponse(data=portfolio)
+    return DashboardBondResponse(data=[item for item in portfolio if item.current_data.quantity > 0])
 
