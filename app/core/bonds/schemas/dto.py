@@ -3,11 +3,13 @@ from datetime import date, datetime, timezone
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-from app.core.cash.schemas.dto import CashFlowInstance
+from app.core.cash.schemas.dto import CashFlowInstance, CashFlow, CashFlowSummary
 
 from app.schemas.domain.bonds import (
     CouponFrequency, InterestHandling
 )
+
+BOND_TAX_RATE = 0.19
 
 class PeriodStatus(Enum):
     PAST = "PAST"
@@ -179,6 +181,7 @@ class BondSummary(BaseModel):
     roi_unrealized_net: float
     roi_unrealized_pa_net: float
     
+    interest_profit_gross: float = Field(ge=0)
     interest_profit_net: float = Field(ge=0)
     
     total_profit_net: float
@@ -201,6 +204,7 @@ class BondSummary(BaseModel):
             unrealized_profit_net=0.0,
             roi_unrealized_net=0.0,
             roi_unrealized_pa_net=0.0,
+            interest_profit_gross=0.0,
             interest_profit_net=0.0,
             total_profit_net=0.0,
             roi_net=0.0,
@@ -216,7 +220,7 @@ class BondData(BaseModel):
     current_data: BondCurrentData
 
     periods: List[BondInterestPeriod]
-    cash_flows: List[CashFlowInstance]
+    cash_flows: CashFlowSummary
     early_redemptions: List[BondEarlyRedemption]
 
 #############################################
@@ -244,13 +248,24 @@ def resolve_early_redemption_type(retail_series_type: str) -> EarlyRedemptionTyp
     # obowiązuje stała opłata (FEE) określona w liście emisyjnym (np. 1 zł lub 2 zł)
     return EarlyRedemptionType.FEE
 
-def map_frequency_to_months(coupon_frequency: CouponFrequency) -> int:
+def map_coupon_frequency_to_rate_frequency(coupon_frequency: CouponFrequency) -> int:
     """Zmienia string z Enuma na liczbę miesięcy dla funkcji relativedelta."""
     mapping = {
         "Co miesiąc": 12,
         "Co kwartał": 4,
         "Co pół roku": 2,
         "Co roku": 1,
+        "Przy wykupie": 0
+    }
+    return mapping.get(coupon_frequency.value, 12)
+
+def map_coupon_frequency_to_months_step(coupon_frequency: CouponFrequency) -> int:
+    """Zmienia string z Enuma na liczbę miesięcy dla funkcji relativedelta."""
+    mapping = {
+        "Co miesiąc": 1,
+        "Co kwartał": 3,
+        "Co pół roku": 6,
+        "Co roku": 12,
         "Przy wykupie": 0
     }
     return mapping.get(coupon_frequency.value, 12)

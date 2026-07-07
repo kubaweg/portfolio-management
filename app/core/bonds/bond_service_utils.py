@@ -12,10 +12,14 @@ from app.core.bonds.schemas.dto import (
     BondInterestPeriod,
     PeriodStatus,
     EarlyRedemptionType, EarlyRedemptionSimulation, BondEarlyRedemption,
-    map_frequency_to_months, resolve_early_redemption_type
+    map_coupon_frequency_to_months_step, map_coupon_frequency_to_rate_frequency,
+    resolve_early_redemption_type,
+    BOND_TAX_RATE
 )
 
-from app.core.cash.schemas.dto import CashFlowType, CashFlowInstance
+from app.core.cash.schemas.dto import (
+    CashFlowType, CashFlowInstance, CashFlow, CashFlowSummary
+)
 
 from app.schemas.domain.transactions import (
     BuyTransaction, TickerTransactions
@@ -27,7 +31,7 @@ from app.schemas.database.macroeconomics import Inflation, InterestRate
 class PortfolioBuilderResult(BaseModel):
 
     periods: List[BondInterestPeriod]
-    cash_flows: List[CashFlowInstance]
+    cash_flows: CashFlowSummary
     early_redemptions: List[BondEarlyRedemption]
 
 
@@ -86,7 +90,7 @@ class PortfolioBuilder:
         cash_flows = self._build_cash_flows(
             calculation_date=calculation_date,
             nominal_value=nominal_value,
-            buy_transactions=buy_transactions, 
+            buy_transaction=buy_transactions[0], 
             periods=periods, 
             early_redemptions=early_redemptions
         )
@@ -102,7 +106,7 @@ class PortfolioBuilder:
         ) -> List[Tuple[date, date]]:
         """Generuje listę krotek (start_date, end_date) dla okresów odsetkowych."""
         dates = []
-        months_step = map_frequency_to_months(coupon_frequency)
+        months_step = map_coupon_frequency_to_months_step(coupon_frequency)
         
         if months_step == 0:
             return [(issue_date, maturity_date)]
@@ -319,7 +323,7 @@ class PortfolioBuilder:
         Utrzymuje ścisły podział na logikę per-bond oraz agregację total.
         Wylicza również dni trwania i narosłe odsetki względem daty 'today'.
         """
-        frequency = map_frequency_to_months(coupon_frequency)
+        frequency = map_coupon_frequency_to_rate_frequency(coupon_frequency)
 
         # Inicjalizacja kapitału jednostkowego
         current_capital_per_bond = nominal_value
@@ -500,14 +504,15 @@ class PortfolioBuilder:
                     )
                 )
         # dodajemy mockowy wykup, bo nie mamy żadnego rzeczywistego
-        early_redemptions.append(
-            BondEarlyRedemption(
-                redemption_date = date(2026, 6, 30),
-                quantity = 10,
-                penalty_method = EarlyRedemptionType.FEE,
-                penalty_per_unit = 2.0
+        if tt.ticker == 'DOR1126':
+            early_redemptions.append(
+                BondEarlyRedemption(
+                    redemption_date = date(2026, 6, 30),
+                    quantity = 10,
+                    penalty_method = EarlyRedemptionType.FEE,
+                    penalty_per_unit = 2.0
+                )
             )
-        )
 
         return early_redemptions
     
@@ -515,6 +520,7 @@ class PortfolioBuilder:
         "Filtruje transakcje, wybierając z nich wyłącznie transakcje BUY"
 
         buy_transactions: List[BuyTransaction] = [tx for tx in tt.transactions if tx.type == TransactionType.BUY]
+        assert len(buy_transactions) == 1, "Obligacja może mieć co najwyżej jedną transakcję BUY."
         return buy_transactions
     
     def _get_active_quantity_at_date(
@@ -522,7 +528,7 @@ class PortfolioBuilder:
         calculation_date: date, 
         initial_quantity: float, 
         early_redemptions: List[BondEarlyRedemption]
-    ) -> float:
+    ) -> int:
         """
         Zwraca ilość aktywnych obligacji na podany dzień, 
         odejmując zrealizowane do tego czasu przedterminowe wykupy.
@@ -531,7 +537,7 @@ class PortfolioBuilder:
             r.quantity for r in early_redemptions 
             if r.redemption_date <= calculation_date
         )
-        return max(0.0, initial_quantity - redeemed_quantity)
+        return max(0, int(initial_quantity - redeemed_quantity))
 
     def _get_active_period_for_date(
         self, 
@@ -546,87 +552,225 @@ class PortfolioBuilder:
                 return period
                 
         raise ValueError(f"Nie znaleziono okresu odsetkowego obejmującego datę: {target_date}")
+
+
+    # ################# CASH FLOWS #################
     
+
     def _build_cash_flows(
         self, 
         calculation_date: date,
         nominal_value: float,
-        buy_transactions: List[BuyTransaction],  # Zastąp właściwym typem modelu transakcji BUY
-        periods: List[BondInterestPeriod], 
-        early_redemptions: List[BondEarlyRedemption]        
-    ) -> List[CashFlowInstance]:
-
-        cash_flows: List[CashFlowInstance] = []
-
-        if calculation_date < periods[0].start_date:
-            return cash_flows
+        buy_transaction: BuyTransaction, 
+        periods: List['BondInterestPeriod'], 
+        early_redemptions: List['BondEarlyRedemption'],
+        tax_rate: float = BOND_TAX_RATE
+    ) -> CashFlowSummary:
         
-        # 1. Wyliczamy początkową pulę obligacji na podstawie transakcji zakupowych
-        initial_quantity = sum(buy.quantity for buy in buy_transactions)
+        # 1. Wstępna walidacja
+        initial_quantity = int(buy_transaction.quantity)
+        empty_cf = CashFlow(realized=[], unrealized=[], total=[])
+        
+        if not periods or calculation_date < periods[0].start_date or initial_quantity <= 0:
+            return CashFlowSummary(gross=empty_cf, net=empty_cf)
 
-        # --- A. PRZEPŁYWY ZAKUPU (Inicjalne) ---
-        for buy in buy_transactions:
-            # Używamy faktycznie zapłaconej kwoty (value_net uwzględnia ew. dyskonto przy zamianie)
-            # Wymaga dostosowania do Twojego modelu (np. czy to buy.timestamp.date() czy buy.date)
-            is_exchange_str = "(Zamiana)" if getattr(buy, 'is_exchange', False) else "(Gotówka)"
-            cash_flows.append(
-                CashFlowInstance(
-                    date=buy.timestamp.date(),
-                    amount=buy.value_net, 
-                    flow_type=CashFlowType.BUY,
-                    description=f"Zakup {buy.quantity} szt. {is_exchange_str}"
-                )
-            )
+        # 2. Ustalenie docelowej liczby sztuk
+        if calculation_date > periods[-1].end_date:
+            final_active_quantity = 0
+        else:
+            final_active_quantity = self._get_active_quantity_at_date(calculation_date, initial_quantity, early_redemptions)
 
-        if not periods or initial_quantity <= 0:
-            return sorted(cash_flows, key=lambda cf: cf.date)
+        rg_list, ug_list, rn_list, un_list = [], [], [], []
 
-        # --- B. PRZEPŁYWY Z REGULARNYCH OKRESÓW ODSETKOWYCH ---
+        # Wewnętrzna funkcja do agregowania wyników z metod pomocniczych
+        def _extend_flows(flows: Tuple[List[CashFlowInstance], ...]):
+            rg_list.extend(flows[0])
+            ug_list.extend(flows[1])
+            rn_list.extend(flows[2])
+            un_list.extend(flows[3])
+
+        # --- A. PRZEPŁYWY ZAKUPU ---
+        _extend_flows(self._build_buy_flow(
+            buy_transaction, initial_quantity, final_active_quantity
+        ))
+
+        # --- B. REGULARNE ODSETKI I ZAPADALNOŚĆ ---
+        _extend_flows(self._build_interest_and_maturity_flows(
+            periods, calculation_date, initial_quantity, early_redemptions, final_active_quantity, nominal_value, tax_rate
+        ))
+
+        # --- C. PRZEDTERMINOWE WYKUPY ---
+        _extend_flows(self._build_early_redemption_flows(
+            early_redemptions, calculation_date, periods, nominal_value, final_active_quantity, tax_rate
+        ))
+
+        # --- D. BIEŻĄCA WYCENA ---
+        ug, un = self._build_current_valuation_flow(
+            calculation_date, periods, nominal_value, final_active_quantity, tax_rate
+        )
+        ug_list.extend(ug)
+        un_list.extend(un)
+
+        # --- FINALNE SORTOWANIE I SKŁADANIE W SUMMARY ---
+        rg_list.sort(key=lambda cf: cf.date)
+        ug_list.sort(key=lambda cf: cf.date)
+        rn_list.sort(key=lambda cf: cf.date)
+        un_list.sort(key=lambda cf: cf.date)
+        
+        gross_cf = CashFlow(
+            realized=rg_list,
+            unrealized=ug_list,
+            total=sorted(rg_list + ug_list, key=lambda cf: cf.date)
+        )
+        
+        net_cf = CashFlow(
+            realized=rn_list,
+            unrealized=un_list,
+            total=sorted(rn_list + un_list, key=lambda cf: cf.date)
+        )
+        
+        return CashFlowSummary(gross=gross_cf, net=net_cf)
+
+    # ==========================================
+    # METODY POMOCNICZE (PRIVATE)
+    # ==========================================
+
+    def _allocate_proportional_flows(
+        self, 
+        event_date: date, 
+        gross_value: float, 
+        net_value: float,
+        event_quantity: int, 
+        final_active_quantity: int, 
+        flow_type: CashFlowType, 
+        desc: str
+    ) -> Tuple[List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance]]:
+        """Dzieli kwoty brutto i netto na część zrealizowaną i niezrealizowaną na podstawie proporcji sztuk."""
+        rg, ug, rn, un = [], [], [], []
+
+        if event_quantity == 0:
+            return rg, ug, rn, un
+
+        def _add(val: float, target_list: List[CashFlowInstance], suffix: str):
+            if abs(val) > 1e-4:
+                full_desc = f"{desc} {suffix}".strip()
+                target_list.append(CashFlowInstance(
+                    date=event_date, value=val, flow_type=flow_type, description=full_desc
+                ))
+
+        unrealized_ratio = final_active_quantity / event_quantity
+        
+        ug_val = gross_value * unrealized_ratio
+        rg_val = gross_value - ug_val
+        
+        un_val = net_value * unrealized_ratio
+        rn_val = net_value - un_val
+
+        _add(rg_val, rg, "[Zrealizowane]")
+        _add(ug_val, ug, "[Niezrealizowane]")
+        
+        _add(rn_val, rn, "[Zrealizowane]")
+        _add(un_val, un, "[Niezrealizowane]")
+
+        return rg, ug, rn, un
+
+    def _allocate_fully_realized_flows(
+        self, 
+        event_date: date, 
+        gross_value: float, 
+        net_value: float,
+        flow_type: CashFlowType, 
+        desc: str
+    ) -> Tuple[List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance]]:
+        """Przypisuje całą kwotę wyłącznie do przepływów zrealizowanych (np. wcześniejszy lub ostateczny wykup)."""
+        rg, ug, rn, un = [], [], [], []
+        
+        if abs(gross_value) > 1e-4:
+            rg.append(CashFlowInstance(date=event_date, value=gross_value, flow_type=flow_type, description=desc))
+        if abs(net_value) > 1e-4:
+            rn.append(CashFlowInstance(date=event_date, value=net_value, flow_type=flow_type, description=desc))
+            
+        return rg, ug, rn, un
+
+    def _build_buy_flow(
+        self, 
+        buy_transaction: BuyTransaction, 
+        initial_quantity: int, 
+        final_active_quantity: int
+    ) -> Tuple[List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance]]:
+        cost_value = -buy_transaction.value_net
+        is_exchange_str = "(Zamiana)" if getattr(buy_transaction, 'is_exchange', False) else "(Gotówka)"
+        desc = f"Zakup {buy_transaction.quantity} szt. {is_exchange_str}"
+        
+        # Przy zakupie wartość brutto i netto jest tożsama
+        return self._allocate_proportional_flows(
+            buy_transaction.timestamp.date(), cost_value, cost_value, initial_quantity, final_active_quantity, CashFlowType.BUY, desc
+        )
+
+    def _build_interest_and_maturity_flows(
+        self, 
+        periods: List['BondInterestPeriod'], 
+        calculation_date: date, 
+        initial_quantity: int, 
+        early_redemptions: List['BondEarlyRedemption'], 
+        final_active_quantity: int,
+        nominal_value: float,
+        tax_rate: float
+    ) -> Tuple[List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance]]:
+        rg, ug, rn, un = [], [], [], []
+        
         for i, period in enumerate(periods):
-            # Pomijamy okresy, które kończą się w przyszłości względem daty wyceny
             if period.end_date > calculation_date:
                 continue
 
             active_quantity = self._get_active_quantity_at_date(period.end_date, initial_quantity, early_redemptions)
-            
             if active_quantity <= 0:
                 continue 
 
-            # 1. Wypłata odsetek w trakcie trwania obligacji (tylko niezapitalizowane)
-            if not period.is_capitalized and period.gross_interest_per_bond > 0:
-                amount = active_quantity * period.gross_interest_per_bond
-                cash_flows.append(
-                    CashFlowInstance(
-                        date=period.end_date,
-                        amount=amount,
-                        flow_type=CashFlowType.INTEREST,
-                        description=f"Wypłata odsetek (okres {period.period_number}) dla {active_quantity} szt."
-                    )
+            # Odsetki (niezapitalizowane)
+            if not period.is_capitalized and period.gross_interest_per_bond > 1e-4:
+                gross_val = active_quantity * period.gross_interest_per_bond
+                net_val = gross_val * (1.0 - tax_rate)
+                desc = f"Wypłata odsetek (okres {period.period_number}) dla {active_quantity} szt."
+                
+                r_g, u_g, r_n, u_n = self._allocate_proportional_flows(
+                    period.end_date, gross_val, net_val, active_quantity, final_active_quantity, CashFlowType.INTEREST, desc
                 )
+                rg.extend(r_g); ug.extend(u_g); rn.extend(r_n); un.extend(u_n)
 
-            # 2. Zwrot kapitału na koniec (Wykup terminowy)
-            if i == len(periods) - 1 and period.ending_capital_per_bond > 0:
-                amount = active_quantity * period.ending_capital_per_bond
-                cash_flows.append(
-                    CashFlowInstance(
-                        date=period.end_date,
-                        amount=amount, 
-                        flow_type=CashFlowType.MATURITY,
-                        description=f"Wykup terminowy (zapadalność) dla {active_quantity} szt."
-                    )
+            # Wykup terminowy
+            if i == len(periods) - 1 and period.ending_capital_per_bond > 1e-4:
+                gross_val = active_quantity * period.ending_capital_per_bond
+                # Podatek płacimy tylko od zysku (wszystko to, co przekracza bazowy nominał)
+                profit = max(0.0, gross_val - (active_quantity * nominal_value))
+                net_val = gross_val - (profit * tax_rate)
+                
+                desc = f"Wykup terminowy (zapadalność) dla {active_quantity} szt."
+                r_g, u_g, r_n, u_n = self._allocate_proportional_flows(
+                    period.end_date, gross_val, net_val, active_quantity, final_active_quantity, CashFlowType.MATURITY, desc
                 )
+                rg.extend(r_g); ug.extend(u_g); rn.extend(r_n); un.extend(u_n)
+                
+        return rg, ug, rn, un
 
-        # --- C. PRZEPŁYWY Z PRZEDTERMINOWYCH WYKUPÓW ---
+    def _build_early_redemption_flows(
+        self, 
+        early_redemptions: List['BondEarlyRedemption'], 
+        calculation_date: date, 
+        periods: List['BondInterestPeriod'], 
+        nominal_value: float, 
+        final_active_quantity: int,
+        tax_rate: float
+    ) -> Tuple[List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance]]:
+        rg, ug, rn, un = [], [], [], []
+        
         for redemption in early_redemptions:
             if redemption.redemption_date > calculation_date:
                 continue
 
-            # 1. Pobranie właściwego okresu dla daty wykupu
             active_period = self._get_active_period_for_date(redemption.redemption_date, periods)
-
             returned_capital = redemption.quantity * nominal_value
             
-            # 2. Wyliczenie odsetek z wykorzystaniem parametrów z active_period
             accrued_per_bond = self._calculate_act_act_interest_per_bond(
                 base_capital_per_bond=active_period.base_capital_per_bond,
                 rate=active_period.interest_rate,
@@ -635,36 +779,50 @@ class PortfolioBuilder:
             )
             accrued_total = redemption.quantity * accrued_per_bond
 
+            # --- LOGIKA KARY ---
             penalty = 0.0
             if redemption.penalty_method == EarlyRedemptionType.FORFEIT_INTEREST:
                 penalty = accrued_total
             elif redemption.penalty_method == EarlyRedemptionType.FEE:
-                max_penalty_calculated = redemption.quantity * redemption.penalty_per_unit
-                penalty = min(accrued_total, max_penalty_calculated)
+                max_penalty = redemption.quantity * redemption.penalty_per_unit
+                
+                # ZASADA: Tylko w pierwszym okresie chronimy nominał (kara nie może przekroczyć narosłych odsetek).
+                # W kolejnych okresach kara jest sztywna i może uszczuplić kapitał (nominal_value).
+                is_first_period = (active_period.period_number == 1)
+                
+                if is_first_period:
+                    penalty = min(accrued_total, max_penalty)
+                else:
+                    penalty = max_penalty
 
-            payout = returned_capital + accrued_total - penalty
-
-            cash_flows.append(
-                CashFlowInstance(
-                    date=redemption.redemption_date,
-                    amount=payout,
-                    flow_type=CashFlowType.EARLY_REDEMPTION,
-                    description=f"Przedterminowy wykup {redemption.quantity} szt."
-                )
+            payout_gross = returned_capital + accrued_total - penalty
+            
+            # Zysk do opodatkowania:
+            # Jeśli payout_gross < returned_capital (kara zjadła część kapitału), 
+            # zysk wynosi 0 (podatek 0), a stratę na kapitale "chłoniemy".
+            profit = max(0.0, payout_gross - returned_capital)
+            payout_net = payout_gross - (profit * tax_rate)
+            
+            desc = f"Przedterminowy wykup {redemption.quantity} szt. (Kara: {penalty:.2f} zł)"
+            
+            r_g, u_g, r_n, u_n = self._allocate_fully_realized_flows(
+                redemption.redemption_date, payout_gross, payout_net, CashFlowType.EARLY_REDEMPTION, desc
             )
+            rg.extend(r_g); ug.extend(u_g); rn.extend(r_n); un.extend(u_n)
+            
+        return rg, ug, rn, un
 
-        # --- D. BIEŻĄCA WYCENA (Terminal Value) ---
-        if calculation_date > periods[-1].end_date:
-            final_active_quantity = 0
-        else:
-            final_active_quantity = self._get_active_quantity_at_date(calculation_date, initial_quantity, early_redemptions)
-
-
+    def _build_current_valuation_flow(
+        self, 
+        calculation_date: date, 
+        periods: List['BondInterestPeriod'], 
+        nominal_value: float, 
+        final_active_quantity: int,
+        tax_rate: float
+    ) -> Tuple[List[CashFlowInstance], List[CashFlowInstance]]:
+        ug, un = [], []
         if final_active_quantity > 0:
-            # 1. Pobranie właściwego okresu dla daty wyceny (calculation_date)
             active_period = self._get_active_period_for_date(calculation_date, periods)
-
-            # 2. Wyliczenie odsetek narosłych do dziś z wykorzystaniem parametrów z active_period
             accrued_today_per_bond = self._calculate_act_act_interest_per_bond(
                 base_capital_per_bond=active_period.base_capital_per_bond,
                 rate=active_period.interest_rate,
@@ -672,18 +830,17 @@ class PortfolioBuilder:
                 end_date=calculation_date
             )
             
-            current_value = final_active_quantity * (nominal_value + accrued_today_per_bond)
-
-            cash_flows.append(
-                CashFlowInstance(
-                    date=calculation_date,
-                    amount=current_value,
-                    flow_type=CashFlowType.CURRENT_VALUATION,
-                    description=f"Wycena bieżąca {final_active_quantity} szt. na dzień {calculation_date}"
-                )
-            )
-
-        # --- FINALNE SORTOWANIE ---
-        cash_flows.sort(key=lambda cf: cf.date)
-        
-        return cash_flows
+            gross_val = final_active_quantity * (nominal_value + accrued_today_per_bond)
+            profit = final_active_quantity * accrued_today_per_bond
+            net_val = gross_val - (profit * tax_rate)
+            
+            desc = f"Wycena bieżąca {final_active_quantity} szt. na dzień {calculation_date}"
+            
+            ug.append(CashFlowInstance(
+                date=calculation_date, value=gross_val, flow_type=CashFlowType.CURRENT_VALUATION, description=desc
+            ))
+            un.append(CashFlowInstance(
+                date=calculation_date, value=net_val, flow_type=CashFlowType.CURRENT_VALUATION, description=desc
+            ))
+            
+        return ug, un
