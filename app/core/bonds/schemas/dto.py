@@ -116,25 +116,25 @@ class BondBaseData(BaseModel):
     early_redemption_penalty: float = Field(ge=0.0)
 
 class BondCurrentData(BaseModel):
-    # Bieżąca wycena jednej sztuki obligacji (nominał + narosłe odsetki)
-    price: float = Field(ge=0)
+    quantity: int
+
+    # Bieżąca wycena według ACT/ACT
+    value_gross_per_bond: float = Field(ge=0)
+    value_gross: float = Field(ge=0.0)
+
     interest_rate: float = Field(ge=0.0, default=0.0)
 
-    # Całkowita bieżąca wartość posiadanego pakietu (quantity * price)
-    interest_pln: float = Field(ge=0)
-    value_pln: float = Field(ge=0)
-
-    # Moment przeliczenia wyceny
-    price_datetime: datetime
+    # Dzień przeliczenia wyceny
+    calculation_date: date
 
     @classmethod
     def empty(cls) -> "BondCurrentData":
         return cls(
-            price=0.0,
+            quantity=0,
+            value_gross_per_bond=0.0,
+            value_gross=0.0,
             interest_rate=0.0,
-            interest_pln=0.0,
-            value_pln=0.0,
-            price_datetime=datetime(1970, 1, 1, tzinfo=timezone.utc)
+            calculation_date=date.today()
         )
 
 class BondInterestPeriod(BaseModel):
@@ -167,8 +167,35 @@ class BondInterestPeriod(BaseModel):
     accrued_interest_to_date: float = Field(ge=0)
     accrued_interest_to_date_per_bond: float = Field(ge=0)
 
+    @classmethod
+    def empty(cls) -> "BondInterestPeriod":
+        """
+        Zwraca pustą, wyzerowaną instancję okresu odsetkowego.
+        Przydatne jako mock lub inicjalny stan pustego portfela.
+        """
+        return cls(
+            period_number=0,
+            start_date=date.min,
+            end_date=date.min,
+            status=PeriodStatus.FUTURE,  # <-- Podmień na właściwą wartość z Twojego enuma
+            days_elapsed=0,
+            days_total=0,
+            interest_rate=0.0,
+            is_rate_estimated=False,
+            benchmark_value=0.0,
+            margin=0.0,
+            is_capitalized=False,
+            base_capital=0.0,
+            base_capital_per_bond=0.0,
+            gross_interest=0.0,
+            gross_interest_per_bond=0.0,
+            ending_capital=0.0,
+            ending_capital_per_bond=0.0,
+            accrued_interest_to_date=0.0,
+            accrued_interest_to_date_per_bond=0.0
+        )
+
 class BondSummary(BaseModel):
-    quantity: float = Field(ge=0)
     total_invested: float = Field(ge=0)
     
     realized_profit_gross: float
@@ -181,9 +208,6 @@ class BondSummary(BaseModel):
     roi_unrealized_net: float
     roi_unrealized_pa_net: float
     
-    interest_profit_gross: float = Field(ge=0)
-    interest_profit_net: float = Field(ge=0)
-    
     total_profit_net: float
     roi_net: float
     roi_pa_net: float
@@ -194,7 +218,6 @@ class BondSummary(BaseModel):
     @classmethod
     def empty(cls) -> "BondSummary":
         return cls(
-            quantity=0.0,
             total_invested=0.0,
             realized_profit_gross=0.0,
             realized_profit_net=0.0,
@@ -204,8 +227,6 @@ class BondSummary(BaseModel):
             unrealized_profit_net=0.0,
             roi_unrealized_net=0.0,
             roi_unrealized_pa_net=0.0,
-            interest_profit_gross=0.0,
-            interest_profit_net=0.0,
             total_profit_net=0.0,
             roi_net=0.0,
             roi_pa_net=0.0,

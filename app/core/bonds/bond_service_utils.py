@@ -11,8 +11,11 @@ from app import SessionLocal
 from app.core.bonds.schemas.dto import (
     BondInterestPeriod,
     PeriodStatus,
-    EarlyRedemptionType, EarlyRedemptionSimulation, BondEarlyRedemption,
-    map_coupon_frequency_to_months_step, map_coupon_frequency_to_rate_frequency,
+    EarlyRedemptionType, 
+    BondEarlyRedemption,
+    BondCurrentData,
+    map_coupon_frequency_to_months_step, 
+    map_coupon_frequency_to_rate_frequency,
     resolve_early_redemption_type,
     BOND_TAX_RATE
 )
@@ -30,6 +33,8 @@ from app.schemas.database.macroeconomics import Inflation, InterestRate
 
 class PortfolioBuilderResult(BaseModel):
 
+    initial_quantity: int
+    current_data: BondCurrentData
     periods: List[BondInterestPeriod]
     cash_flows: CashFlowSummary
     early_redemptions: List[BondEarlyRedemption]
@@ -86,16 +91,32 @@ class PortfolioBuilder:
         )
 
         early_redemptions = self._build_early_redemptions(tt=tt)
-        buy_transactions = self._build_buy_transactions(tt=tt)
+        buy_transaction, initial_quantity = self._build_buy_transactions(tt=tt)
         cash_flows = self._build_cash_flows(
             calculation_date=calculation_date,
             nominal_value=nominal_value,
-            buy_transaction=buy_transactions[0], 
+            maturity_date=maturity_date,
+            buy_transaction=buy_transaction, 
             periods=periods, 
+            early_redemptions=early_redemptions,
+            tax_rate=BOND_TAX_RATE
+        )
+
+        current_data = self._build_current_data(
+            calculation_date=calculation_date,
+            initial_quantity=initial_quantity,
+            nominal_value=nominal_value,
+            periods=periods,
             early_redemptions=early_redemptions
         )
 
-        return PortfolioBuilderResult(periods=periods, cash_flows=cash_flows, early_redemptions=early_redemptions)
+        return PortfolioBuilderResult(
+            initial_quantity=initial_quantity,
+            current_data=current_data,
+            periods=periods, 
+            cash_flows=cash_flows, 
+            early_redemptions=early_redemptions
+        )
     
 
     # Metody pomocnicze
@@ -237,78 +258,6 @@ class PortfolioBuilder:
         """
         interest = (base_capital_per_bond * rate) / frequency
         return round(interest, 2)
-
-    def simulate_early_redemption(self, redemption_date: date, penalty_fee: float) -> EarlyRedemptionSimulation:
-        """
-        Symuluje wcześniejszy wykup na zadany dzień z uwzględnieniem podatku Belki.
-        Zwraca ustrukturyzowany model EarlyRedemptionSimulation.
-        """
-    #     if not self.periods or redemption_date <= self.periods[0].start_date:
-    #         raise ValueError("Data wykupu musi być późniejsza niż data zakupu obligacji.")
-
-    #     active_period = None
-    #     accumulated_capital_per_bond = self.params.nominal_value
-        
-    #     for period in self.periods:
-    #         if period.start_date <= redemption_date < period.end_date:
-    #             active_period = period
-    #             accumulated_capital_per_bond = period.base_capital_per_bond
-    #             break
-                
-    #     if not active_period:
-    #         raise ValueError("Data wykupu przekracza datę zapadalności obligacji.")
-
-    #     # 1. Bieżące odsetki ułamkowe (ACT/ACT) do dnia wykupu
-    #     current_period_interest_per_bond = self._calculate_act_act_interest_per_bond(
-    #         base_capital_per_bond=accumulated_capital_per_bond,
-    #         rate=active_period.interest_rate,
-    #         start_date=active_period.start_date,
-    #         end_date=redemption_date
-    #     )
-
-    #     # 2. Skumulowane odsetki brutto
-    #     total_interest_accrued_per_bond = (accumulated_capital_per_bond - self.params.nominal_value) + current_period_interest_per_bond
-        
-    #     # 3. Ochrona kapitału i opłata karna (Logika biznesowa)
-    #     if hasattr(self.params, 'early_redemption_type') and self.params.early_redemption_type == EarlyRedemptionType.FORFEIT_INTEREST:
-    #         # W przypadku utraty odsetek, kara pochłania dokładnie cały wypracowany zysk.
-    #         actual_penalty_per_bond = total_interest_accrued_per_bond
-    #     else:
-    #         # Standardowa opłata pobierana z zysku (FEE) - kapitał podstawowy jest chroniony.
-    #         actual_penalty_per_bond = min(total_interest_accrued_per_bond, penalty_fee)
-        
-    #     # 4. Wyliczenie kwoty brutto
-    #     gross_payout_per_bond = self.params.nominal_value + total_interest_accrued_per_bond - actual_penalty_per_bond
-
-    #     # 5. PODATEK BELKI - podstawa to zysk brutto minus zastosowana kara
-    #     tax_base_per_bond = max(0.0, total_interest_accrued_per_bond - actual_penalty_per_bond)
-    #     tax_per_bond = round(tax_base_per_bond * self.TAX_RATE, 2)
-        
-    #     # 6. Wypłata netto
-    #     net_payout_per_bond = gross_payout_per_bond - tax_per_bond
-
-    #     # --- Tworzenie modeli Pydantic ---
-        
-    #     per_bond_metrics = PerBondRedemptionMetrics(
-    #         nominal=self.params.nominal_value,
-    #         accrued_interest=round(total_interest_accrued_per_bond, 2),
-    #         penalty_applied=round(actual_penalty_per_bond, 2),
-    #         gross_payout=round(gross_payout_per_bond, 2),
-    #         tax_applied=tax_per_bond,
-    #         net_payout=round(net_payout_per_bond, 2)
-    #     )
-        
-    #     quantity = self.params.quantity
-        
-    #     total_metrics = TotalRedemptionMetrics(
-    #         quantity=quantity,
-    #         gross_payout=round(gross_payout_per_bond * quantity, 2),
-    #         total_penalty=round(actual_penalty_per_bond * quantity, 2),
-    #         total_tax=round(tax_per_bond * quantity, 2),
-    #         net_payout=round(net_payout_per_bond * quantity, 2)
-    #     )
-        
-        return EarlyRedemptionSimulation.empty()
 
     def _update_periods(
             self, 
@@ -516,12 +465,13 @@ class PortfolioBuilder:
 
         return early_redemptions
     
-    def _build_buy_transactions(self, tt: TickerTransactions) -> List[BuyTransaction]:
+    def _build_buy_transactions(self, tt: TickerTransactions) -> Tuple[BuyTransaction, int]:
         "Filtruje transakcje, wybierając z nich wyłącznie transakcje BUY"
 
         buy_transactions: List[BuyTransaction] = [tx for tx in tt.transactions if tx.type == TransactionType.BUY]
         assert len(buy_transactions) == 1, "Obligacja może mieć co najwyżej jedną transakcję BUY."
-        return buy_transactions
+
+        return buy_transactions[0], int(buy_transactions[0].quantity)
     
     def _get_active_quantity_at_date(
         self, 
@@ -553,18 +503,53 @@ class PortfolioBuilder:
                 
         raise ValueError(f"Nie znaleziono okresu odsetkowego obejmującego datę: {target_date}")
 
+    # ################# CURRENT DATA ###############
+    def _build_current_data(
+        self,
+        calculation_date: date,
+        initial_quantity: int,
+        nominal_value: float,
+        periods: List[BondInterestPeriod],
+        early_redemptions: List[BondEarlyRedemption],
 
+    ) -> BondCurrentData:
+        
+        current_quantity = self._get_active_quantity_at_date(calculation_date, initial_quantity, early_redemptions)
+        try:
+            active_period = self._get_active_period_for_date(calculation_date, periods)
+        except ValueError as e:
+            return BondCurrentData.empty()
+
+        accrued_today_per_bond = self._calculate_act_act_interest_per_bond(
+                base_capital_per_bond=active_period.base_capital_per_bond,
+                rate=active_period.interest_rate,
+                start_date=active_period.start_date,
+                end_date=calculation_date
+            )
+        
+        value_gross_per_bond = nominal_value + accrued_today_per_bond
+        value_gross = current_quantity * value_gross_per_bond
+
+        return BondCurrentData(
+            quantity=current_quantity,
+            value_gross_per_bond=value_gross_per_bond,
+            value_gross=value_gross,
+            interest_rate=active_period.interest_rate,
+            calculation_date=calculation_date
+        )
+    
+    
     # ################# CASH FLOWS #################
     
-
     def _build_cash_flows(
         self, 
         calculation_date: date,
         nominal_value: float,
+        maturity_date: date,
         buy_transaction: BuyTransaction, 
-        periods: List['BondInterestPeriod'], 
-        early_redemptions: List['BondEarlyRedemption'],
-        tax_rate: float = BOND_TAX_RATE
+        periods: List[BondInterestPeriod], 
+        early_redemptions: List[BondEarlyRedemption],
+        tax_rate: float
     ) -> CashFlowSummary:
         
         # 1. Wstępna walidacja
@@ -575,7 +560,7 @@ class PortfolioBuilder:
             return CashFlowSummary(gross=empty_cf, net=empty_cf)
 
         # 2. Ustalenie docelowej liczby sztuk
-        if calculation_date > periods[-1].end_date:
+        if calculation_date > maturity_date:
             final_active_quantity = 0
         else:
             final_active_quantity = self._get_active_quantity_at_date(calculation_date, initial_quantity, early_redemptions)
@@ -709,10 +694,10 @@ class PortfolioBuilder:
 
     def _build_interest_and_maturity_flows(
         self, 
-        periods: List['BondInterestPeriod'], 
+        periods: List[BondInterestPeriod], 
         calculation_date: date, 
         initial_quantity: int, 
-        early_redemptions: List['BondEarlyRedemption'], 
+        early_redemptions: List[BondEarlyRedemption], 
         final_active_quantity: int,
         nominal_value: float,
         tax_rate: float
@@ -727,7 +712,7 @@ class PortfolioBuilder:
             if active_quantity <= 0:
                 continue 
 
-            # Odsetki (niezapitalizowane)
+            # Odsetki (nieskapitalizowane)
             if not period.is_capitalized and period.gross_interest_per_bond > 1e-4:
                 gross_val = active_quantity * period.gross_interest_per_bond
                 net_val = gross_val * (1.0 - tax_rate)
@@ -755,9 +740,9 @@ class PortfolioBuilder:
 
     def _build_early_redemption_flows(
         self, 
-        early_redemptions: List['BondEarlyRedemption'], 
+        early_redemptions: List[BondEarlyRedemption], 
         calculation_date: date, 
-        periods: List['BondInterestPeriod'], 
+        periods: List[BondInterestPeriod], 
         nominal_value: float, 
         final_active_quantity: int,
         tax_rate: float
@@ -815,7 +800,7 @@ class PortfolioBuilder:
     def _build_current_valuation_flow(
         self, 
         calculation_date: date, 
-        periods: List['BondInterestPeriod'], 
+        periods: List[BondInterestPeriod], 
         nominal_value: float, 
         final_active_quantity: int,
         tax_rate: float
