@@ -13,10 +13,7 @@ from app.core.exchange.schemas.dto import (
 )
 
 from app.core.bonds.service import BondEngine
-from app.core.bonds.schemas.dto import (
-    DashboardBondResponse, BondData, BondBaseData,
-    map_frequency_to_months, resolve_early_redemption_type
-)
+from app.core.bonds.schemas.dto import DashboardBondResponse
 
 from app.portfolio.transformer import DashboardTransformer
 
