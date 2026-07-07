@@ -527,7 +527,7 @@ class PortfolioBuilder:
                 end_date=calculation_date
             )
         
-        value_gross_per_bond = nominal_value + accrued_today_per_bond
+        value_gross_per_bond = active_period.base_capital_per_bond + accrued_today_per_bond
         value_gross = current_quantity * value_gross_per_bond
 
         return BondCurrentData(
@@ -718,8 +718,8 @@ class PortfolioBuilder:
                 net_val = gross_val * (1.0 - tax_rate)
                 desc = f"Wypłata odsetek (okres {period.period_number}) dla {active_quantity} szt."
                 
-                r_g, u_g, r_n, u_n = self._allocate_proportional_flows(
-                    period.end_date, gross_val, net_val, active_quantity, final_active_quantity, CashFlowType.INTEREST, desc
+                r_g, u_g, r_n, u_n = self._allocate_fully_realized_flows(
+                    period.end_date, gross_val, net_val, CashFlowType.INTEREST, desc
                 )
                 rg.extend(r_g); ug.extend(u_g); rn.extend(r_n); un.extend(u_n)
 
@@ -731,8 +731,8 @@ class PortfolioBuilder:
                 net_val = gross_val - (profit * tax_rate)
                 
                 desc = f"Wykup terminowy (zapadalność) dla {active_quantity} szt."
-                r_g, u_g, r_n, u_n = self._allocate_proportional_flows(
-                    period.end_date, gross_val, net_val, active_quantity, final_active_quantity, CashFlowType.MATURITY, desc
+                r_g, u_g, r_n, u_n = self._allocate_fully_realized_flows(
+                    period.end_date, gross_val, net_val, CashFlowType.MATURITY, desc
                 )
                 rg.extend(r_g); ug.extend(u_g); rn.extend(r_n); un.extend(u_n)
                 
@@ -815,7 +815,7 @@ class PortfolioBuilder:
                 end_date=calculation_date
             )
             
-            gross_val = final_active_quantity * (nominal_value + accrued_today_per_bond)
+            gross_val = final_active_quantity * (active_period.base_capital_per_bond + accrued_today_per_bond)
             profit = final_active_quantity * accrued_today_per_bond
             net_val = gross_val - (profit * tax_rate)
             

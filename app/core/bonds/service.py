@@ -60,8 +60,6 @@ class BondEngine:
     ### Metody pomocnicze    
     def _build_bond_data(self, bond: Bond, calculation_date: date, pb_result: PortfolioBuilderResult) -> BondData:
 
-        nominal_value = float(bond.nominal_value)       # type: ignore
-        initial_quantity = pb_result.initial_quantity
         current_data = pb_result.current_data
         periods = pb_result.periods
         cash_flows = pb_result.cash_flows
