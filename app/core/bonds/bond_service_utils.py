@@ -453,15 +453,15 @@ class PortfolioBuilder:
                     )
                 )
         # dodajemy mockowy wykup, bo nie mamy żadnego rzeczywistego
-        if tt.ticker == 'DOR1126':
-            early_redemptions.append(
-                BondEarlyRedemption(
-                    redemption_date = date(2026, 6, 30),
-                    quantity = 10,
-                    penalty_method = EarlyRedemptionType.FEE,
-                    penalty_per_unit = 2.0
-                )
-            )
+        # if tt.ticker == 'DOR1126':
+        #     early_redemptions.append(
+        #         BondEarlyRedemption(
+        #             redemption_date = date(2026, 6, 30),
+        #             quantity = 10,
+        #             penalty_method = EarlyRedemptionType.FEE,
+        #             penalty_per_unit = 2.0
+        #         )
+        #     )
 
         return early_redemptions
     
@@ -581,12 +581,12 @@ class PortfolioBuilder:
 
         # --- B. REGULARNE ODSETKI I ZAPADALNOŚĆ ---
         _extend_flows(self._build_interest_and_maturity_flows(
-            periods, calculation_date, initial_quantity, early_redemptions, final_active_quantity, nominal_value, tax_rate
+            periods, calculation_date, initial_quantity, early_redemptions, nominal_value, tax_rate
         ))
 
         # --- C. PRZEDTERMINOWE WYKUPY ---
         _extend_flows(self._build_early_redemption_flows(
-            early_redemptions, calculation_date, periods, nominal_value, final_active_quantity, tax_rate
+            early_redemptions, calculation_date, periods, nominal_value, tax_rate
         ))
 
         # --- D. BIEŻĄCA WYCENA ---
@@ -698,7 +698,6 @@ class PortfolioBuilder:
         calculation_date: date, 
         initial_quantity: int, 
         early_redemptions: List[BondEarlyRedemption], 
-        final_active_quantity: int,
         nominal_value: float,
         tax_rate: float
     ) -> Tuple[List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance]]:
@@ -744,7 +743,6 @@ class PortfolioBuilder:
         calculation_date: date, 
         periods: List[BondInterestPeriod], 
         nominal_value: float, 
-        final_active_quantity: int,
         tax_rate: float
     ) -> Tuple[List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance], List[CashFlowInstance]]:
         rg, ug, rn, un = [], [], [], []
