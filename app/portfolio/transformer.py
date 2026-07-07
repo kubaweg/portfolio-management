@@ -67,7 +67,7 @@ class DashboardTransformer:
             name=item.base_data.name,
             quantity=item.current_data.quantity,
             current_value_pln=item.current_data.value_gross,
-            roi_pln=item.summary.roi_net,
+            roi_pln=item.summary.roi_pa_net,
             total_profit_gross_pln=item.summary.realized_profit_gross + item.summary.unrealized_profit_gross,
             total_profit_net_pln=item.summary.realized_profit_net + item.summary.unrealized_profit_net
         )
