@@ -53,7 +53,7 @@ class DashboardTransformer:
         return DashboardMainTableRowData(
             ticker=item.base_data.ticker,
             name=item.base_data.name,
-            quantity=item.summary.quantity,
+            quantity=item.current_data.quantity,
             current_value_pln=item.current_data.value_pln,
             roi_pln=item.summary.roi_pln,
             total_profit_gross_pln=item.summary.total_profit_pln,
@@ -79,7 +79,7 @@ class DashboardTransformer:
         # 1. Agregacja z Exchange (Giełda: ETF/ETC)
         # =========================================================================
         exch_invested = sum(
-            item.summary.avg_price_pln * item.summary.quantity 
+            item.summary.avg_price_pln * item.current_data.quantity 
             for item in input_data.exchange_response.data
         )
         exch_current = sum(
@@ -88,7 +88,7 @@ class DashboardTransformer:
         )
         # Wartość + dywidendy/odsetki
         exch_current_with_interest = sum(
-            item.current_data.value_pln + item.summary.interest_profit_pln 
+            item.current_data.value_pln
             for item in input_data.exchange_response.data
         )
         
@@ -228,7 +228,7 @@ class DashboardTransformer:
         
         for e in input_data.exchange_response.data:
             combined_assets.append({
-                "invested": e.summary.avg_price_pln * e.summary.quantity,
+                "invested": e.summary.avg_price_pln * e.current_data.quantity,
                 "current": e.current_data.value_pln,
                 "type": e.base_data.type,
                 "category2": e.base_data.category2,
