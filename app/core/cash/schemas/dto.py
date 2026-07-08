@@ -12,6 +12,7 @@ class CashFlowType(str, Enum):
     # Transakcje i operacje na papierach
     BUY = "BUY"
     SELL = "SELL"
+    DIVIDEND = "DIVIDEND"
     
     # Operacje specyficzne dla obligacji
     INTEREST = "INTEREST"
