@@ -23,11 +23,12 @@ class BaseTransaction(BaseModel):
         description="Data i godzina zawarcia transakcji w strefie czasowej UTC"
     )
     value_net: float = Field(
-        ..., 
+        ge=0.0, 
         description="Absolutny, ostateczny wpływ gotówkowy na saldo portfela. Zawsze wartość dodatnia."
     )
     fee: float = Field(
-        default=0.0, 
+        default=0.0,
+        ge=0.0, 
         description="Opłaty i prowizje transakcyjne pobrane przez brokera. Domyślnie 0.0."
     )
     tax: float = Field(
