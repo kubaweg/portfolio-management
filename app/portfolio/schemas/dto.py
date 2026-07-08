@@ -68,6 +68,7 @@ class DashboardMainTableRowData(BaseModel):
     current_value_pln: float
     roi_pln: float
     total_profit_gross_pln: float
+    total_profit_net_pln: float
 
 class RowDetailsBond(BaseModel):
     data: Any

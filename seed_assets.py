@@ -124,6 +124,7 @@ def seed_database():
         # Dane odczytane ze zdjęcia: (Ticker, Data wykupu, Kara za przedterminowy wykup, Stopa początkowa, Marża ponad benchmark, Aktywny)
         bonds_data = [
             ("OTS0326", date(2026, 3, 16), "0.00", "0.0250", None, False),
+            ("OTS0826", date(2026, 5, 14), "0.00", "0.0200", None, False),
             ("ROR0625", date(2025, 6, 4), "0.50", "0.0595", "0.0", False),
             ("ROR1025", date(2025, 10, 17), "0.50", "0.0575", "0.0", False),
             ("ROR1225", date(2025, 12, 4), "0.50", "0.0575", "0.0", False),
@@ -153,9 +154,9 @@ def seed_database():
                 
                 # Wyliczamy datę emisji cofając się o odpowiednią liczbę lat (tenor)
                 issue = (
-                    maturity_date - relativedelta(month=3)
+                    maturity_date - relativedelta(months=3)
                     if ticker.startswith('OTS')
-                    else maturity_date - relativedelta(year=cfg['tenor'])
+                    else maturity_date - relativedelta(years=cfg['tenor'])
                 )
 
                 assets_to_add.append(Bond(

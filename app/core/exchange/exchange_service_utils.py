@@ -5,7 +5,7 @@ from app.schemas.domain.transactions import (
     TickerTransactions,
     BuyTransaction,
     SellTransaction,
-    InterestTransaction
+    DividendTransaction
 )
 from app.schemas.domain.positions import OpenPosition, ClosedPosition
 
@@ -26,7 +26,7 @@ class PositionBuilderResult(BaseModel):
 class PositionBuilder:
     """
     Buduje pozycje otwarte/zamknięte dla jednego tickera na podstawie
-    listy transakcji domenowych (FIFO).
+    listy transakcji domenowych.
     """
 
     def build(self, tt: TickerTransactions, current_price: float, fx_current: float) -> PositionBuilderResult:
@@ -57,10 +57,10 @@ class PositionBuilder:
                 realized_profit_pln += tx_realized_profit_pln
                 closed_positions.extend(closed)
 
-            elif isinstance(tx, InterestTransaction):
+            elif isinstance(tx, DividendTransaction):
                 # Odsetki traktujemy jako zysk zrealizowany (cashflow)
-                interest_profit += tx.value
-                interest_profit_pln += tx.value
+                interest_profit += tx.value_net
+                interest_profit_pln += tx.value_net
 
         # Po przejściu wszystkich transakcji budujemy pozycje otwarte
         total_unrealized, total_unrealized_pln, open_positions = self._build_open_positions(

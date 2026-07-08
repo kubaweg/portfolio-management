@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -8,12 +8,12 @@ from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
 from app.core.fx_calculator import FXCalculator
 
-from app.core.exchange.position_builder import PositionBuilder, PositionBuilderResult
+from app.core.exchange.exchange_service_utils import PositionBuilder, PositionBuilderResult
 from app.core.exchange.schemas.dto import (
     ExchangeBaseData, ExchangeSummary, ExchangeFXData, ExchangeCurrentData, ExchangeData
 )
 from app.core.market_data import MarketDataProvider
-from app.core.exchange.annualized_roi import calculate_annualized_roi, AnnualizedRoiOutput
+from app.core.exchange.annualized_roi import calculate_annualized_roi
 
 # Modele DTO
 class OpenPositionsMetrics(BaseModel):
@@ -90,7 +90,6 @@ class MarketPriceData(BaseModel):
         default=None, 
         description="Data i czas (timestamp) ostatniej aktualizacji kursu walutowego."
     )
-
 
 class ExchangeEngine:
 

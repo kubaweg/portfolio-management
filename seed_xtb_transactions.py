@@ -35,7 +35,7 @@ def import_from_excel(file_path):
                 ts_value = pd.to_datetime(row['timestamp'])
 
                 tx_type_str = str(row['type']).upper().strip()
-                tx_type = TransactionType[tx_type_str]
+                tx_type = TransactionType(tx_type_str)
                 
                 # --- KLUCZOWY MOMENT: Sprawdzenie duplikatu ---
                 # Szukamy czy identyczna transakcja już jest w bazie
@@ -53,14 +53,19 @@ def import_from_excel(file_path):
                     if already_exists_count % 10 == 0:
                         print(f"Info: Znaleziono już {already_exists_count} istniejących rekordów...")
                     continue
+                
+                quantity = Decimal(str(row['quantity']))
+                price = Decimal(str(row['price']))
+                fx_rate = Decimal(str(row['fx_rate']))
 
                 new_tx = Transaction(
                     asset_id=asset.id,
                     type=tx_type,
                     timestamp=ts_value, # Przekazujemy pełny timestamp z godziną
-                    quantity=Decimal(str(row['quantity'])),
-                    price=Decimal(str(row['price'])),
-                    fx_rate=Decimal(str(row['fx_rate'])),
+                    value_net=quantity*price*fx_rate,
+                    quantity=quantity,
+                    price=price,
+                    fx_rate=fx_rate,
                     notes=str(row['notes']) if pd.notna(row['notes']) else None
                 )
 

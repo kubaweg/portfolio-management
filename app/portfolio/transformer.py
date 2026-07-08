@@ -56,7 +56,8 @@ class DashboardTransformer:
             quantity=item.summary.quantity,
             current_value_pln=item.current_data.value_pln,
             roi_pln=item.summary.roi_pln,
-            total_profit_gross_pln=item.summary.total_profit_pln
+            total_profit_gross_pln=item.summary.total_profit_pln,
+            total_profit_net_pln=item.summary.total_profit_pln
         )
 
     def _map_bond_to_row(self, item: BondData) -> DashboardMainTableRowData:
@@ -64,10 +65,11 @@ class DashboardTransformer:
         return DashboardMainTableRowData(
             ticker=item.base_data.ticker, # lub inna identyfikacja obligacji
             name=item.base_data.name,
-            quantity=item.summary.quantity,
-            current_value_pln=item.current_data.value_pln,
-            roi_pln=item.summary.roi_net,
-            total_profit_gross_pln = item.summary.realized_profit_gross + item.summary.unrealized_profit_gross
+            quantity=item.current_data.quantity,
+            current_value_pln=item.current_data.value_gross,
+            roi_pln=item.summary.roi_pa_net,
+            total_profit_gross_pln=item.summary.realized_profit_gross + item.summary.unrealized_profit_gross,
+            total_profit_net_pln=item.summary.realized_profit_net + item.summary.unrealized_profit_net
         )
 
     def _calculate_summary(self, input_data) -> DashboardSummaryData:
@@ -113,25 +115,25 @@ class DashboardTransformer:
         # =========================================================================
         bond_invested = sum(
             item.summary.total_invested
-            for item in input_data.bond_response.data
+            for item in input_data.bond_response.data if item.summary.overall_progress_percent < 1.0
         )
         bond_current = sum(
-            item.current_data.value_pln 
-            for item in input_data.bond_response.data
+            item.current_data.value_gross
+            for item in input_data.bond_response.data if item.summary.overall_progress_percent < 1.0
         )
         # Bieżąca wartość + zrealizowane już kupony odsetkowe (brutto)
         bond_current_with_interest = sum(
-            item.current_data.value_pln + item.summary.realized_profit_gross 
-            for item in input_data.bond_response.data
+            item.current_data.value_gross + item.summary.realized_profit_gross
+            for item in input_data.bond_response.data if item.summary.overall_progress_percent < 1.0
         )
         
         bond_unrealized_gross = sum(
             item.summary.unrealized_profit_gross 
-            for item in input_data.bond_response.data
+            for item in input_data.bond_response.data if item.summary.overall_progress_percent < 1.0
         )
         bond_realized_gross = sum(
             item.summary.realized_profit_gross 
-            for item in input_data.bond_response.data
+            for item in input_data.bond_response.data if item.summary.overall_progress_percent < 1.0
         )
         # Łączny zysk brutto dla obligacji (unrealized + realized)
         bond_total_gross = bond_unrealized_gross + bond_realized_gross
@@ -237,7 +239,7 @@ class DashboardTransformer:
         for b in input_data.bond_response.data:
             combined_assets.append({
                 "invested": b.summary.total_invested,
-                "current": b.current_data.value_pln,
+                "current": b.current_data.value_gross,
                 "type": b.base_data.type,
                 "category2": b.base_data.category2,
                 "name": b.base_data.name,

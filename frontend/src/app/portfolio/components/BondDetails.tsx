@@ -82,12 +82,12 @@ export const BondPeriodTable: React.FC<BondPeriodTableProps> = ({
             cell: info => <span className="font-bold text-slate-700">{formatPercent(info.getValue())}</span>,
             meta: { align: 'right' }
         }),
-        columnHelper.accessor('base_capital', {
+        columnHelper.accessor('base_capital_per_bond', {
             header: 'Baza (Łącznie)',
             cell: info => <span className="whitespace-nowrap">{formatPLN(info.getValue())}</span>,
             meta: { align: 'right' }
         }),
-        columnHelper.accessor('gross_interest', {
+        columnHelper.accessor('gross_interest_per_bond', {
             header: 'Odsetki Brutto',
             cell: info => (
                 <div className="flex flex-col items-end gap-0.5 whitespace-nowrap">

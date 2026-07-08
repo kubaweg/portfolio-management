@@ -1,8 +1,11 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List
 from app.schemas.domain.positions import OpenPosition, ClosedPosition
 from app.schemas.domain.transactions import TransactionType
+
+from app.core.cash.schemas.dto import CashFlowSummary
+
 
 
 class TransactionData(BaseModel):
@@ -84,8 +87,6 @@ class ExchangeCurrentData(BaseModel):
 
 # klasa główna
 class ExchangeData(BaseModel):
-    
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     base_data: ExchangeBaseData
     summary: ExchangeSummary
@@ -93,6 +94,8 @@ class ExchangeData(BaseModel):
 
     open_positions: List[OpenPosition]
     closed_positions: List[ClosedPosition]
+
+    # cash_flows: CashFlowSummary
 
 #############################################
 
