@@ -1,26 +1,16 @@
 from typing import List
-from pydantic import BaseModel
+
+from app.core.exchange.schemas.dto import (
+    PositionBuilderResult
+)
 
 from app.schemas.domain.transactions import (
     TickerTransactions,
     BuyTransaction,
-    SellTransaction,
-    DividendTransaction
+    SellTransaction
 )
+
 from app.schemas.domain.positions import OpenPosition, ClosedPosition
-
-
-class PositionBuilderResult(BaseModel):
-        open_positions: List[OpenPosition]
-        closed_positions: List[ClosedPosition]
-
-        realized_profit: float
-        unrealized_profit: float
-        interest_profit: float
-        
-        realized_profit_pln: float
-        unrealized_profit_pln: float
-        interest_profit_pln: float
 
 
 class PositionBuilder:
@@ -35,17 +25,15 @@ class PositionBuilder:
         current_price: bieżąca cena instrumentu (w walucie instrumentu)
         """
 
-        buy_lots: List[dict] = []  # każdy lot: {"qty": AssetQuantity, "price": MoneyAmount}
+        buy_lots: List[dict] = []
         open_positions: List[OpenPosition] = []
         closed_positions: List[ClosedPosition] = []
 
         realized_profit = 0.0
         unrealized_profit = 0.0
-        interest_profit = 0.0
 
         realized_profit_pln = 0.0
         unrealized_profit_pln = 0.0
-        interest_profit_pln = 0.0
 
         for tx in tt.transactions:
             if isinstance(tx, BuyTransaction):
@@ -57,27 +45,21 @@ class PositionBuilder:
                 realized_profit_pln += tx_realized_profit_pln
                 closed_positions.extend(closed)
 
-            elif isinstance(tx, DividendTransaction):
-                # Odsetki traktujemy jako zysk zrealizowany (cashflow)
-                interest_profit += tx.value_net
-                interest_profit_pln += tx.value_net
 
         # Po przejściu wszystkich transakcji budujemy pozycje otwarte
         total_unrealized, total_unrealized_pln, open_positions = self._build_open_positions(
             tt.ticker, buy_lots, current_price, fx_current
         )
-        unrealized_profit += (total_unrealized + interest_profit)
-        unrealized_profit_pln += (total_unrealized_pln + interest_profit_pln)
+        unrealized_profit += total_unrealized
+        unrealized_profit_pln += total_unrealized_pln
 
         return PositionBuilderResult(
             open_positions=open_positions,
             closed_positions=closed_positions,
             realized_profit=realized_profit,
             unrealized_profit=unrealized_profit,
-            interest_profit=interest_profit,
             realized_profit_pln=realized_profit_pln,
-            unrealized_profit_pln=unrealized_profit_pln,
-            interest_profit_pln=interest_profit_pln
+            unrealized_profit_pln=unrealized_profit_pln
         )
 
     # --- Metody pomocnicze ---
