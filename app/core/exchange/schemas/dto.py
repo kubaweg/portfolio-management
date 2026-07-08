@@ -12,11 +12,11 @@ class PositionBuilderResult(BaseModel):
     open_positions: List[OpenPosition]
     closed_positions: List[ClosedPosition]
 
-    realized_profit: float
-    unrealized_profit: float
+    # realized_profit: float
+    # unrealized_profit: float
     
-    realized_profit_pln: float
-    unrealized_profit_pln: float
+    # realized_profit_pln: float
+    # unrealized_profit_pln: float
 
 #########################################
 

@@ -56,10 +56,10 @@ class PositionBuilder:
         return PositionBuilderResult(
             open_positions=open_positions,
             closed_positions=closed_positions,
-            realized_profit=realized_profit,
-            unrealized_profit=unrealized_profit,
-            realized_profit_pln=realized_profit_pln,
-            unrealized_profit_pln=unrealized_profit_pln
+            # realized_profit=realized_profit,
+            # unrealized_profit=unrealized_profit,
+            # realized_profit_pln=realized_profit_pln,
+            # unrealized_profit_pln=unrealized_profit_pln
         )
 
     # --- Metody pomocnicze ---

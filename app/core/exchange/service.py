@@ -59,26 +59,26 @@ class ExchangeEngine:
 
         # 1) Obliczenia dla pozycji otwartych i zamkniętych (zwracają modele Pydantic)
         open_metrics = self._process_open_positions(open_positions, prices.fx_effective_rate_sell)
-        assert pb_result.unrealized_profit == open_metrics.unrealized_profit, ''
-        assert pb_result.unrealized_profit_pln == open_metrics.unrealized_profit_pln, ''
+        # assert pb_result.unrealized_profit == open_metrics.unrealized_profit, ''
+        # assert pb_result.unrealized_profit_pln == open_metrics.unrealized_profit_pln, ''
 
         closed_metrics = self._process_closed_positions(closed_positions)
-        assert pb_result.realized_profit == closed_metrics.realized_profit, ''
-        assert pb_result.realized_profit_pln == closed_metrics.realized_profit_pln, ''
+        # assert pb_result.realized_profit == closed_metrics.realized_profit, ''
+        # assert pb_result.realized_profit_pln == closed_metrics.realized_profit_pln, ''
 
         # 3) Zysk nominalny
-        total_profit = pb_result.realized_profit + pb_result.unrealized_profit
-        total_profit_pln = pb_result.realized_profit_pln + pb_result.unrealized_profit_pln
+        total_profit = closed_metrics.realized_profit + open_metrics.unrealized_profit
+        total_profit_pln = closed_metrics.realized_profit_pln + open_metrics.unrealized_profit_pln
 
         # 4) ROI bezwzględne
         historical_cost = open_metrics.historical_cost
         historical_cost_pln = open_metrics.historical_cost_pln
 
-        roi_realized = pb_result.realized_profit / historical_cost if historical_cost > 0 else 0.0
-        roi_realized_pln = pb_result.realized_profit_pln / historical_cost_pln if historical_cost_pln > 0 else 0.0
+        roi_realized = closed_metrics.realized_profit / historical_cost if historical_cost > 0 else 0.0
+        roi_realized_pln = closed_metrics.realized_profit_pln / historical_cost_pln if historical_cost_pln > 0 else 0.0
 
-        roi_unrealized = pb_result.unrealized_profit / historical_cost if historical_cost > 0 else 0.0
-        roi_unrealized_pln = pb_result.unrealized_profit_pln / historical_cost_pln if historical_cost_pln > 0 else 0.0
+        roi_unrealized = open_metrics.unrealized_profit / historical_cost if historical_cost > 0 else 0.0
+        roi_unrealized_pln = open_metrics.unrealized_profit_pln / historical_cost_pln if historical_cost_pln > 0 else 0.0
 
         roi = total_profit / historical_cost if historical_cost > 0 else 0.0
         roi_pln = total_profit_pln / historical_cost_pln if historical_cost_pln > 0 else 0.0
