@@ -85,7 +85,7 @@ class PositionBuilder:
         - listę ClosedPosition (może być kilka, jeśli sprzedaż konsumuje kilka lotów)
         """
 
-        buy_lots.sort(key=lambda x: x["value_buy"])
+        buy_lots.sort(key=lambda x: x["price_buy"]*x["fx_buy"])
         
         remaining_qty = tx.quantity
         realized_profit = 0.0
@@ -102,14 +102,14 @@ class PositionBuilder:
 
             matched_qty = min(remaining_qty, lot_qty)
 
-            cost = matched_qty * lot_price
+            cost = round(matched_qty * lot_price, 2)
             cost_pln = cost * lot_fx_rate
 
-            proceeds = matched_qty * tx.price
+            proceeds = round(matched_qty * tx.price, 2)
             proceeds_pln = proceeds * tx.fx_rate
 
-            profit = proceeds - cost
-            profit_pln = proceeds_pln - cost_pln
+            profit = round(proceeds - cost, 2)
+            profit_pln = round(proceeds_pln - cost_pln, 2)
 
             realized_profit += profit
             realized_profit_pln += profit_pln
@@ -126,7 +126,7 @@ class PositionBuilder:
                     fx_sell=tx.fx_rate,
                     fx_percentage_impact=tx.fx_rate/lot_fx_rate - 1,
                     realized_profit=profit,
-                    realized_profit_pln=0.0 # na razie
+                    realized_profit_pln=profit_pln
                 )
             )
 
@@ -155,28 +155,29 @@ class PositionBuilder:
             qty = lot["quantity"]
             fx_buy = lot['fx_buy']
 
-            value_buy = qty * lot["price_buy"]
-            current_value = qty * current_price
+            value_buy = round(qty * lot["price_buy"], 2)
+            current_value = round(qty * current_price, 2)
 
-            unrealized_profit = current_value - value_buy
-            unrealized_profit_pln = current_value * fx_current - value_buy * fx_buy
+            unrealized_profit = round(current_value - value_buy, 2)
+            unrealized_profit_pln = round(current_value * fx_current - value_buy * fx_buy, 2)
 
             total_unrealized_profit += unrealized_profit
             total_unrealized_profit_pln += unrealized_profit_pln
 
-            open_positions.append(
-                OpenPosition(
-                    ticker=ticker,
-                    quantity=qty,
-                    date_buy=lot['date_buy'],
-                    value_buy=value_buy,
-                    current_value=current_value,
-                    fx_buy=fx_buy,
-                    fx_current=fx_current,
-                    fx_percentage_impact=fx_current/fx_buy - 1,
-                    unrealized_profit=unrealized_profit,
-                    unrealized_profit_pln=unrealized_profit_pln
+            if abs(qty) > 1e-6:
+                open_positions.append(
+                    OpenPosition(
+                        ticker=ticker,
+                        quantity=qty,
+                        date_buy=lot['date_buy'],
+                        value_buy=value_buy,
+                        current_value=current_value,
+                        fx_buy=fx_buy,
+                        fx_current=fx_current,
+                        fx_percentage_impact=fx_current/fx_buy - 1,
+                        unrealized_profit=unrealized_profit,
+                        unrealized_profit_pln=unrealized_profit_pln
+                    )
                 )
-            )
 
         return total_unrealized_profit, total_unrealized_profit_pln, open_positions

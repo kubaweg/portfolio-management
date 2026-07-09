@@ -28,7 +28,7 @@ from app.schemas.domain.transactions import (
     BuyTransaction, TickerTransactions
 )
 from app.schemas.database.transaction import TransactionType, Transaction
-from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling, CouponFrequency
+from app.schemas.domain.assets import RetailBondBenchmark, InterestHandling, CouponFrequency, AssetType
 from app.schemas.database.macroeconomics import Inflation, InterestRate
 
 class PortfolioBuilderResult(BaseModel):
@@ -441,8 +441,9 @@ class PortfolioBuilder:
         early_redemptions: List[BondEarlyRedemption] = []
 
         with SessionLocal() as db:
-            redemption_txs = db.query(Transaction).filter(Transaction.type == TransactionType.SELL and Transaction.is_early_redemption).all()
-
+            redemption_txs = db.query(Transaction).filter(Transaction.type == TransactionType.SELL and Transaction.asset.asset_type == AssetType.BOND).all()
+            redemption_txs = [tx for tx in redemption_txs if bool(tx.is_early_redemption)]
+            
             for tx in redemption_txs:
                 early_redemptions.append(
                     BondEarlyRedemption(
