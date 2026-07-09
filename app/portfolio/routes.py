@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app import get_db
@@ -12,7 +12,7 @@ from app.portfolio.utils import (
 # Nowe routery - do produkcyjnego uruchomienia
 dashboard_router = APIRouter()
 @dashboard_router.get('/dashboard/main', response_model=DashboardMainPageOutput)
-def get_main_table_response(db: Session = Depends(get_db), tickers: list[str] = []):
+def get_main_table_response(db: Session = Depends(get_db), tickers: list[str] = Query(default=[])):
 
     input = DashboardMainPageInput(
         bond_response=get_bonds_summary(db, tickers=tickers),
