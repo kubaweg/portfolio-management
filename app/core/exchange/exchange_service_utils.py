@@ -29,37 +29,23 @@ class PositionBuilder:
         open_positions: List[OpenPosition] = []
         closed_positions: List[ClosedPosition] = []
 
-        realized_profit = 0.0
-        unrealized_profit = 0.0
-
-        realized_profit_pln = 0.0
-        unrealized_profit_pln = 0.0
-
         for tx in tt.transactions:
             if isinstance(tx, BuyTransaction):
                 self._handle_buy(tx, buy_lots)
 
             elif isinstance(tx, SellTransaction):
-                tx_realized_profit, tx_realized_profit_pln, closed = self._handle_sell(tx, buy_lots)
-                realized_profit += tx_realized_profit
-                realized_profit_pln += tx_realized_profit_pln
+                closed = self._handle_sell(tx, buy_lots)
                 closed_positions.extend(closed)
 
 
         # Po przejściu wszystkich transakcji budujemy pozycje otwarte
-        total_unrealized, total_unrealized_pln, open_positions = self._build_open_positions(
+        open_positions = self._build_open_positions(
             tt.ticker, buy_lots, current_price, fx_current
         )
-        unrealized_profit += total_unrealized
-        unrealized_profit_pln += total_unrealized_pln
 
         return PositionBuilderResult(
             open_positions=open_positions,
-            closed_positions=closed_positions,
-            # realized_profit=realized_profit,
-            # unrealized_profit=unrealized_profit,
-            # realized_profit_pln=realized_profit_pln,
-            # unrealized_profit_pln=unrealized_profit_pln
+            closed_positions=closed_positions
         )
 
     # --- Metody pomocnicze ---
@@ -77,7 +63,7 @@ class PositionBuilder:
 
     def _handle_sell(
         self, tx: SellTransaction, buy_lots: List[dict]
-    ) -> tuple[float, float, List[ClosedPosition]]:
+    ) -> List[ClosedPosition]:
         """
         FIFO: konsumujemy kolejne loty kupna.
         Zwracamy:
@@ -88,8 +74,6 @@ class PositionBuilder:
         buy_lots.sort(key=lambda x: x["price_buy"]*x["fx_buy"])
         
         remaining_qty = tx.quantity
-        realized_profit = 0.0
-        realized_profit_pln = 0.0
 
         closed_positions: List[ClosedPosition] = []
 
@@ -110,9 +94,6 @@ class PositionBuilder:
 
             profit = round(proceeds - cost, 2)
             profit_pln = round(proceeds_pln - cost_pln, 2)
-
-            realized_profit += profit
-            realized_profit_pln += profit_pln
 
             closed_positions.append(
                 ClosedPosition(
@@ -139,17 +120,15 @@ class PositionBuilder:
         # Jeśli remaining_qty > 0 i nie ma lotów → dane niespójne (sprzedaż > kupno)
         # Możemy tu dodać walidację / wyjątek, ale na razie zostawiamy.
 
-        return realized_profit, realized_profit_pln, closed_positions
+        return closed_positions
 
     def _build_open_positions(
         self, ticker: str, buy_lots: List[dict], current_price: float, fx_current: float
-    ) -> tuple[float, float, List[OpenPosition]]:
+    ) -> List[OpenPosition]:
         """
         Z pozostałych lotów budujemy pozycje otwarte i liczymy zysk wirtualny.
         """
         open_positions: List[OpenPosition] = []
-        total_unrealized_profit = 0.0
-        total_unrealized_profit_pln = 0.0
 
         for lot in buy_lots:
             qty = lot["quantity"]
@@ -160,9 +139,6 @@ class PositionBuilder:
 
             unrealized_profit = round(current_value - value_buy, 2)
             unrealized_profit_pln = round(current_value * fx_current - value_buy * fx_buy, 2)
-
-            total_unrealized_profit += unrealized_profit
-            total_unrealized_profit_pln += unrealized_profit_pln
 
             if abs(qty) > 1e-6:
                 open_positions.append(
@@ -180,4 +156,4 @@ class PositionBuilder:
                     )
                 )
 
-        return total_unrealized_profit, total_unrealized_profit_pln, open_positions
+        return open_positions
