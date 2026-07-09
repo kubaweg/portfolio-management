@@ -227,24 +227,26 @@ class DashboardTransformer:
         combined_assets = []
         
         for e in input_data.exchange_response.data:
-            combined_assets.append({
-                "invested": e.summary.avg_price_pln * e.current_data.quantity,
-                "current": e.current_data.value_pln,
-                "type": e.base_data.type,
-                "category2": e.base_data.category2,
-                "name": e.base_data.name,
-                "ticker": e.base_data.ticker
-            })
+            if e.current_data.value_pln > 1e-4:
+                combined_assets.append({
+                    "invested": e.summary.avg_price_pln * e.current_data.quantity,
+                    "current": e.current_data.value_pln,
+                    "type": e.base_data.type,
+                    "category2": e.base_data.category2,
+                    "name": e.base_data.name,
+                    "ticker": e.base_data.ticker
+                })
             
         for b in input_data.bond_response.data:
-            combined_assets.append({
-                "invested": b.summary.total_invested,
-                "current": b.current_data.value_gross,
-                "type": b.base_data.type,
-                "category2": b.base_data.category2,
-                "name": b.base_data.name,
-                "ticker": b.base_data.ticker
-            })
+            if b.current_data.value_gross > 1e-4:
+                combined_assets.append({
+                    "invested": b.summary.total_invested,
+                    "current": b.current_data.value_gross,
+                    "type": b.base_data.type,
+                    "category2": b.base_data.category2,
+                    "name": b.base_data.name,
+                    "ticker": b.base_data.ticker
+                })
 
         total_invested = sum(a["invested"] for a in combined_assets)
         total_current = sum(a["current"] for a in combined_assets)
