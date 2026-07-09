@@ -10,6 +10,7 @@ import {
     SortingState,
     createColumnHelper
 } from '@tanstack/react-table';
+import { OpenPosition, ClosedPosition } from '../schema/main_table_schema';
 
 // =========================================================================
 // KOMPONENTY POMOCNICZE
@@ -35,9 +36,9 @@ const MiniCard = ({ title, children }: any) => (
 // TABELA OTWARTYCH POZYCJI
 // =========================================================================
 
-const openColumnHelper = createColumnHelper<any>(); // Użyj 'any' lub swojego typu OpenPosition
+const openColumnHelper = createColumnHelper<OpenPosition>();
 
-const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any) => {
+const OpenPositionsTable = ({ data, currency, currentPrice }: any) => {
     const isForeign = currency !== 'PLN';
     const [sorting, setSorting] = useState<SortingState>([{ id: 'date_buy', desc: true }]);
 
@@ -52,28 +53,13 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
             cell: info => <span className="font-medium text-slate-700">{formatGenericFloat(info.getValue())}</span>,
             size: 80,
         }),
-        openColumnHelper.display({
-            id: 'share',
-            header: 'Waga',
-            cell: info => formatPercent(info.row.original.quantity / totalQuantity),
-            size: 70,
-        }),
+
+        // --- KURSY AKTYWA OBOK SIEBIE ---
         openColumnHelper.display({
             id: 'unit_buy_price',
             header: `Kurs początkowy (${currency})`,
             cell: info => formatGenericFloat(info.row.original.value_buy / info.row.original.quantity),
             size: 110,
-        }),
-        openColumnHelper.accessor('fx_buy', {
-            header: 'Kurs FX początkowy',
-            cell: info => <span className="font-mono text-slate-500">{formatGenericFloat(info.getValue())}</span>,
-            size: 90,
-        }),
-        openColumnHelper.display({
-            id: 'buy_value_pln',
-            header: 'Wartość początkowa (PLN)',
-            cell: info => formatPLN(info.row.original.value_buy * info.row.original.fx_buy),
-            size: 130,
         }),
         openColumnHelper.display({
             id: 'unit_current_price',
@@ -81,11 +67,23 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
             cell: () => formatGenericFloat(currentPrice),
             size: 110,
         }),
+
+        // --- KURSY WALUTOWE I WPŁYW FX OBOK SIEBIE ---
+        openColumnHelper.accessor('fx_buy', {
+            header: 'Kurs FX początkowy',
+            cell: info => <span className="font-mono text-slate-500">{formatGenericFloat(info.getValue())}</span>,
+            size: 100,
+        }),
+        openColumnHelper.accessor('fx_current' as any, { // Zakładam obecność fx_current w modelu pozycji
+            header: 'Kurs FX obecny',
+            cell: info => <span className="font-mono text-slate-500">{formatGenericFloat(info.row.original.fx_current)}</span>,
+            size: 100,
+        }),
         openColumnHelper.display({
             id: 'roi_currency',
             header: `ROI (${currency})`,
             cell: info => {
-                const roi = info.row.original.roi_unrealized
+                const roi = info.row.original.roi_unrealized;
                 return <span className={roi >= 0 ? 'text-emerald-600' : 'text-rose-600'}>{formatPercent(roi)}</span>;
             },
             size: 100,
@@ -101,45 +99,216 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
             },
             size: 90,
         }),
-        openColumnHelper.display({
-            id: 'current_value_pln',
-            header: 'Wartość Obecna (PLN)',
+
+        // --- BLOK ZYSKÓW W PLN ---
+        openColumnHelper.accessor('unrealized_profit_pln', {
+            id: 'unrealized_profit_pln',
+            header: 'Zysk (PLN)',
             cell: info => {
-                const buyPln = info.row.original.value_buy * info.row.original.fx_buy;
-                const currentPln = buyPln + info.row.original.unrealized_profit_pln;
-                return <span className="font-semibold text-slate-700">{formatPLN(currentPln)}</span>;
+                const profit = info.getValue();
+                return <span className={`font-semibold ${profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {profit > 0 ? '+' : ''}{formatPLN(profit)}
+                </span>;
             },
-            size: 140,
+            size: 120,
         }),
-        // openColumnHelper.display({
-        //     id: 'unrealized_profit_pln',
-        //     header: 'Zysk niezrealizowany (PLN)',
-        //     cell: info => {
-        //         const unrealizedProfit = info.row.original.unrealized_profit_pln;
-        //         return <span className="text-slate-700">{formatPLN(unrealizedProfit)}</span>;
-        //     },
-        //     size: 140,
-        // }),
         openColumnHelper.display({
             id: 'roi_pln',
             header: 'ROI (PLN)',
             cell: info => {
-                const roiPln = info.row.original.roi_unrealized_pln
+                const roiPln = info.row.original.roi_unrealized_pln;
                 return <span className={`font-bold ${roiPln >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {roiPln > 0 ? '+' : ''}{formatPercent(roiPln)}
                 </span>;
             },
             size: 100,
+        }),
+        openColumnHelper.accessor('roi_unrealized_pa_pln' as any, {
+            id: 'roi_pa_pln',
+            header: 'ROI p.a. (PLN)',
+            cell: info => {
+                const roiPa = info.getValue();
+                return <span className={`font-bold ${roiPa >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    {roiPa > 0 ? '+' : ''}{formatPercent(roiPa)}
+                </span>;
+            },
+            size: 110,
         })
-    ], [currency, totalQuantity, currentPrice]);
+    ], [currency, currentPrice]);
 
     const table = useReactTable({
         data,
         columns,
         state: {
             sorting,
-            columnVisibility: { fx_buy: isForeign, fx_impact: isForeign, roi_currency: isForeign },
-            columnPinning: { left: ['date_buy', 'quantity'], right: ['current_value_pln', 'roi_pln'] }
+            columnVisibility: {
+                fx_buy: isForeign,
+                fx_current: isForeign,
+                fx_impact: isForeign,
+                roi_currency: isForeign
+            },
+            columnPinning: {
+                left: ['date_buy', 'quantity'],
+                right: ['unrealized_profit_pln', 'roi_pln', 'roi_pa_pln']
+                // Przypięliśmy najważniejsze metryki wynikowe do prawej krawędzi
+            }
+        },
+        onSortingChange: setSorting,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+    });
+
+    return (
+        // Kluczowa zmiana: dodanie w-full i max-w-full do głównego kontenera
+        <div className="w-full max-w-full overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+            <table className="w-full text-left text-xs text-slate-600" style={{ minWidth: table.getTotalSize() }}>
+                <thead className="w-full bg-slate-50 text-slate-500 uppercase text-[10px]">
+                    {table.getHeaderGroups().map(hg => (
+                        <tr key={hg.id}>
+                            {hg.headers.map(h => (
+                                <th key={h.id} className="p-3" style={{ width: h.getSize() }}>
+                                    <div className="flex items-center gap-1 cursor-pointer" onClick={h.column.getToggleSortingHandler()}>
+                                        {flexRender(h.column.columnDef.header, h.getContext())}
+                                        {{ asc: <ArrowUp className="w-3 h-3" />, desc: <ArrowDown className="w-3 h-3" /> }[h.column.getIsSorted() as string]}
+                                    </div>
+                                </th>
+                            ))}
+                        </tr>
+                    ))}
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                    {table.getRowModel().rows.map(row => (
+                        <tr key={row.id} className="hover:bg-slate-50">
+                            {row.getVisibleCells().map(cell => (
+                                <td key={cell.id} className="p-3">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
+
+// =========================================================================
+// TABELA ZAMKNIĘTYCH POZYCJI
+// =========================================================================
+
+const closedColumnHelper = createColumnHelper<ClosedPosition>(); // Zgodnie z dobrymi praktykami od razu podpinamy interfejs
+
+export const ClosedPositionsTable = ({ data, currency }: { data: ClosedPosition[], currency: string }) => {
+    const isForeign = currency !== 'PLN';
+    // Domyślnie sortujemy po dacie sprzedaży, od najnowszych
+    const [sorting, setSorting] = useState<SortingState>([{ id: 'date_sell', desc: true }]);
+
+    const columns = useMemo(() => [
+        closedColumnHelper.accessor('date_buy', {
+            header: 'Data Zakupu',
+            cell: info => <span className="whitespace-nowrap">{new Date(info.getValue()).toLocaleDateString('us-US')}</span>,
+            size: 90,
+        }),
+        closedColumnHelper.accessor('date_sell', {
+            header: 'Data Sprzedaży',
+            cell: info => <span className="whitespace-nowrap font-medium text-slate-700">{new Date(info.getValue()).toLocaleDateString('us-US')}</span>,
+            size: 90,
+        }),
+        closedColumnHelper.accessor('quantity', {
+            header: 'Wolumen',
+            cell: info => <span className="font-medium text-slate-700">{formatGenericFloat(info.getValue())}</span>,
+            size: 80,
+        }),
+        closedColumnHelper.display({
+            id: 'unit_buy_price',
+            header: `Kurs zakupu (${currency})`,
+            cell: info => formatGenericFloat(info.row.original.value_buy / info.row.original.quantity),
+            size: 110,
+        }),
+        closedColumnHelper.display({
+            id: 'unit_sell_price',
+            header: `Kurs sprzedaży (${currency})`,
+            cell: info => formatGenericFloat(info.row.original.value_sell / info.row.original.quantity),
+            size: 110,
+        }),
+        closedColumnHelper.accessor('fx_buy', {
+            header: 'FX Kupno',
+            cell: info => <span className="font-mono text-slate-500">{formatGenericFloat(info.getValue())}</span>,
+            size: 80,
+        }),
+        closedColumnHelper.accessor('fx_sell', {
+            header: 'FX Sprzedaż',
+            cell: info => <span className="font-mono text-slate-500">{formatGenericFloat(info.getValue())}</span>,
+            size: 80,
+        }),
+        closedColumnHelper.display({
+            id: 'roi_realized',
+            header: `ROI (${currency})`,
+            cell: info => {
+                const roi = info.row.original.roi_realized;
+                return <span className={roi >= 0 ? 'text-emerald-600' : 'text-rose-600'}>{formatPercent(roi)}</span>;
+            },
+            size: 90,
+        }),
+        closedColumnHelper.display({
+            id: 'fx_impact',
+            header: 'Wpływ FX',
+            cell: info => {
+                const impact = info.row.original.fx_percentage_impact;
+                return <span className={`font-medium ${impact >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {impact > 0 ? '+' : ''}{formatPercent(impact)}
+                </span>;
+            },
+            size: 90,
+        }),
+        closedColumnHelper.accessor('realized_profit_pln', {
+            header: 'Zysk (PLN)',
+            cell: info => {
+                const profit = info.getValue();
+                return <span className={`font-semibold ${profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {profit > 0 ? '+' : ''}{formatPLN(profit)}
+                </span>;
+            },
+            size: 120,
+        }),
+        closedColumnHelper.accessor('roi_realized_pln', {
+            header: 'ROI (PLN)',
+            cell: info => {
+                const roi = info.getValue();
+                return <span className={`font-bold ${roi >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {roi > 0 ? '+' : ''}{formatPercent(roi)}
+                </span>;
+            },
+            size: 100,
+        }),
+        closedColumnHelper.accessor('roi_realized_pa_pln', {
+            header: 'ROI p.a. (PLN)',
+            cell: info => {
+                const roipa = info.getValue();
+                return <span className={`font-bold ${roipa >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    {roipa > 0 ? '+' : ''}{formatPercent(roipa)}
+                </span>;
+            },
+            size: 110,
+        })
+    ], [currency]);
+
+    const table = useReactTable({
+        data,
+        columns,
+        state: {
+            sorting,
+            columnVisibility: {
+                fx_buy: isForeign,
+                fx_sell: isForeign,
+                fx_impact: isForeign,
+                roi_realized: isForeign
+            },
+            columnPinning: {
+                left: ['date_buy', 'date_sell', 'quantity'],
+                right: ['realized_profit_pln', 'roi_realized_pln', 'roi_realized_pa_pln']
+            }
         },
         onSortingChange: setSorting,
         getCoreRowModel: getCoreRowModel(),
@@ -174,6 +343,9 @@ const OpenPositionsTable = ({ data, currency, totalQuantity, currentPrice }: any
         </div>
     );
 };
+
+
+// ===============================================================================================================
 
 interface BaseDataRow {
     label: string;
@@ -298,6 +470,7 @@ export const ExchangeRowDetails = ({ exchangePayload }: { exchangePayload: Excha
                 <MiniCard title="Wycena">
                     <DetailedRow label="Średni kurs zakupu" value={formatGenericFloat(exchangePayload.summary.avg_price)} />
                     <DetailedRow label="Kurs obecny" value={formatGenericFloat(exchangePayload.current_data.price)} />
+                    <DetailedRow label="% różnicy vs średni kurs zakupu" value={formatPercent(exchangePayload.current_data.price / exchangePayload.summary.avg_price - 1)} />
                 </MiniCard>
 
                 {/* 2. KAFELEK: Kurs FX (Renderowany warunkowo, tylko jeśli waluta to NIE PLN) */}
@@ -306,7 +479,8 @@ export const ExchangeRowDetails = ({ exchangePayload }: { exchangePayload: Excha
                         <DetailedRow label="Bieżący kurs FX" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate)} />
                         <DetailedRow label="Efektywny kurs FX (buy)" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate / 0.995)} />
                         <DetailedRow label="Efektywny kurs FX (sell)" value={formatGenericFloat(exchangePayload.current_data.fx_data.fx_rate / 1.005)} />
-                        <DetailedRow label="% różnicy vs średni kurs zakupu" value={formatPercent(exchangePayload.current_data.fx_data.fx_effective_rate_sell / exchangePayload.summary.avg_fx_rate - 1)} />
+                        <DetailedRow label="Średni kurs FX zakupu" value={formatGenericFloat(exchangePayload.summary.avg_fx_rate)} />
+                        <DetailedRow label="% różnicy vs średni kurs FX zakupu" value={formatPercent(exchangePayload.current_data.fx_data.fx_effective_rate_sell / exchangePayload.summary.avg_fx_rate - 1)} />
                     </MiniCard>
                 )}
 
@@ -321,22 +495,40 @@ export const ExchangeRowDetails = ({ exchangePayload }: { exchangePayload: Excha
                 <MiniCard title="Efektywność">
                     {!isPLN && (
                         <>
-                            <DetailedRow label={`ROI (${exchangePayload.base_data.currency})`} value={formatPercent(exchangePayload.summary.roi)} isBold />
-                            {/* <DetailedRow label={`ROI w skali roku (${exchangePayload.base_data.currency})`} value={formatPercent(exchangePayload.summary.roi_pa)} isBold /> */}
+                            <DetailedRow label={`ROI (${exchangePayload.base_data.currency})`} value={formatPercent(exchangePayload.summary.roi_attribution_asset_pln)} />
+                            <DetailedRow label="Wpływ FX" value={formatPercent(exchangePayload.summary.roi_attribution_fx_pln)} />
                         </>
                     )}
-                    <DetailedRow label="ROI (PLN)" value={formatPercent(exchangePayload.summary.roi_pln)} isBold />
-                    <DetailedRow label="ROI w skali roku (PLN)" value={formatPercent(exchangePayload.summary.roi_pa_pln)} />
+                    <DetailedRow label="ROI (PLN)" value={formatPercent(exchangePayload.summary.roi_pln)} />
+                    <DetailedRow label="ROI w skali roku (PLN)" value={formatPercent(exchangePayload.summary.roi_pa_pln)} isBold />
                 </MiniCard>
 
             </div>
 
-            <OpenPositionsTable
-                data={exchangePayload.open_positions}
-                currency={exchangePayload.base_data.currency}
-                totalQuantity={exchangePayload.summary.quantity}
-                currentPrice={exchangePayload.current_data.price}
-            />
+            {exchangePayload.open_positions.length > 0 ? (
+                <OpenPositionsTable
+                    data={exchangePayload.open_positions}
+                    currency={exchangePayload.base_data.currency}
+                    currentPrice={exchangePayload.current_data.price}
+                />
+            ) : (
+                <div className="p-8 text-center text-slate-400 border border-dashed border-slate-300 rounded-lg">
+                    Brak otwartych pozycji dla tego aktywa.
+                </div>
+            )}
+
+            <div className="mb-3"></div>
+
+            {exchangePayload.closed_positions.length > 0 ? (
+                <ClosedPositionsTable
+                    data={exchangePayload.closed_positions}
+                    currency={exchangePayload.base_data.currency}
+                />
+            ) : (
+                <div className="p-8 text-center text-slate-400 border border-dashed border-slate-300 rounded-lg">
+                    Brak zamkniętych pozycji dla tego aktywa.
+                </div>
+            )}
         </div >
     );
 };

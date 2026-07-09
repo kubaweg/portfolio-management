@@ -10,39 +10,33 @@ export interface ExchangeBaseData {
 }
 
 export interface ExchangeSummary {
-    quantity: number;
-
+    // --- STARE POLA: średnie oraz zysk
     avg_price: number;
     avg_price_pln: number;
     avg_fx_rate: number;
-
-    realized_profit: number;
-    roi_realized: number;
-    roi_realized_pa: number;
 
     realized_profit_pln: number;
     roi_realized_pln: number;
     roi_realized_pa_pln: number;
 
-    unrealized_profit: number;
-    roi_unrealized: number;
-    roi_unrealized_pa: number;
-
     unrealized_profit_pln: number;
     roi_unrealized_pln: number;
     roi_unrealized_pa_pln: number;
 
-    interest_profit: number;
-    interest_profit_pln: number;
-
-    total_profit: number;
     total_profit_pln: number;
-
-    roi: number;
-    roi_pa: number;
-
     roi_pln: number;
     roi_pa_pln: number;
+
+    // --- NOWE POLA: Skala i Wolumen ---
+    total_quantity: number;
+    total_quantity_open: number;
+    total_quantity_closed: number;
+    total_invested_pln: number;
+    total_withdrawn_pln: number;
+
+    // --- NOWE POLA: Atrybucja wyniku ---
+    roi_attribution_asset_pln: number;
+    roi_attribution_fx_pln: number;
 }
 
 export interface ExchangeFXData {
