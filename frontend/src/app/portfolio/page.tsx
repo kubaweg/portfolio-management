@@ -149,7 +149,7 @@ export default function PortfolioPage() {
                             <th className="p-4">Instrument</th>
                             <th className="p-4">Wolumen</th>
                             <th className="p-4">Wartość obecna</th>
-                            <th className="p-4">ROI (PLN)</th>
+                            <th className="p-4">ROI p.a. (PLN)</th>
                             <th className="p-4">Zysk całkowity</th>
                             <th className="p-4"></th>
                         </tr>
