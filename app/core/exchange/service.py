@@ -6,21 +6,20 @@ from app.schemas.domain.positions import OpenPosition, ClosedPosition
 from app.schemas.domain.transactions import TickerTransactions, TransactionType
 from app.schemas.mappers import TransactionMapper
 from app.schemas.groupers import group_by_ticker
-from app.core.fx_calculator import FXCalculator
 
+from app.core.cash.service import CashFlowEngine
 from app.core.cash.schemas.dto import (
-    CashFlowInstance, CashFlow, CashFlowSummary, CashFlowType
+    CashFlowInstance, CashFlow, CashFlowSummary, CashFlowType, FinancialSummary, FinancialAggregation, FinancialAggregationInstance
 )
 
 from app.core.exchange.exchange_service_utils import PositionBuilder, PositionBuilderResult
 from app.core.exchange.schemas.dto import (
     ExchangeBaseData, ExchangeSummary, ExchangeFXData, ExchangeCurrentData, ExchangeData,
-    OpenPositionsMetrics, ClosedPositionsMetrics, MarketPriceData,
+    OpenPositionsMetrics, MarketPriceData,
     EXCHANGE_TAX_RATE
 )
-from app.core.market_data import MarketDataProvider
-from app.core.exchange.annualized_roi import calculate_annualized_roi
 
+from app.core.market_data import MarketDataProvider
 
 
 class ExchangeEngine:
@@ -57,66 +56,27 @@ class ExchangeEngine:
         open_positions = pb_result.open_positions
         closed_positions = pb_result.closed_positions
 
-        # 1) Obliczenia dla pozycji otwartych i zamkniętych (zwracają modele Pydantic)
+        # Obliczenia dla pozycji otwartych i zamkniętych (zwracają modele Pydantic)
         open_metrics = self._process_open_positions(open_positions, prices.fx_effective_rate_sell)
-        # assert pb_result.unrealized_profit == open_metrics.unrealized_profit, ''
-        # assert pb_result.unrealized_profit_pln == open_metrics.unrealized_profit_pln, ''
 
-        closed_metrics = self._process_closed_positions(closed_positions)
-        # assert pb_result.realized_profit == closed_metrics.realized_profit, ''
-        # assert pb_result.realized_profit_pln == closed_metrics.realized_profit_pln, ''
-
-        # 3) Zysk nominalny
-        total_profit = closed_metrics.realized_profit + open_metrics.unrealized_profit
-        total_profit_pln = closed_metrics.realized_profit_pln + open_metrics.unrealized_profit_pln
-
-        # 4) ROI bezwzględne
+        # ROI bezwzględne
         historical_cost = open_metrics.historical_cost
         historical_cost_pln = open_metrics.historical_cost_pln
 
-        roi_realized = closed_metrics.realized_profit / historical_cost if historical_cost > 0 else 0.0
-        roi_realized_pln = closed_metrics.realized_profit_pln / historical_cost_pln if historical_cost_pln > 0 else 0.0
-
-        roi_unrealized = open_metrics.unrealized_profit / historical_cost if historical_cost > 0 else 0.0
-        roi_unrealized_pln = open_metrics.unrealized_profit_pln / historical_cost_pln if historical_cost_pln > 0 else 0.0
-
-        roi = total_profit / historical_cost if historical_cost > 0 else 0.0
-        roi_pln = total_profit_pln / historical_cost_pln if historical_cost_pln > 0 else 0.0
-
-        # 5) Annualized ROI
-        roi_unrealized_annualized = calculate_annualized_roi(open_positions, [])
-        roi_unrealized_pa = roi_unrealized_annualized.roi_pa
-        roi_unrealized_pa_pln = roi_unrealized_annualized.roi_pa_pln
-
-        roi_realized_annualized = calculate_annualized_roi([], closed_positions)
-        roi_realized_pa = roi_realized_annualized.roi_pa
-        roi_realized_pa_pln = roi_realized_annualized.roi_pa_pln
-
-        roi_annualized = calculate_annualized_roi(open_positions, closed_positions)
-        roi_pa = roi_annualized.roi_pa
-        roi_pa_pln = roi_annualized.roi_pa_pln
-
-        # 6) Średnie historyczne
-        qty = open_metrics.quantity
+        # Średnie historyczne dla pozycji otwartych
+        current_quantity = open_metrics.quantity
         
-        avg_price = historical_cost / qty if qty > 0 else 0.0
-        avg_price_pln = historical_cost_pln / qty if qty > 0 else 0.0
+        avg_price = historical_cost / current_quantity if current_quantity > 0 else 0.0
+        avg_price_pln = historical_cost_pln / current_quantity if current_quantity > 0 else 0.0
         avg_fx_rate = historical_cost_pln / historical_cost if historical_cost > 0 else 0.0
 
         # 7) Budowa obiektów końcowych
         base_data = self._build_exchange_base_data(asset=asset)
 
         current_data = self._build_exchange_current_data(
-            quantity=open_metrics.quantity,
-            price=prices.price,
-            value=open_metrics.current_value,
-            value_pln=open_metrics.current_value_pln,
-            currency=asset.currency,
-            fx_rate=prices.fx_rate,
-            fx_effective_rate_buy=prices.fx_effective_rate_buy,
-            fx_effective_rate_sell=prices.fx_effective_rate_sell,
-            fx_datetime=prices.fx_datetime,
-            price_datetime=prices.price_datetime
+            open_metrics=open_metrics,
+            prices=prices,
+            currency=str(asset.currency)
         )
 
         cash_flows = self._build_exchange_cash_flows(
@@ -127,34 +87,14 @@ class ExchangeEngine:
             tax_rate=EXCHANGE_TAX_RATE
         )
 
+        engine = CashFlowEngine()
+        financial_summary = engine.calculate_summary(cash_flows)
+
         summary = self._build_exchange_summary(
-            avg_price=avg_price,
-            avg_price_pln=avg_price_pln,
-            avg_fx_rate=avg_fx_rate,
-
-            realized_profit=closed_metrics.realized_profit,
-            roi_realized=roi_realized,
-            roi_realized_pa=roi_realized_pa,
-            
-            realized_profit_pln=closed_metrics.realized_profit_pln,
-            roi_realized_pln=roi_realized_pln,
-            roi_realized_pa_pln=roi_realized_pa_pln,
-
-            unrealized_profit=open_metrics.unrealized_profit,
-            roi_unrealized=roi_unrealized,
-            roi_unrealized_pa=roi_unrealized_pa,
-
-            unrealized_profit_pln=open_metrics.unrealized_profit_pln,
-            roi_unrealized_pln=roi_unrealized_pln,
-            roi_unrealized_pa_pln=roi_unrealized_pa_pln,    
-
-            total_profit=total_profit,
-            roi=roi,
-            roi_pa=roi_pa,
-
-            total_profit_pln=total_profit_pln,
-            roi_pln=roi_pln,
-            roi_pa_pln=roi_pa_pln
+            financial_summary=financial_summary,
+            open_positions=open_positions,
+            closed_positions=closed_positions,
+            prices=prices
         )
 
         exchange_data = ExchangeData(
@@ -226,58 +166,103 @@ class ExchangeEngine:
             currency=str(asset.currency)
         )
     
-    def _build_exchange_summary(self, **kwargs) -> ExchangeSummary:
-        return ExchangeSummary(
+    def _build_exchange_summary(
+            self,
+            financial_summary: FinancialSummary,
+            open_positions: List[OpenPosition],
+            closed_positions: List[ClosedPosition],
+            prices: MarketPriceData
+        ) -> ExchangeSummary:
+            
+            # Skrót do wartości netto z silnika agregującego
+            base = financial_summary.gross
+            
+            # Połączenie wszystkich pozycji dla uproszczenia iteracji
+            all_positions = open_positions + closed_positions
 
-            avg_price=kwargs.get("avg_price", 0.0),
-            avg_price_pln=kwargs.get("avg_price_pln", 0.0),
-            avg_fx_rate=kwargs.get("avg_fx_rate", 0.0),
+            # Agregacja wartości bazowych
+            total_quantity_open = sum(p.quantity for p in open_positions)
+            total_quantity_closed = sum(p.quantity for p in closed_positions)
+            total_quantity = total_quantity_open + total_quantity_closed
 
-            realized_profit=kwargs.get("realized_profit", 0.0),
-            roi_realized=kwargs.get("roi_realized", 0.0),
-            roi_realized_pa=kwargs.get("roi_realized_pa", 0.0),
+            total_value = sum(p.value_buy for p in all_positions)
+            total_value_pln = sum(p.value_buy * p.fx_buy for p in all_positions)
 
-            realized_profit_pln=kwargs.get("realized_profit_pln", 0.0),
-            roi_realized_pln=kwargs.get("roi_realized_pln", 0.0),
-            roi_realized_pa_pln=kwargs.get("roi_realized_pa_pln", 0.0),
+            total_invested = sum(p.value_buy for p in all_positions)
+            total_invested_pln = sum(p.value_buy * p.fx_buy for p in all_positions)
 
-            unrealized_profit=kwargs.get("unrealized_profit", 0.0),
-            roi_unrealized=kwargs.get("roi_unrealized", 0.0),
-            roi_unrealized_pa=kwargs.get("roi_unrealized_pa", 0.0),
+            total_withdrawn_pln = sum(p.value_sell * p.fx_sell for p in closed_positions)
 
-            unrealized_profit_pln=kwargs.get("unrealized_profit_pln", 0.0),
-            roi_unrealized_pln=kwargs.get("roi_unrealized_pln", 0.0),
-            roi_unrealized_pa_pln=kwargs.get("roi_unrealized_pa_pln", 0.0),
+            # Wyliczenie średnich z zabezpieczeniem przed dzieleniem przez zero
+            avg_price = total_value / total_quantity if total_quantity > 0 else 0.0
+            avg_price_pln = total_value_pln / total_quantity if total_quantity > 0 else 0.0
+            avg_fx_rate = total_value_pln / total_value if total_value > 0 else 0.0
 
-            total_profit=kwargs.get("total_profit", 0.0),
-            roi=kwargs.get("roi", 0.0),
-            roi_pa=kwargs.get("roi_pa", 0.0),
+            # Zysk w walucie instrumentu
+            asset_profit_closed = sum((p.value_sell - p.value_buy) for p in closed_positions)
+            asset_profit_open = sum(((p.quantity * prices.price) - p.value_buy) for p in open_positions)
+            asset_profit = asset_profit_open + asset_profit_closed
+            roi_attribution_asset = asset_profit / total_invested if total_invested > 0 else 0.0
+            roi_attribution_fx = base.total.roi - roi_attribution_asset
 
-            total_profit_pln=kwargs.get("total_profit_pln", 0.0),
-            roi_pln=kwargs.get("roi_pln", 0.0),
-            roi_pa_pln=kwargs.get("roi_pa_pln", 0.0),
-        )
+
+            # 4. Zbudowanie i zwrócenie modelu
+            return ExchangeSummary(
+                avg_price=avg_price,
+                avg_price_pln=avg_price_pln,
+                avg_fx_rate=avg_fx_rate,
+
+                realized_profit_pln=base.realized.profit,
+                roi_realized_pln=base.realized.roi,
+                roi_realized_pa_pln=base.realized.roi_pa or 0.0,
+
+                unrealized_profit_pln=base.unrealized.profit,
+                roi_unrealized_pln=base.unrealized.roi,
+                roi_unrealized_pa_pln=base.unrealized.roi_pa or 0.0,
+
+                total_profit_pln=base.total.profit,
+                roi_pln=base.total.roi,
+                roi_pa_pln=base.total.roi_pa or 0.0,
+
+                total_quantity=total_quantity,
+                total_quantity_open=total_quantity_open,
+                total_quantity_closed=total_quantity_closed,
+                total_invested_pln=total_invested_pln,
+                total_withdrawn_pln=total_withdrawn_pln,
+
+                roi_attribution_asset_pln=roi_attribution_asset,
+                roi_attribution_fx_pln=roi_attribution_fx
+            )
     
-    def _build_exchange_fx_data(self, **kwargs) -> ExchangeFXData:
+    def _build_exchange_fx_data(
+        self, 
+        prices: MarketPriceData,
+        currency: str
+    ) -> ExchangeFXData:
         return ExchangeFXData(
-            currency=kwargs.get("currency", "-"),
-            fx_rate=kwargs.get("fx_rate", 0.0),
-            fx_effective_rate_buy=kwargs.get("fx_effective_rate_buy", -1.0),
-            fx_effective_rate_sell=kwargs.get("fx_effective_rate_sell", -1.0),
-            fx_datetime=kwargs.get("fx_datetime", datetime(year=1900, month=1, day=1))
+            currency=currency,
+            fx_rate=prices.fx_rate,
+            fx_effective_rate_buy=prices.fx_effective_rate_buy,
+            fx_effective_rate_sell=prices.fx_effective_rate_sell,
+            fx_datetime=prices.fx_datetime or datetime(year=1, month=1, day=1)
         )
     
-    def _build_exchange_current_data(self, **kwargs) -> ExchangeCurrentData:
+    def _build_exchange_current_data(
+            self, 
+            open_metrics: OpenPositionsMetrics,
+            prices: MarketPriceData,
+            currency: str
+    ) -> ExchangeCurrentData:
 
-        fx_data = self._build_exchange_fx_data(**kwargs)
+        fx_data = self._build_exchange_fx_data(prices=prices, currency=currency)
 
         return ExchangeCurrentData(
-            quantity=kwargs.get("quantity", 0.0),
-            price=kwargs.get("price", 0.0),
-            value=kwargs.get("value", 0.0),
-            value_pln=kwargs.get("value_pln", 0.0),
+            quantity=open_metrics.quantity,
+            price=prices.price,
+            value=open_metrics.current_value,
+            value_pln=open_metrics.current_value_pln,
             fx_data=fx_data,
-            price_datetime=kwargs.get("price_datetime", datetime(year=1900, month=1, day=1))
+            price_datetime=prices.price_datetime or datetime(year=1, month=1, day=1)
         )
     
     # ---------------------------------------------------------
@@ -289,17 +274,6 @@ class ExchangeEngine:
         metrics = OpenPositionsMetrics()
 
         for op in open_positions:
-            # Obliczenie i przypisanie wartości PLN do obiektu
-            op.unrealized_profit_pln = FXCalculator.unrealized_pln(
-                op.value_buy, op.fx_buy, op.current_value, fx_effective_rate_sell
-            )
-
-            op.roi_unrealized = op.unrealized_profit / op.value_buy if op.value_buy > 0 else 0.0
-            op.roi_unrealized_pln = op.unrealized_profit_pln / (op.value_buy * op.fx_buy) if op.value_buy > 0 else 0.0
-
-            roi_annualized = calculate_annualized_roi([op], [])
-            op.roi_unrealized_pa = roi_annualized.roi_pa
-            op.roi_unrealized_pa_pln = roi_annualized.roi_pa_pln
 
             # Agregacja do atrybutów modelu
             metrics.quantity += op.quantity
@@ -307,24 +281,6 @@ class ExchangeEngine:
             metrics.historical_cost_pln += op.value_buy * op.fx_buy
             metrics.current_value += op.current_value
             metrics.current_value_pln += op.current_value * fx_effective_rate_sell
-            metrics.unrealized_profit += op.unrealized_profit
-            metrics.unrealized_profit_pln += op.unrealized_profit_pln
-
-        return metrics
-
-    def _process_closed_positions(self, closed_positions: List[ClosedPosition]) -> ClosedPositionsMetrics:
-        """Przetwarza zamknięte pozycje i agreguje zyski do modelu Pydantic."""
-        metrics = ClosedPositionsMetrics()
-
-        for cp in closed_positions:
-            # Obliczenie i przypisanie wartości PLN do obiektu
-            cp.realized_profit_pln = FXCalculator.realized_pln(
-                cp.value_buy, cp.fx_buy, cp.value_sell, cp.fx_sell
-            )
-
-            # Agregacja do atrybutów modelu
-            metrics.realized_profit += cp.realized_profit
-            metrics.realized_profit_pln += cp.realized_profit_pln
 
         return metrics
     

@@ -41,33 +41,33 @@ class ExchangeBaseData(BaseModel):
 
 class ExchangeSummary(BaseModel):
 
+    # --- STARE POLA: średnie oraz zysk    
     avg_price: float = Field(ge=0)
     avg_price_pln: float = Field(ge=0)
     avg_fx_rate: float = Field(ge=0)
-
-    realized_profit: float
-    roi_realized: float
-    roi_realized_pa: float
 
     realized_profit_pln: float
     roi_realized_pln: float
     roi_realized_pa_pln: float
 
-    unrealized_profit: float
-    roi_unrealized: float
-    roi_unrealized_pa: float
-
     unrealized_profit_pln: float
     roi_unrealized_pln: float
     roi_unrealized_pa_pln: float
 
-    total_profit: float
-    roi: float
-    roi_pa: float
-
     total_profit_pln: float
     roi_pln: float
     roi_pa_pln: float
+
+    # --- NOWE POLA: Skala i Wolumen ---
+    total_quantity: float = Field(ge=0)
+    total_quantity_open: float = Field(ge=0)
+    total_quantity_closed: float = Field(ge=0)
+    total_invested_pln: float = Field(ge=0)
+    total_withdrawn_pln: float = Field(ge=0)
+
+    # --- NOWE POLA: Atrybucja wyniku ---
+    roi_attribution_asset_pln: float
+    roi_attribution_fx_pln: float
 
 class ExchangeFXData(BaseModel):
 
@@ -135,24 +135,11 @@ class OpenPositionsMetrics(BaseModel):
         ge=0.0, 
         description="Bieżąca rynkowa wartość otwartych pozycji przeliczona na PLN po aktualnym kursie FX."
     )
-    unrealized_profit: float = Field(
-        default=0.0, 
-        description="Niezrealizowany zysk lub strata (papierowy wynik) w walucie notowania instrumentu. Może przyjmować wartości ujemne."
-    )
-    unrealized_profit_pln: float = Field(
-        default=0.0, 
-        description="Niezrealizowany zysk lub strata przeliczony na PLN, uwzględniający różnice kursowe FX. Może przyjmować wartości ujemne."
-    )
 
 class ClosedPositionsMetrics(BaseModel):
-    realized_profit: float = Field(
-        default=0.0, 
-        description="Faktycznie zrealizowany zysk lub strata z zamkniętych pozycji w walucie notowania instrumentu. Może przyjmować wartości ujemne."
-    )
-    realized_profit_pln: float = Field(
-        default=0.0, 
-        description="Faktycznie zrealizowany zysk lub strata z zamkniętych pozycji w PLN, uwzględniający różnice kursowe z dnia zakupu i sprzedaży. Może przyjmować wartości ujemne."
-    )
+    ...
+
+#############################################
 
 class MarketPriceData(BaseModel):
     price: float = Field(
