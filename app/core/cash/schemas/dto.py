@@ -4,12 +4,12 @@ from pydantic import BaseModel, Field
 from datetime import date
 
 class CashFlowType(str, Enum):
-    # Gotówka / Forex
+    # Gotówka
     DEPOSIT = "DEPOSIT"
     WITHDRAWAL = "WITHDRAWAL"
     EXCHANGE = "EXCHANGE"
     
-    # Transakcje i operacje na papierach
+    # Transakcje i operacje na papierach giełdowych (exchange)
     BUY = "BUY"
     SELL = "SELL"
     DIVIDEND = "DIVIDEND"
@@ -30,7 +30,6 @@ class CashFlowInstance(BaseModel):
     value: float
     flow_type: CashFlowType
     description: Optional[str]
-
 
 class CashFlow(BaseModel):
     realized: List[CashFlowInstance]
