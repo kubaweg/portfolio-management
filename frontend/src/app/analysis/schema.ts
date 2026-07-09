@@ -27,11 +27,20 @@ export interface ChartResponse {
     transactions: ChartTransactionPoint[];
 }
 
-// Typ pomocniczy dla połączonych danych pod wykres (Recharts)
 export interface MergedChartData {
     date: string;
+
+    open: number;
+    high: number;
+    low: number;
     close: number;
+
     volume: number;
+
+    // Tablice [min, max] dla Recharts, aby wyrysować przedziały w pionie
+    wick: [number, number];
+    body: [number, number];
+
     transaction_buy?: number;
     transaction_sell?: number;
 }
