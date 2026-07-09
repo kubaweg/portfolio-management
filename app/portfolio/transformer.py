@@ -72,14 +72,14 @@ class DashboardTransformer:
             total_profit_net_pln=item.summary.realized_profit_net + item.summary.unrealized_profit_net
         )
 
-    def _calculate_summary(self, input_data) -> DashboardSummaryData:
+    def _calculate_summary(self, input_data: DashboardMainPageInput) -> DashboardSummaryData:
         """Suma portfela (Exchange + Bonds) dla kafelków dashboardu z rozbiciem szczegółowym."""
         
         # =========================================================================
         # 1. Agregacja z Exchange (Giełda: ETF/ETC)
         # =========================================================================
         exch_invested = sum(
-            item.summary.avg_price_pln * item.current_data.quantity 
+            item.summary.total_invested_pln
             for item in input_data.exchange_response.data
         )
         exch_current = sum(
