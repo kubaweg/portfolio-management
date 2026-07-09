@@ -120,7 +120,7 @@ export default function AddTransactionPage() {
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    {/* SEKCJA 1: Wybór aktywa i typu */}
+                    {/* SEKCJA 1: Wybór aktywa, typu oraz flag operacyjnych */}
                     <Card className="shadow-sm border-blue-100">
                         <CardHeader className="bg-blue-50/20 pb-4 border-b border-blue-50">
                             <CardTitle className="flex items-center gap-2 text-base font-semibold text-blue-700">
@@ -132,7 +132,6 @@ export default function AddTransactionPage() {
                                 <Label>Aktywo</Label>
                                 <Select onValueChange={(val) => setValue("asset_id", parseInt(val))}>
                                     <SelectTrigger className={errors.asset_id ? "border-destructive" : ""}>
-                                        {/* 3. Kluczowa zmiana: SelectValue z logiką wyświetlania */}
                                         <SelectValue placeholder="Wybierz aktywo...">
                                             {selectedAsset ? `${selectedAsset.ticker} — ${selectedAsset.name}` : null}
                                         </SelectValue>
@@ -163,10 +162,41 @@ export default function AddTransactionPage() {
                                 </Select>
                                 {errors.type && <p className="text-xs font-medium text-destructive">{errors.type.message}</p>}
                             </div>
+
+                            {/* Nowe pola logiczne (Booleany) w dolnej sekcji pierwszej karty */}
+                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                                <div className="flex items-start space-x-3 rounded-md border p-4 shadow-sm bg-slate-50/30">
+                                    <input
+                                        type="checkbox"
+                                        id="is_exchange"
+                                        {...register("is_exchange")}
+                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 cursor-pointer"
+                                    />
+                                    <div className="space-y-1 leading-none">
+                                        <Label htmlFor="is_exchange" className="cursor-pointer font-medium text-slate-700">Zamiana obligacji</Label>
+                                        <p className="text-xs text-muted-foreground">Zaznacz, jeśli kupujesz obligacje w ramach mechanizmu zamiany.</p>
+                                        {errors.is_exchange && <p className="text-xs font-medium text-destructive">{errors.is_exchange.message}</p>}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start space-x-3 rounded-md border p-4 shadow-sm bg-slate-50/30">
+                                    <input
+                                        type="checkbox"
+                                        id="is_early_redemption"
+                                        {...register("is_early_redemption")}
+                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 cursor-pointer"
+                                    />
+                                    <div className="space-y-1 leading-none">
+                                        <Label htmlFor="is_early_redemption" className="cursor-pointer font-medium text-slate-700">Przedterminowy wykup</Label>
+                                        <p className="text-xs text-muted-foreground">Zaznacz w przypadku przedterminowego wykupu obligacji skarbowych.</p>
+                                        {errors.is_early_redemption && <p className="text-xs font-medium text-destructive">{errors.is_early_redemption.message}</p>}
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
 
-                    {/* SEKCJA 2: Dane finansowe */}
+                    {/* SEKCJA 2: Dane finansowe i parametry liczbowe */}
                     <Card className="shadow-sm">
                         <CardHeader className="bg-slate-50/50 pb-4 border-b border-slate-100">
                             <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-700">
@@ -174,27 +204,51 @@ export default function AddTransactionPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-6">
+
+                            {/* Wiersz 1: Podstawowe parametry wykonania */}
                             <div className="space-y-2 lg:col-span-2">
-                                <Label className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> Data</Label>
-                                <Input type="datetime-local" {...register("timestamp")} />
+                                <Label className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> Data i godzina</Label>
+                                <Input type="datetime-local" {...register("timestamp")} className={errors.timestamp ? "border-destructive" : ""} />
                                 {errors.timestamp && <p className="text-xs font-medium text-destructive">{errors.timestamp.message}</p>}
                             </div>
 
                             <div className="space-y-2">
                                 <Label className="flex items-center gap-2"><Hash className="h-3.5 w-3.5" /> Wolumen</Label>
-                                <Input type="number" step="0.0001" placeholder="Wpisz wolumen..."{...register("quantity")} />
+                                <Input type="number" step="0.00000001" placeholder="Wpisz wolumen..." {...register("quantity")} className={errors.quantity ? "border-destructive" : ""} />
+                                {errors.quantity && <p className="text-xs font-medium text-destructive">{errors.quantity.message}</p>}
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Cena jednostkowa ({selectedAsset ? selectedAsset.currency : "Wybierz aktywo..."})</Label>
-                                <Input type="number" step="0.0001" placeholder="Wpisz cenę..." {...register("price")} />
+                                <Label>Cena jednostkowa ({selectedAsset ? selectedAsset.currency : "—"})</Label>
+                                <Input type="number" step="0.0001" placeholder="Wpisz cenę..." {...register("price")} className={errors.price ? "border-destructive" : ""} />
                                 {errors.price && <p className="text-xs font-medium text-destructive">{errors.price.message}</p>}
                             </div>
 
-                            <div className="space-y-2 lg:col-span-2">
-                                <Label className="flex items-center gap-2"><Globe className="h-3.5 w-3.5" /> Kurs waluty (FX)</Label>
-                                <Input type="number" step="0.0001" {...register("fx_rate")} />
+                            {/* Wiersz 2: Rozliczenie finansowe netto, koszty poboczne i FX */}
+                            <div className="space-y-2">
+                                <Label>Wartość netto (PLN)</Label>
+                                <Input type="number" step="0.01" placeholder="0.00" {...register("value_net")} className={errors.value_net ? "border-destructive" : ""} />
+                                {errors.value_net && <p className="text-xs font-medium text-destructive">{errors.value_net.message}</p>}
                             </div>
+
+                            <div className="space-y-2">
+                                <Label>Prowizja / Fee (PLN)</Label>
+                                <Input type="number" step="0.01" placeholder="0.00" {...register("fee")} className={errors.fee ? "border-destructive" : ""} />
+                                {errors.fee && <p className="text-xs font-medium text-destructive">{errors.fee.message}</p>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Podatek / Tax (PLN)</Label>
+                                <Input type="number" step="0.01" placeholder="0.00" {...register("tax")} className={errors.tax ? "border-destructive" : ""} />
+                                {errors.tax && <p className="text-xs font-medium text-destructive">{errors.tax.message}</p>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-2"><Globe className="h-3.5 w-3.5" /> Kurs waluty (FX)</Label>
+                                <Input type="number" step="0.0001" {...register("fx_rate")} className={errors.fx_rate ? "border-destructive" : ""} />
+                                {errors.fx_rate && <p className="text-xs font-medium text-destructive">{errors.fx_rate.message}</p>}
+                            </div>
+
                         </CardContent>
                     </Card>
 
@@ -203,18 +257,20 @@ export default function AddTransactionPage() {
                         <CardContent className="pt-6">
                             <div className="space-y-2">
                                 <Label className="flex items-center gap-2"><Notebook className="h-3.5 w-3.5" /> Notatki</Label>
-                                <Textarea {...register("notes")} className="min-h-[100px]" />
+                                <Textarea {...register("notes")} className="min-h-[100px]" placeholder="Opcjonalne uwagi do transakcji..." />
+                                {errors.notes && <p className="text-xs font-medium text-destructive">{errors.notes.message}</p>}
                             </div>
                         </CardContent>
                     </Card>
 
+                    {/* Przyciski sterujące */}
                     <div className="flex justify-end gap-3">
                         <Button type="button" variant="ghost" onClick={() => window.history.back()}>
                             Anuluj
                         </Button>
                         <Button
                             type="submit"
-                            className="min-w-[200px] bg-white hover:bg-white shadow-md"
+                            className="min-w-[200px] bg-slate-900 text-white hover:bg-slate-800 shadow-md transition-colors"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? "Zapisywanie..." : <><Save className="mr-2 h-4 w-4" /> Dodaj transakcję</>}

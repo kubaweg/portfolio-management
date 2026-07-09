@@ -15,6 +15,10 @@ class AddTransaction(BaseModel):
     # Pydantic automatycznie skonwertuje string ISO/datetime-local na obiekt datetime
     timestamp: datetime
 
+    value_net: float = Field(..., ge=0)
+    fee: float = Field(..., ge=0)
+    tax: float = Field(..., ge=0)
+
     # Ilość (Numeric 18, 8)
     quantity: float = Field(..., ge=0, description="Ilość jednostek")
 
@@ -24,21 +28,13 @@ class AddTransaction(BaseModel):
     # Kurs wymiany (z.coerce.number().positive().default(1.0))
     fx_rate: float = Field(default=1.0, gt=0)
 
+    is_exchange: bool
+    is_early_redemption: bool
+
+
     # Notatki (z.string().optional().or(z.literal("")))
     notes: Optional[str] = Field(default=None)
 
     class Config:
         # Pozwala na mapowanie z obiektów ORM (np. SQLAlchemy)
         from_attributes = True
-        # Zapewnia czytelny format JSON w dokumentacji Swagger
-        json_schema_extra = {
-            "example": {
-                "asset_id": 1,
-                "type": "Kupno",
-                "timestamp": "2026-05-13T13:00:00",
-                "quantity": "10.50000000",
-                "price": "145.20",
-                "fx_rate": "1.0",
-                "notes": "Zakup na dołku"
-            }
-        }
