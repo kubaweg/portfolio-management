@@ -26,7 +26,11 @@ class DashboardTransformer:
             details=DashboardMainTableDetailsData(data=details_rows)
         )
 
-    def _build_table_and_details(self, input_data) -> Tuple[List[DashboardMainTableRowData], List[DashboardMainTableRowDetailsData]]:
+    def _build_table_and_details(
+            self, 
+            input_data: DashboardMainPageInput
+        ) -> Tuple[List[DashboardMainTableRowData], List[DashboardMainTableRowDetailsData]]:
+
         table_rows = []
         details_rows = []
 
@@ -48,22 +52,29 @@ class DashboardTransformer:
 
         return table_rows, details_rows
 
-    def _map_exchange_to_row(self, item: ExchangeData) -> DashboardMainTableRowData:
+    def _map_exchange_to_row(
+            self, 
+            item: ExchangeData
+        ) -> DashboardMainTableRowData:
         """Adapter: ExchangeData -> DashboardMainTableRowData"""
         return DashboardMainTableRowData(
             ticker=item.base_data.ticker,
             name=item.base_data.name,
             quantity=item.current_data.quantity,
             current_value_pln=item.current_data.value_pln,
-            roi_pln=item.summary.roi_pln,
+            roi_pln=item.summary.roi_pa_pln,
             total_profit_gross_pln=item.summary.total_profit_pln,
             total_profit_net_pln=item.summary.total_profit_pln
         )
 
-    def _map_bond_to_row(self, item: BondData) -> DashboardMainTableRowData:
+    def _map_bond_to_row(
+            self, 
+            item: BondData
+        ) -> DashboardMainTableRowData:
         """Adapter: BondData -> DashboardMainTableRowData"""
+
         return DashboardMainTableRowData(
-            ticker=item.base_data.ticker, # lub inna identyfikacja obligacji
+            ticker=item.base_data.ticker,
             name=item.base_data.name,
             quantity=item.current_data.quantity,
             current_value_pln=item.current_data.value_gross,

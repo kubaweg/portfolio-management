@@ -40,7 +40,7 @@ const navigationItems = [
     {
         title: "Analityka",
         description: "Wykresy, zyski i statystyki portfela",
-        href: "/analytics",
+        href: "/analysis",
         icon: PieChart,
         color: "text-orange-600",
         bgColor: "bg-orange-50",

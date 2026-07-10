@@ -17,7 +17,7 @@ def load_cpi(db: Session = Depends(get_db)):
     cpi_data_model = InflationData(data=[])
 
     for el in cpi_data:
-        cpi_data_model.data.append(InflationDataPeriod(month=el.month, value=el.value))
+        cpi_data_model.data.append(InflationDataPeriod(month=el.month, value=el.value)) # type: ignore
 
     return cpi_data_model
 
@@ -28,6 +28,6 @@ def load_ref(db: Session = Depends(get_db)):
     ref_data_model = InterestRateData(data=[])
 
     for el in ref_data:
-        ref_data_model.data.append(InterestRateDataPeriod(effective_date=el.effective_date, value=el.value))
+        ref_data_model.data.append(InterestRateDataPeriod(effective_date=el.effective_date, value=el.value)) # type: ignore
 
     return ref_data_model

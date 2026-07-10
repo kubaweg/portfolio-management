@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from typing import List, Union, Any
 
-from app.core.bonds.schemas.dto import DashboardBondResponse
-from app.core.exchange.schemas.dto import DashboardExchangeResponse
+from app.core.bonds.schemas.dto import DashboardBondResponse, BondData
+from app.core.exchange.schemas.dto import DashboardExchangeResponse, ExchangeData
 
 class DashboardMainPageInput(BaseModel):
 
@@ -71,10 +71,10 @@ class DashboardMainTableRowData(BaseModel):
     total_profit_net_pln: float
 
 class RowDetailsBond(BaseModel):
-    data: Any
+    data: BondData
 
 class RowDetailsExchange(BaseModel):
-    data: Any
+    data: ExchangeData
 
 class DashboardMainTableRowDetailsData(BaseModel):
     type: str # informacja czy pokazujemy exchange czy bond

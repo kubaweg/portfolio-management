@@ -24,8 +24,22 @@ export default function PortfolioPage() {
 
     useEffect(() => {
         const fetchDashboardData = async () => {
+
+            // Twoja tablica z tickerami (może być pusta)
+            const tickersToFetch = [];
+
+            // Budujemy parametry zapytania
+            const params = new URLSearchParams();
+            tickersToFetch.forEach(ticker => {
+                params.append('tickers', ticker);
+            });
+
+            const url = tickersToFetch.length > 0
+                ? `${API_BASE_URL}/api/dashboard/main?${params.toString()}`
+                : `${API_BASE_URL}/api/dashboard/main`;
+
             try {
-                const response = await fetch(`${API_BASE_URL}/api/dashboard/main`, {
+                const response = await fetch(url, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                 });
@@ -149,7 +163,7 @@ export default function PortfolioPage() {
                             <th className="p-4">Instrument</th>
                             <th className="p-4">Wolumen</th>
                             <th className="p-4">Wartość obecna</th>
-                            <th className="p-4">ROI (PLN)</th>
+                            <th className="p-4">ROI p.a. (PLN)</th>
                             <th className="p-4">Zysk całkowity</th>
                             <th className="p-4"></th>
                         </tr>

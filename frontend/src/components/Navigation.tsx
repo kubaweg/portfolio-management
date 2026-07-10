@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils"; // Funkcja narzędziowa, którą już masz w projekcie
-import { Home, PieChart, PlusCircle, ArrowRightLeft } from "lucide-react"; // Ikony, które zazwyczaj instalują się z shadcn/ui
+import { Home, PieChart, PlusCircle, ArrowRightLeft, Wallet } from "lucide-react"; // Ikony, które zazwyczaj instalują się z shadcn/ui
 
 const navItems = [
-    { name: "Dashboard", href: "/", icon: Home },
-    { name: "Mój Portfel", href: "/portfolio", icon: PieChart },
+    { name: "Strona główna", href: "/", icon: Home },
+    { name: "Portfolio", href: "/portfolio", icon: Wallet },
+    { name: "Wykresy", href: "/analysis", icon: PieChart },
     { name: "Dodaj Aktywo", href: "/add_asset", icon: PlusCircle },
     { name: "Dodaj Transakcję", href: "/add_transaction", icon: ArrowRightLeft },
 ];

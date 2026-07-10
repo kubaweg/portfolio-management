@@ -1,17 +1,10 @@
 import yfinance as yf
-from typing import Tuple, Optional, List
-from datetime import date, datetime, timedelta
+from typing import Tuple, List
+from datetime import datetime, timedelta
 
-from app import SessionLocal
-from app.schemas.dto.charts import ChartDataPoint, VolumeDataPoint
 from app.schemas.database.asset import AssetType
-from app.core.bonds.service import BondEngine
-from app.core.bonds.schemas.dto import BondInterestPeriod
-from app.schemas.database.asset import Bond
+from app.analysis.schemas.dto import ChartDataPoint, VolumeDataPoint
 
-
-def _get_current_bond_price(ticker: str) -> float:
-    return -1
 
     
 class MarketDataProvider:
@@ -21,7 +14,7 @@ class MarketDataProvider:
     def get_asset_price(ticker_symbol: str, asset_type: AssetType, fallback_price: float = 0.0) -> float:
         """Pobiera aktualną cenę instrumentu z Yahoo Finance."""
         if asset_type == AssetType.BOND:
-            return _get_current_bond_price(ticker=ticker_symbol)
+            return -1
 
         try:
             ticker_yf = yf.Ticker(ticker_symbol)
