@@ -270,7 +270,7 @@ def resolve_early_redemption_type(retail_series_type: str) -> EarlyRedemptionTyp
     return EarlyRedemptionType.FEE
 
 def map_coupon_frequency_to_rate_frequency(coupon_frequency: CouponFrequency) -> int:
-    """Zmienia string z Enuma na liczbę miesięcy dla funkcji relativedelta."""
+    """Zmienia string z Enuma na roczną częstotliwość wypłaty kuponu."""
     mapping = {
         "Co miesiąc": 12,
         "Co kwartał": 4,
@@ -281,7 +281,7 @@ def map_coupon_frequency_to_rate_frequency(coupon_frequency: CouponFrequency) ->
     return mapping.get(coupon_frequency.value, 12)
 
 def map_coupon_frequency_to_months_step(coupon_frequency: CouponFrequency) -> int:
-    """Zmienia string z Enuma na liczbę miesięcy dla funkcji relativedelta."""
+    """Zmienia string z Enuma na liczbę miesięcy które dzielą kolejne wypłaty kuponu."""
     mapping = {
         "Co miesiąc": 1,
         "Co kwartał": 3,

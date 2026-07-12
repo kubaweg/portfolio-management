@@ -5,6 +5,9 @@ from app import get_db
 from app.portfolio.schemas.dto import DashboardMainPageInput, DashboardMainPageOutput
 from app.portfolio.transformer import DashboardTransformer
 
+from app.core.bonds.schemas.dto import DashboardBondResponse
+from app.core.exchange.schemas.dto import DashboardExchangeResponse
+
 from app.portfolio.utils import (
     get_bonds_summary, get_exchange_summary
 )
@@ -21,4 +24,16 @@ def get_main_table_response(db: Session = Depends(get_db), tickers: list[str] = 
 
     transformer = DashboardTransformer()
     return transformer.build_dashboard(input_data=input)
+
+bond_router = APIRouter()
+@bond_router.get('/dashboard/bonds', response_model=DashboardBondResponse)
+def get_bonds(db: Session = Depends(get_db), tickers: list[str] = Query(default=[])):
+    output = get_bonds_summary(db, tickers=tickers)
+    return output
+
+exchange_router = APIRouter()
+@exchange_router.get('/dashboard/exchange', response_model=DashboardExchangeResponse)
+def get_exchange(db: Session = Depends(get_db), tickers: list[str] = Query(default=[])):
+    output = get_exchange_summary(db, tickers=tickers)
+    return output
 
