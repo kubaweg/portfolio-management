@@ -9,3 +9,10 @@ test/
 debug.py
 
 uv.lock
+
+# Wszystkie foldery __pycache__
+__pycache__/
+
+# Wszystkie pojedyncze pliki skompilowane Pythona
+*.pyc
+*.pyo
