@@ -1,11 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Podmień na swój adres bazy (np. PostgreSQL lub SQLite)
-# Skoro baza już istnieje, FastAPI po prostu się do niej podłączy.
-# SQLALCHEMY_DATABASE_URL = 'sqlite:///instance/portfolio_new.db'
 SQLALCHEMY_DATABASE_URL = 'sqlite:///instance/portfolio.db'
-
 
 # Tworzymy silnik bazy danych
 engine = create_engine(SQLALCHEMY_DATABASE_URL)

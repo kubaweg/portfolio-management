@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from app import Base, SQLALCHEMY_DATABASE_URL # Zmień 'models' na nazwę swojego pliku
+from app import Base, SQLALCHEMY_DATABASE_URL
 
 # echo=True wydrukuje wygenerowane zapytania SQL w konsoli
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
